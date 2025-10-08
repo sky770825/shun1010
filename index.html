@@ -354,6 +354,10 @@ td:hover{background:#f8f9fa;}
   #colleagueBorrowSection > div:first-child { grid-template-columns: 1fr !important; gap: 6px !important; }
   #colleagueBorrowSection input, #colleagueBorrowSection select { width: 100% !important; max-width: 100% !important; min-width: auto !important; }
   .dutyControls button { font-size: 11px !important; padding: 5px 8px !important; }
+  #dutyMember { font-size: 13px !important; }
+  #keyItem { font-size: 14px !important; padding: 10px 14px !important; }
+  button[onclick="borrowKey()"] { font-size: 13px !important; padding: 10px 16px !important; }
+  button[onclick="clearKeyHistory()"] { font-size: 12px !important; padding: 10px 14px !important; }
   #keyRecord details { font-size: 11px !important; padding: 8px !important; }
   #keyRecord details summary { gap: 3px !important; }
   #keyRecord details summary span:last-child { display: none; }
@@ -379,6 +383,11 @@ td:hover{background:#f8f9fa;}
   #keyTable th:nth-child(6),#keyTable td:nth-child(6){width:17%;min-width:75px;}
   .key-action-btn { padding: 3px 7px; font-size: 10px; margin: 1px; }
   #keyTable td > div { font-size: 10px; }
+  #dutyMember { font-size: 12px !important; }
+  #keyItem { font-size: 13px !important; padding: 8px 12px !important; }
+  button[onclick="borrowKey()"] { font-size: 12px !important; padding: 8px 12px !important; }
+  button[onclick="clearKeyHistory()"] { font-size: 11px !important; padding: 8px 10px !important; }
+  button[onclick="quickSetTodayDuty()"], button[onclick="clearTempDuty()"], button[onclick="showDebugInfo()"] { font-size: 11px !important; padding: 7px 12px !important; }
 }
 
 @media (max-width: 480px) {
@@ -412,6 +421,11 @@ td:hover{background:#f8f9fa;}
   #currentDateRecordCount { font-size: 10px !important; }
   #keyRecord details { font-size: 10px !important; padding: 6px !important; }
   #keyRecord details ul { margin: 5px 0 0 12px !important; font-size: 10px !important; }
+  #dutyMember { font-size: 11px !important; }
+  #keyItem { font-size: 11px !important; padding: 7px 10px !important; }
+  button[onclick="borrowKey()"] { font-size: 10px !important; padding: 7px 10px !important; }
+  button[onclick="clearKeyHistory()"] { font-size: 10px !important; padding: 7px 8px !important; }
+  button[onclick="quickSetTodayDuty()"], button[onclick="clearTempDuty()"], button[onclick="showDebugInfo()"] { font-size: 10px !important; padding: 6px 10px !important; }
 }
 
 @media (max-width: 360px) {
@@ -431,6 +445,11 @@ td:hover{background:#f8f9fa;}
   #keyTable th:nth-child(6),#keyTable td:nth-child(6){width:17%;min-width:60px;}
   .key-action-btn { padding: 2px 4px; font-size: 8px; margin: 1px; }
   #keyTable td > div { font-size: 8px; line-height: 1.2; }
+  #dutyMember { font-size: 10px !important; }
+  #keyItem { font-size: 10px !important; padding: 6px 8px !important; }
+  button[onclick="borrowKey()"] { font-size: 9px !important; padding: 6px 8px !important; }
+  button[onclick="clearKeyHistory()"] { font-size: 9px !important; padding: 6px 6px !important; }
+  button[onclick="quickSetTodayDuty()"], button[onclick="clearTempDuty()"], button[onclick="showDebugInfo()"] { font-size: 9px !important; padding: 5px 8px !important; }
 }
 
 /* 統計報表樣式 */
@@ -515,6 +534,11 @@ td:hover{background:#f8f9fa;}
       <option value="23">23 珈瑜</option>
       <option value="25">25 濬瑒</option>
       <option value="26">26 益呈</option>
+      <option value="90" disabled>90 徐店東（主管）</option>
+      <option value="91" disabled>91 簡副總（主管）</option>
+      <option value="92" disabled>92 王店（主管）</option>
+      <option value="93" disabled>93 曾經理（主管）</option>
+      <option value="94" disabled>94 羅珍妮（主管）</option>
     </select>
   </label>
   <button onclick="requirePassword('autoAssign')">🔐 隨機平均排班</button>
@@ -681,7 +705,7 @@ td:hover{background:#f8f9fa;}
 </div>
 
 <script>
-const EXCLUDED_MEMBERS = ['02','17','22'];
+const EXCLUDED_MEMBERS = ['02','17','22','90','91','92','93','94'];
 const STORE_KEY = 'schedule-checkin';
 const HISTORY_KEY = 'schedule-history';
 const KEY_RECORD_KEY = 'key-records';
@@ -732,8 +756,13 @@ const CONTACT_PHONES = {
   '21': '黃郁庭 0988-562-796',
   '22': '張婕茹 0963-581-509',
   '23': '張珈瑜 0987-091-219',
-  '25': '葉益呈 0920-661-218',
-  '26': '葉益呈 0920-661-218'
+  '25': '蔡濬瑒 0928-776-755',
+  '26': '葉益呈 0920-661-218',
+  '90': '徐店東 0916-186-362',
+  '91': '簡副總 0973-070-637',
+  '92': '王店 0989-813-686',
+  '93': '曾經理 0916-888-061',
+  '94': '羅珍妮 0918-829-871'
 };
 
 // 平日與假日班別
@@ -771,7 +800,12 @@ const MEMBERS = [
   {id:'22',name:'婕茹',disabled:true},
   {id:'23',name:'珈瑜',group:'group4'},
   {id:'25',name:'濬瑒',group:'group1'},
-  {id:'26',name:'益呈'}
+  {id:'26',name:'益呈'},
+  {id:'90',name:'徐店東',disabled:true},
+  {id:'91',name:'簡副總',disabled:true},
+  {id:'92',name:'王店',disabled:true},
+  {id:'93',name:'曾經理',disabled:true},
+  {id:'94',name:'羅珍妮',disabled:true}
 ];
 
 // 設定預設為當前年月（2025年）
@@ -866,9 +900,32 @@ function renderMemberList(){
   
   sortedMembers.forEach(m=>{
     const li=document.createElement('li');
+    
+    // 檢查是否為主管（編號90以上）
+    const isManager = parseInt(m.id) >= 90;
+    
     if(m.disabled){
-    li.textContent=`${m.id} ${m.name}`;
-      li.classList.add('disabled');
+      // 主管：不顯示編號，但可以點擊借key
+      if(isManager){
+        li.textContent=`👔 ${m.name}`;
+        li.style.background='linear-gradient(135deg,#ffd700 0%,#ffed4e 100%)';
+        li.style.color='#000';
+        li.style.fontWeight='bold';
+        li.style.borderLeft='4px solid #ff9800';
+        li.style.cursor='pointer';
+        
+        // 添加點擊選擇功能（可以借key）
+        li.addEventListener('click', () => selectMember(m));
+        
+        // 如果當前選中，添加選中樣式
+        if(selectedMember && selectedMember.id === m.id){
+          li.classList.add('selected');
+        }
+      } else {
+        // 一般不排班成員：顯示編號，不能點擊
+        li.textContent=`${m.id} ${m.name}`;
+        li.classList.add('disabled');
+      }
     }else{
       const currentCount = memberStats[m.id] ? memberStats[m.id].count : 0;
       li.textContent=`${m.id} ${m.name}(${currentCount}班)`;
@@ -1999,17 +2056,22 @@ function saveColleagueToHistory(fullColleagueName, phone) {
 
 // 選擇成員函數
 function selectMember(member){
-  if(member.disabled) return;
+  // 檢查是否為主管（編號90以上）
+  const isManager = parseInt(member.id) >= 90;
+  
+  // 如果是disabled但不是主管，則不能選擇
+  if(member.disabled && !isManager) return;
   
   selectedMember = member;
   
   // 更新顯示 - 改為醒目的成功狀態
+  const displayName = isManager ? `👔 ${member.name}` : `${member.id} ${member.name}`;
   const memberSection = document.getElementById('memberBorrowSection');
   memberSection.innerHTML = `
     <div style="text-align:center;padding:16px 20px;background:linear-gradient(135deg,#d4edda 0%,#c3e6cb 100%);border-radius:12px;border:2px solid #28a745;margin-bottom:10px;box-shadow:0 4px 12px rgba(40,167,69,0.2);cursor:pointer;transition:all 0.3s;" onclick="clearMemberSelection()" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 16px rgba(40,167,69,0.3)';" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 12px rgba(40,167,69,0.2)';">
       <div style="font-size:17px;font-weight:700;color:#155724;display:flex;align-items:center;justify-content:center;gap:10px;">
         <span style="font-size:26px;">✅</span>
-        已選擇：${member.id} ${member.name}
+        已選擇：${displayName}
         <span style="font-size:26px;">✅</span>
       </div>
     </div>
@@ -3356,10 +3418,14 @@ function renderKeyTable(){
       const memberName = record.memberName || record.displayName;
       const phone = CONTACT_PHONES[memberId];
       
+      // 檢查是否為主管（編號90以上）
+      const isManager = parseInt(memberId) >= 90;
+      const displayName = isManager ? `👔 ${memberName}` : `${memberId} ${memberName}`;
+      
       if(phone){
-        memberCell.innerHTML = `<div><span style="cursor:pointer;color:#007bff;text-decoration:underline;" onclick="showPhone('${memberId}', '${memberName}')">${memberId} ${memberName}</span></div>`;
+        memberCell.innerHTML = `<div><span style="cursor:pointer;color:#007bff;text-decoration:underline;" onclick="showPhone('${memberId}', '${memberName}')">${displayName}</span></div>`;
       }else{
-        memberCell.innerHTML = `<div>${memberId} ${memberName}</div>`;
+        memberCell.innerHTML = `<div>${displayName}</div>`;
       }
     }
     
@@ -3620,11 +3686,21 @@ function showColleaguePhone(phone, name) {
   const modal = document.createElement('div');
   modal.className = 'modal-content';
   
+  // 提取電話號碼並格式化
+  const phoneMatch = phone.match(/\d{4}-\d{3}-\d{3}/);
+  const phoneNumber = phoneMatch ? phoneMatch[0] : phone;
+  const telLink = phoneNumber.replace(/-/g, '');
+  
   modal.innerHTML = `
     <button class="modal-close" onclick="closeModal(this)">&times;</button>
     <div class="modal-title">📞 同業聯絡電話</div>
     <div style="font-size: 18px; color: #495057; margin: 15px 0;">${name}</div>
-    <div class="modal-phone">${phone}</div>
+    <div class="modal-phone">
+      <a href="tel:${telLink}" style="color:#ff9800;text-decoration:none;font-size:28px;font-weight:bold;display:inline-block;margin-top:10px;padding:10px 20px;background:#fff3e0;border-radius:10px;transition:all 0.3s;" onmouseover="this.style.background='#ffe0b2'" onmouseout="this.style.background='#fff3e0'">
+        📱 ${phoneNumber}
+      </a>
+      <div style="font-size:12px;color:#6c757d;margin-top:10px;">點擊號碼可直接撥打</div>
+    </div>
   `;
   
   overlay.appendChild(modal);
@@ -3658,10 +3734,21 @@ function showPhone(memberId, memberName){
   modal.className = 'modal-content';
   
   if(phone){
+    // 提取電話號碼（去掉姓名）
+    const phoneMatch = phone.match(/\d{4}-\d{3}-\d{3}/);
+    const phoneNumber = phoneMatch ? phoneMatch[0] : '';
+    const telLink = phoneNumber ? phoneNumber.replace(/-/g, '') : '';
+    
     modal.innerHTML = `
       <button class="modal-close" onclick="closeModal(this)">&times;</button>
       <div class="modal-title">📞 聯絡電話</div>
-      <div class="modal-phone">${phone}</div>
+      <div class="modal-phone">
+        ${phone.split(' ')[0]}<br>
+        <a href="tel:${telLink}" style="color:#007bff;text-decoration:none;font-size:28px;font-weight:bold;display:inline-block;margin-top:10px;padding:10px 20px;background:#e7f3ff;border-radius:10px;transition:all 0.3s;" onmouseover="this.style.background='#cce5ff'" onmouseout="this.style.background='#e7f3ff'">
+          📱 ${phoneNumber}
+        </a>
+        <div style="font-size:12px;color:#6c757d;margin-top:10px;">點擊號碼可直接撥打</div>
+      </div>
     `;
   }else{
     modal.innerHTML = `
