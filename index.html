@@ -704,7 +704,286 @@ td:hover{background:#f8f9fa;}
   </div>
 </div>
 
+<!-- Firebase SDK -->
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getDatabase, ref, set, get, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+  // Your web app's Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyB8YjKj9mN2pL3qR4sT5uV6wX7yZ8aB9c",
+    authDomain: "shun1010-361e6.firebaseapp.com",
+    projectId: "shun1010-361e6",
+    storageBucket: "shun1010-361e6.appspot.com",
+    messagingSenderId: "507892482",
+    appId: "1:507892482:web:12263774917",
+    databaseURL: "https://shun1010-361e6-default-rtdb.asia-southeast1.firebasedatabase.app"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const database = getDatabase(app);
+
+  // 將 Firebase 對象設為全局變量
+  window.firebaseDB = database;
+  window.firebaseRef = ref;
+  window.firebaseSet = set;
+  window.firebaseGet = get;
+  window.firebaseOnValue = onValue;
+  window.firebaseRemove = remove;
+
+  console.log("✅ Firebase 初始化完成");
+</script>
+
 <script>
+// Firebase 數據訪問層
+class FirebaseDB {
+  constructor() {
+    this.initialized = false;
+    this.initPromise = null;
+  }
+
+  async init() {
+    if (this.initialized) return;
+    if (this.initPromise) return this.initPromise;
+
+    this.initPromise = new Promise((resolve) => {
+      const checkFirebase = () => {
+        if (window.firebaseDB && window.firebaseRef && window.firebaseSet && window.firebaseGet) {
+          this.initialized = true;
+          console.log("✅ Firebase 數據庫連接成功");
+          resolve();
+        } else {
+          setTimeout(checkFirebase, 100);
+        }
+      };
+      checkFirebase();
+    });
+
+    return this.initPromise;
+  }
+
+  async getStorageItem(key) {
+    await this.init();
+    
+    try {
+      // 先從本地緩存讀取（快速）
+      const localData = localStorage.getItem(key);
+      if (localData) {
+        // 同時從 Firebase 同步最新數據（後台）
+        this.syncFromFirebase(key);
+        return localData;
+      }
+      
+      // 如果本地沒有，從 Firebase 讀取
+      const dbRef = window.firebaseRef(window.firebaseDB, key);
+      const snapshot = await window.firebaseGet(dbRef);
+      
+      if (snapshot.exists()) {
+        const firebaseData = JSON.stringify(snapshot.val());
+        localStorage.setItem(key, firebaseData); // 緩存到本地
+        return firebaseData;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error("Firebase 讀取錯誤:", error);
+      // 回退到本地存儲
+      return localStorage.getItem(key);
+    }
+  }
+
+  async setStorageItem(key, value) {
+    await this.init();
+    
+    try {
+      // 立即更新本地緩存
+      localStorage.setItem(key, value);
+      
+      // 異步寫入 Firebase
+      const dbRef = window.firebaseRef(window.firebaseDB, key);
+      await window.firebaseSet(dbRef, JSON.parse(value));
+      
+      console.log(`✅ 數據已同步到 Firebase: ${key}`);
+      
+      // 觸發數據變化事件
+      this.triggerDataChangeEvent(key);
+      
+    } catch (error) {
+      console.error("Firebase 寫入錯誤:", error);
+      // 即使 Firebase 失敗，本地數據已保存
+    }
+  }
+
+  async removeStorageItem(key) {
+    await this.init();
+    
+    try {
+      // 從本地緩存移除
+      localStorage.removeItem(key);
+      
+      // 從 Firebase 移除
+      const dbRef = window.firebaseRef(window.firebaseDB, key);
+      await window.firebaseRemove(dbRef);
+      
+      console.log(`✅ 數據已從 Firebase 移除: ${key}`);
+      
+      // 觸發數據變化事件
+      this.triggerDataChangeEvent(key);
+      
+    } catch (error) {
+      console.error("Firebase 刪除錯誤:", error);
+    }
+  }
+
+  async syncFromFirebase(key) {
+    try {
+      const dbRef = window.firebaseRef(window.firebaseDB, key);
+      const snapshot = await window.firebaseGet(dbRef);
+      
+      if (snapshot.exists()) {
+        const firebaseData = JSON.stringify(snapshot.val());
+        const localData = localStorage.getItem(key);
+        
+        // 如果數據不同，更新本地緩存
+        if (localData !== firebaseData) {
+          localStorage.setItem(key, firebaseData);
+          this.triggerDataChangeEvent(key);
+        }
+      }
+    } catch (error) {
+      console.error("Firebase 同步錯誤:", error);
+    }
+  }
+
+  triggerDataChangeEvent(key) {
+    // 觸發自定義事件，通知其他模塊數據已更新
+    const event = new CustomEvent('firebaseDataChanged', { detail: { key } });
+    window.dispatchEvent(event);
+  }
+
+  // 設置 Firebase 實時監聽
+  async setupRealtimeListener(key) {
+    await this.init();
+    
+    try {
+      const dbRef = window.firebaseRef(window.firebaseDB, key);
+      window.firebaseOnValue(dbRef, (snapshot) => {
+        if (snapshot.exists()) {
+          const firebaseData = JSON.stringify(snapshot.val());
+          const localData = localStorage.getItem(key);
+          
+          // 如果數據不同，更新本地緩存並觸發事件
+          if (localData !== firebaseData) {
+            localStorage.setItem(key, firebaseData);
+            this.triggerDataChangeEvent(key);
+            this.showSyncNotification();
+          }
+        }
+      });
+    } catch (error) {
+      console.error("Firebase 監聽設置錯誤:", error);
+    }
+  }
+
+  showSyncNotification() {
+    // 顯示同步通知
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      z-index: 10000;
+      font-size: 14px;
+      font-weight: bold;
+    `;
+    notification.textContent = '☁️ 云端數據已同步';
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+      notification.remove();
+    }, 2000);
+  }
+}
+
+// 創建全局 Firebase 數據庫實例
+const firebaseDB = new FirebaseDB();
+
+// 包裝原有的 localStorage 函數，使其使用 Firebase
+async function getStorageItem(key) {
+  return await firebaseDB.getStorageItem(key);
+}
+
+async function setStorageItem(key, value) {
+  return await firebaseDB.setStorageItem(key, value);
+}
+
+async function removeStorageItem(key) {
+  return await firebaseDB.removeStorageItem(key);
+}
+
+// 設置所有數據的實時監聽
+async function setupFirebaseListeners() {
+  const keys = [
+    'schedule-checkin',
+    'schedule-history', 
+    'key-records',
+    'shift-change-requests',
+    'key-item-history',
+    'colleague-history',
+    'temp-duty-override'
+  ];
+  
+  for (const key of keys) {
+    await firebaseDB.setupRealtimeListener(key);
+  }
+  
+  console.log("✅ Firebase 實時監聽已設置");
+}
+
+// 數據遷移：首次運行時將本地數據上傳到 Firebase
+async function migrateToFirebase() {
+  const keys = [
+    'schedule-checkin',
+    'schedule-history', 
+    'key-records',
+    'shift-change-requests',
+    'key-item-history',
+    'colleague-history',
+    'temp-duty-override'
+  ];
+  
+  let migratedCount = 0;
+  
+  for (const key of keys) {
+    const localData = localStorage.getItem(key);
+    if (localData) {
+      try {
+        // 檢查 Firebase 是否已有數據
+        const firebaseData = await firebaseDB.getStorageItem(key);
+        if (!firebaseData) {
+          // Firebase 沒有數據，上傳本地數據
+          await firebaseDB.setStorageItem(key, localData);
+          migratedCount++;
+        }
+      } catch (error) {
+        console.error(`遷移 ${key} 時出錯:`, error);
+      }
+    }
+  }
+  
+  if (migratedCount > 0) {
+    console.log(`✅ 已遷移 ${migratedCount} 項數據到 Firebase`);
+    firebaseDB.showSyncNotification();
+  }
+}
+
 const EXCLUDED_MEMBERS = ['02','17','22','90','91','92','93','94'];
 const STORE_KEY = 'schedule-checkin';
 const HISTORY_KEY = 'schedule-history';
@@ -1017,7 +1296,7 @@ function buildGrid(){
 // 點擊簽到或換班
 function bindEvents(){
   document.querySelectorAll('.cell').forEach(cell=>{
-    cell.addEventListener('click',()=>{
+    cell.addEventListener('click', async ()=>{
       // 檢查是否為平日的中班位置（不可點選）
       const day = parseInt(cell.dataset.day);
       const shift = cell.dataset.shift;
@@ -1073,8 +1352,8 @@ function bindEvents(){
       }
       
       // 儲存資料並更新顯示
-      localStorage.setItem(STORE_KEY,JSON.stringify(data));
-      hydrate();
+      await setStorageItem(STORE_KEY,JSON.stringify(data));
+      await hydrate();
       renderMemberList(); // 更新成員統計
       updateDutyMember(); // 更新值班人員
     });
@@ -1082,9 +1361,10 @@ function bindEvents(){
 }
 
 // 將資料填回表格
-function hydrate(){
+async function hydrate(){
   const ym=document.getElementById('monthPicker').value;
-  const data=JSON.parse(localStorage.getItem(STORE_KEY)||'{}');
+  const dataStr = await getStorageItem(STORE_KEY);
+  const data = JSON.parse(dataStr || '{}');
   document.querySelectorAll('.cell').forEach(cell=>{
     const key=`${ym}:${cell.dataset.day}-${cell.dataset.shift}`;
     
@@ -5028,17 +5308,77 @@ window.addEventListener('load', () => {
   }, 500);
 });
 
-// 初始化
-renderMemberList();
-buildGrid();
-initKeyRecord();
-optimizeScale();
+// Firebase 初始化
+async function initializeFirebase() {
+  try {
+    console.log("🔄 正在初始化 Firebase...");
+    
+    // 設置 Firebase 監聽器
+    await setupFirebaseListeners();
+    
+    // 數據遷移（如果需要的話）
+    await migrateToFirebase();
+    
+    // 監聽數據變化事件
+    window.addEventListener('firebaseDataChanged', (event) => {
+      const key = event.detail.key;
+      console.log(`📡 檢測到數據變化: ${key}`);
+      
+      // 根據變化的數據類型重新渲染相應界面
+      switch(key) {
+        case 'schedule-checkin':
+          hydrate();
+          renderMemberList();
+          break;
+        case 'key-records':
+          renderKeyTable();
+          break;
+        case 'shift-change-requests':
+          // 可以添加調班申請的重新渲染邏輯
+          break;
+        default:
+          // 其他數據類型
+          break;
+      }
+    });
+    
+    console.log("✅ Firebase 初始化完成");
+    
+    // 更新頁面標題顯示雲端同步狀態
+    document.title = "☁️ 常順地產值班key進出系統";
+    
+    // 在標題欄顯示雲端同步標識
+    const header = document.querySelector('h2');
+    if (header) {
+      header.innerHTML = '☁️ 雲端同步 - 常順地產值班key進出系統';
+    }
+    
+  } catch (error) {
+    console.error("❌ Firebase 初始化失敗:", error);
+    // 即使 Firebase 失敗，系統仍可使用本地存儲
+  }
+}
 
-// 表格渲染後確保適應視窗
-setTimeout(() => {
+// 初始化
+async function initializeApp() {
+  // 先初始化 Firebase
+  await initializeFirebase();
+  
+  // 然後初始化應用程序
+  renderMemberList();
+  buildGrid();
+  initKeyRecord();
   optimizeScale();
-  adjustTableToFit();
-}, 300);
+  
+  // 表格渲染後確保適應視窗
+  setTimeout(() => {
+    optimizeScale();
+    adjustTableToFit();
+  }, 300);
+}
+
+// 啟動應用程序
+initializeApp();
 </script>
 
 </body>
