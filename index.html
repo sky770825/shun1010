@@ -1094,6 +1094,8 @@ function bindEvents(){
             // 密碼驗證成功後執行換班
             data[key]=member;
             localStorage.setItem(STORE_KEY,JSON.stringify(data));
+            // 同步到 Firebase
+            syncToFirebase(STORE_KEY, JSON.stringify(data));
             hydrate();
             renderMemberList(); // 更新成員統計
             updateDutyMember(); // 更新值班人員
@@ -1108,6 +1110,8 @@ function bindEvents(){
       
       // 儲存資料並更新顯示
       localStorage.setItem(STORE_KEY,JSON.stringify(data));
+      // 同步到 Firebase
+      syncToFirebase(STORE_KEY, JSON.stringify(data));
       hydrate();
       renderMemberList(); // 更新成員統計
       updateDutyMember(); // 更新值班人員
@@ -1150,12 +1154,27 @@ function hydrate(){
 // 清除本月資料
 function clearData(){
   if(confirm('確定清除本月簽到資料？')){
+    console.log('🗑️ 開始清除本月資料...');
     const ym=document.getElementById('monthPicker').value;
+    console.log(`📅 目標月份: ${ym}`);
     const data=JSON.parse(localStorage.getItem(STORE_KEY)||'{}');
+    console.log(`📊 清除前的數據:`, data);
+    let deletedCount = 0;
     for(const k in data){
-      if(k.startsWith(ym+':')) delete data[k];
+      if(k.startsWith(ym+':')){
+        console.log(`❌ 刪除: ${k}`);
+        delete data[k];
+        deletedCount++;
+      }
     }
+    console.log(`🗑️ 刪除了 ${deletedCount} 個項目`);
+    console.log(`📊 清除後的數據:`, data);
     localStorage.setItem(STORE_KEY,JSON.stringify(data));
+    console.log('💾 localStorage 更新完成');
+    // 同步到 Firebase
+    console.log('📡 準備同步到 Firebase...');
+    syncToFirebase(STORE_KEY, JSON.stringify(data));
+    console.log('✅ syncToFirebase 調用完成');
     hydrate();
   }
 }
@@ -1256,6 +1275,8 @@ function recordScheduleHistory(ym, shuffled, remainder){
   }
   
   localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+  // 同步到 Firebase
+  syncToFirebase(HISTORY_KEY, JSON.stringify(history));
 }
 
 // 獲取前3次增額分配的成員
@@ -1757,6 +1778,8 @@ function executeAutoAssign(){
   }
 
   localStorage.setItem(STORE_KEY,JSON.stringify(data));
+  // 同步到 Firebase
+  syncToFirebase(STORE_KEY, JSON.stringify(data));
   hydrate();
   renderMemberList(); // 更新成員統計
   updateDutyMember(); // 更新值班人員
@@ -1850,6 +1873,8 @@ function executeQuickFill(){
   }
   
   localStorage.setItem(STORE_KEY,JSON.stringify(data));
+  // 同步到 Firebase
+  syncToFirebase(STORE_KEY, JSON.stringify(data));
   hydrate();
   renderMemberList(); // 更新成員統計
   updateDutyMember(); // 更新值班人員
@@ -2085,6 +2110,8 @@ function saveColleagueToHistory(fullColleagueName, phone) {
   }
   
   localStorage.setItem(COLLEAGUE_HISTORY_KEY, JSON.stringify(allHistory));
+  // 同步到 Firebase
+  syncToFirebase(COLLEAGUE_HISTORY_KEY, JSON.stringify(allHistory));
 }
 
 
@@ -2299,6 +2326,8 @@ function saveKeyItemToHistory(keyItem) {
   }
   
   localStorage.setItem(KEY_HISTORY_KEY, JSON.stringify(history));
+  // 同步到 Firebase
+  syncToFirebase(KEY_HISTORY_KEY, JSON.stringify(history));
   renderKeyItemHistory();
 }
 
@@ -2506,7 +2535,11 @@ function executeBatchBorrow() {
   }
   const now = new Date();
   const timeStr = `${now.getMonth()+1}/${now.getDate()} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
-  const records = JSON.parse(localStorage.getItem(KEY_RECORD_KEY) || '[]');
+  let records = JSON.parse(localStorage.getItem(KEY_RECORD_KEY) || '[]');
+  // 確保 records 是數組
+  if (!Array.isArray(records)) {
+    records = [];
+  }
   
   // 將所有選中的鑰匙項目合併成一筆記錄
   const allKeyItems = Array.from(selectedKeyItems).join('、');
@@ -2532,6 +2565,8 @@ function executeBatchBorrow() {
   
   records.push(keyRecord);
   localStorage.setItem(KEY_RECORD_KEY, JSON.stringify(records));
+  // 同步到 Firebase
+  syncToFirebase(KEY_RECORD_KEY, JSON.stringify(records));
   
   // 保存所有鑰匙項目到歷史記錄
   selectedKeyItems.forEach(item => {
@@ -2570,6 +2605,8 @@ function clearKeyItemHistory() {
     '這不會影響借出記錄，只會清除快速選擇列表',
     () => {
       localStorage.removeItem(KEY_HISTORY_KEY);
+      // 同步到 Firebase（清空數據）
+      syncToFirebase(KEY_HISTORY_KEY, '[]');
       selectedKeyItems.clear(); // 同時清除選擇
       renderKeyItemHistory();
       showCustomAlert('✅ 已清除鑰匙項目記錄', 'success');
@@ -2715,6 +2752,8 @@ function clearTempDuty() {
       const tempDutyData = JSON.parse(localStorage.getItem(TEMP_DUTY_KEY) || '{}');
       delete tempDutyData[dateKey];
       localStorage.setItem(TEMP_DUTY_KEY, JSON.stringify(tempDutyData));
+      // 同步到 Firebase
+      syncToFirebase(TEMP_DUTY_KEY, JSON.stringify(tempDutyData));
       
       updateDutyMember();
       showCustomAlert('✅ 已取消臨時代班設定，恢復使用排班表數據', 'success');
@@ -3091,7 +3130,11 @@ function updateDutyMember(){
 
 // 值班確認歸還
 function dutyConfirm(recordId){
-  const records = JSON.parse(localStorage.getItem(KEY_RECORD_KEY) || '[]');
+  let records = JSON.parse(localStorage.getItem(KEY_RECORD_KEY) || '[]');
+  // 確保 records 是數組
+  if (!Array.isArray(records)) {
+    records = [];
+  }
   const record = records.find(r => r.id === recordId);
   
   if(!record){
@@ -3169,6 +3212,8 @@ function dutyConfirm(recordId){
       record.dutyConfirmedTime = now.toISOString();
       
       localStorage.setItem(KEY_RECORD_KEY, JSON.stringify(records));
+      // 同步到 Firebase
+      syncToFirebase(KEY_RECORD_KEY, JSON.stringify(records));
       renderKeyTable();
       showCustomAlert(`✅ ${currentDutyMember.name} 已確認「${record.keyItem}」歸還`, 'success');
     }
@@ -3229,7 +3274,11 @@ function isSameDay(date1, date2) {
 
 // 清理30天前的記錄
 function cleanOldRecords() {
-  const records = JSON.parse(localStorage.getItem(KEY_RECORD_KEY) || '[]');
+  let records = JSON.parse(localStorage.getItem(KEY_RECORD_KEY) || '[]');
+  // 確保 records 是數組
+  if (!Array.isArray(records)) {
+    records = [];
+  }
   const now = new Date();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
   
@@ -3240,6 +3289,8 @@ function cleanOldRecords() {
   
   if (filteredRecords.length !== records.length) {
     localStorage.setItem(KEY_RECORD_KEY, JSON.stringify(filteredRecords));
+    // 同步到 Firebase
+    syncToFirebase(KEY_RECORD_KEY, JSON.stringify(filteredRecords));
     console.log(`已清理 ${records.length - filteredRecords.length} 條超過30天的記錄`);
   }
 }
@@ -3332,9 +3383,15 @@ function borrowKey(){
     dutyConfirmedTime: null
   };
   
-  const records = JSON.parse(localStorage.getItem(KEY_RECORD_KEY) || '[]');
+  let records = JSON.parse(localStorage.getItem(KEY_RECORD_KEY) || '[]');
+  // 確保 records 是數組
+  if (!Array.isArray(records)) {
+    records = [];
+  }
   records.push(keyRecord);
   localStorage.setItem(KEY_RECORD_KEY, JSON.stringify(records));
+  // 同步到 Firebase
+  syncToFirebase(KEY_RECORD_KEY, JSON.stringify(records));
   
   // 保存鑰匙項目到歷史記錄
   saveKeyItemToHistory(keyItem);
@@ -3376,9 +3433,15 @@ function deleteKeyRecord(recordId){
     '確定要刪除此記錄嗎？',
     '此操作無法復原！',
     () => {
-      const records = JSON.parse(localStorage.getItem(KEY_RECORD_KEY) || '[]');
+      let records = JSON.parse(localStorage.getItem(KEY_RECORD_KEY) || '[]');
+      // 確保 records 是數組
+      if (!Array.isArray(records)) {
+        records = [];
+      }
       const filteredRecords = records.filter(r => r.id !== recordId);
       localStorage.setItem(KEY_RECORD_KEY, JSON.stringify(filteredRecords));
+      // 同步到 Firebase
+      syncToFirebase(KEY_RECORD_KEY, JSON.stringify(filteredRecords));
       
       renderKeyTable();
       showCustomAlert('✅ 記錄已刪除', 'success');
@@ -3387,7 +3450,11 @@ function deleteKeyRecord(recordId){
 }
 
 function renderKeyTable(){
-  const allRecords = JSON.parse(localStorage.getItem(KEY_RECORD_KEY) || '[]');
+  let allRecords = JSON.parse(localStorage.getItem(KEY_RECORD_KEY) || '[]');
+  // 確保 allRecords 是數組
+  if (!Array.isArray(allRecords)) {
+    allRecords = [];
+  }
   const tbody = document.getElementById('keyTableBody');
   tbody.innerHTML = '';
   
@@ -3662,7 +3729,11 @@ function optimizeKeyTableTextSize() {
 }
 
 function quickReturn(recordId){
-  const records = JSON.parse(localStorage.getItem(KEY_RECORD_KEY) || '[]');
+  let records = JSON.parse(localStorage.getItem(KEY_RECORD_KEY) || '[]');
+  // 確保 records 是數組
+  if (!Array.isArray(records)) {
+    records = [];
+  }
   const record = records.find(r => r.id === recordId);
   
   if(!record){
@@ -3692,6 +3763,8 @@ function quickReturn(recordId){
       record.returnTimeStr = `${now.getMonth()+1}/${now.getDate()} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
       
       localStorage.setItem(KEY_RECORD_KEY, JSON.stringify(records));
+      // 同步到 Firebase
+      syncToFirebase(KEY_RECORD_KEY, JSON.stringify(records));
       cleanOldRecords(); // 清理舊記錄
       renderKeyTable();
       showCustomAlert(`✅ ${borrowerDisplay} 已歸還「${record.keyItem}」`, 'success');
@@ -3706,6 +3779,8 @@ function clearKeyHistory(){
     '此操作無法復原！',
     () => {
       localStorage.removeItem(KEY_RECORD_KEY);
+      // 同步到 Firebase（清空數據）
+      syncToFirebase(KEY_RECORD_KEY, '[]');
       renderKeyTable();
       showCustomAlert('✅ 已清除所有鑰匙借出記錄', 'success');
     }
@@ -3859,10 +3934,13 @@ function showConfirmModal(title, message, detail, onConfirm) {
   document.addEventListener('keydown', escHandler);
   
   // 確認按鈕功能
+  const originalConfirmAction = window.confirmAction;
   window.confirmAction = function(btn) {
     closeModal(overlay);
     if(onConfirm) onConfirm();
     document.removeEventListener('keydown', escHandler);
+    // 恢復原始的 confirmAction 函數
+    window.confirmAction = originalConfirmAction;
   };
 }
 
@@ -4507,6 +4585,8 @@ function showStatisticsModal(content) {
   window.closeModal = function(element) {
     if (element === overlay) {
       document.removeEventListener('keydown', escHandler);
+      // 恢復原始的 closeModal 函數
+      window.closeModal = originalCloseModal;
     }
     originalCloseModal(element);
   };
@@ -4795,6 +4875,8 @@ function handleShiftChangeSubmit(e) {
   const requests = JSON.parse(localStorage.getItem(SHIFT_CHANGE_KEY) || '[]');
   requests.push(request);
   localStorage.setItem(SHIFT_CHANGE_KEY, JSON.stringify(requests));
+  // 同步到 Firebase
+  syncToFirebase(SHIFT_CHANGE_KEY, JSON.stringify(requests));
   
   showCustomAlert('✅ 調班申請已提交，等待審核', 'success');
   
@@ -4831,6 +4913,8 @@ function processShiftChange(requestId, action) {
     
     // 儲存更新後的排班資料
     localStorage.setItem(STORE_KEY, JSON.stringify(data));
+    // 同步到 Firebase
+    syncToFirebase(STORE_KEY, JSON.stringify(data));
     
     // 更新頁面顯示
     hydrate();
@@ -4846,6 +4930,8 @@ function processShiftChange(requestId, action) {
   requests[requestIndex].status = action;
   requests[requestIndex].processTime = new Date().toISOString();
   localStorage.setItem(SHIFT_CHANGE_KEY, JSON.stringify(requests));
+  // 同步到 Firebase
+  syncToFirebase(SHIFT_CHANGE_KEY, JSON.stringify(requests));
   
   // 重新顯示申請列表
   setTimeout(() => {
@@ -5062,20 +5148,43 @@ window.addEventListener('load', () => {
   }, 500);
 });
 
-// 初始化
-renderMemberList();
-buildGrid();
-initKeyRecord();
-optimizeScale();
-
-// 表格渲染後確保適應視窗
-setTimeout(() => {
+// 應用程式初始化（等待 Firebase 完成後執行）
+async function initializeApp() {
+  // 等待 Firebase 初始化完成
+  await new Promise(resolve => {
+    const checkFirebase = () => {
+      if (window.firebaseDB && window.syncToFirebase) {
+        console.log('✅ Firebase 同步準備就緒，開始初始化應用程式');
+        resolve();
+      } else {
+        setTimeout(checkFirebase, 100);
+      }
+    };
+    checkFirebase();
+  });
+  
+  // 初始化應用程式
+  renderMemberList();
+  buildGrid();
+  initKeyRecord();
   optimizeScale();
-  adjustTableToFit();
-}, 300);
+  
+  // 表格渲染後確保適應視窗
+  setTimeout(() => {
+    optimizeScale();
+    adjustTableToFit();
+  }, 300);
+}
+
+// 啟動應用程式
+initializeApp();
+
+// ========================================
+// Firebase 同步層 - 不影響原有功能
+// ========================================
 
 // Firebase 數據訪問層
-class FirebaseDB {
+class FirebaseSync {
   constructor() {
     this.initialized = false;
     this.initPromise = null;
@@ -5089,7 +5198,7 @@ class FirebaseDB {
       const checkFirebase = () => {
         if (window.firebaseDB && window.firebaseRef && window.firebaseSet && window.firebaseGet) {
           this.initialized = true;
-          console.log("✅ Firebase 數據庫連接成功");
+          console.log("✅ Firebase 同步層初始化完成");
           resolve();
         } else {
           setTimeout(checkFirebase, 100);
@@ -5101,81 +5210,28 @@ class FirebaseDB {
     return this.initPromise;
   }
 
-  async getStorageItem(key) {
-    await this.init();
-    
+  // 同步數據到 Firebase（不影響原有功能）
+  async syncToFirebase(key, value) {
     try {
-      // 先從本地緩存讀取（快速）
-      const localData = localStorage.getItem(key);
-      if (localData) {
-        // 同時從 Firebase 同步最新數據（後台）
-        this.syncFromFirebase(key);
-        return localData;
-      }
-      
-      // 如果本地沒有，從 Firebase 讀取
+      console.log(`🔄 firebaseSync.syncToFirebase 開始: key="${key}"`);
+      await this.init();
+      console.log(`✅ Firebase 初始化完成`);
       const dbRef = window.firebaseRef(window.firebaseDB, key);
-      const snapshot = await window.firebaseGet(dbRef);
-      
-      if (snapshot.exists()) {
-        const firebaseData = JSON.stringify(snapshot.val());
-        localStorage.setItem(key, firebaseData); // 緩存到本地
-        return firebaseData;
-      }
-      
-      return null;
-    } catch (error) {
-      console.error("Firebase 讀取錯誤:", error);
-      // 回退到本地存儲
-      return localStorage.getItem(key);
-    }
-  }
-
-  async setStorageItem(key, value) {
-    await this.init();
-    
-    try {
-      // 立即更新本地緩存
-      localStorage.setItem(key, value);
-      
-      // 異步寫入 Firebase
-      const dbRef = window.firebaseRef(window.firebaseDB, key);
+      console.log(`✅ Firebase 參考建立: ${key}`);
       await window.firebaseSet(dbRef, JSON.parse(value));
-      
-      console.log(`✅ 數據已同步到 Firebase: ${key}`);
-      
-      // 觸發數據變化事件
-      this.triggerDataChangeEvent(key);
-      
+      console.log(`📡 數據已成功同步到 Firebase: ${key}`);
+      this.showSyncNotification();
     } catch (error) {
-      console.error("Firebase 寫入錯誤:", error);
-      // 即使 Firebase 失敗，本地數據已保存
+      console.error(`❌ Firebase 同步錯誤 (key="${key}"):`, error);
+      console.error(`❌ 錯誤詳情:`, error.message, error.stack);
+      // 靜默失敗，不影響原有功能
     }
   }
 
-  async removeStorageItem(key) {
-    await this.init();
-    
-    try {
-      // 從本地緩存移除
-      localStorage.removeItem(key);
-      
-      // 從 Firebase 移除
-      const dbRef = window.firebaseRef(window.firebaseDB, key);
-      await window.firebaseRemove(dbRef);
-      
-      console.log(`✅ 數據已從 Firebase 移除: ${key}`);
-      
-      // 觸發數據變化事件
-      this.triggerDataChangeEvent(key);
-      
-    } catch (error) {
-      console.error("Firebase 刪除錯誤:", error);
-    }
-  }
-
+  // 從 Firebase 同步數據
   async syncFromFirebase(key) {
     try {
+      await this.init();
       const dbRef = window.firebaseRef(window.firebaseDB, key);
       const snapshot = await window.firebaseGet(dbRef);
       
@@ -5194,17 +5250,10 @@ class FirebaseDB {
     }
   }
 
-  triggerDataChangeEvent(key) {
-    // 觸發自定義事件，通知其他模塊數據已更新
-    const event = new CustomEvent('firebaseDataChanged', { detail: { key } });
-    window.dispatchEvent(event);
-  }
-
-  // 設置 Firebase 實時監聽
+  // 設置實時監聽
   async setupRealtimeListener(key) {
-    await this.init();
-    
     try {
+      await this.init();
       const dbRef = window.firebaseRef(window.firebaseDB, key);
       window.firebaseOnValue(dbRef, (snapshot) => {
         if (snapshot.exists()) {
@@ -5224,8 +5273,14 @@ class FirebaseDB {
     }
   }
 
+  // 觸發數據變化事件
+  triggerDataChangeEvent(key) {
+    const event = new CustomEvent('firebaseDataChanged', { detail: { key } });
+    window.dispatchEvent(event);
+  }
+
+  // 顯示同步通知
   showSyncNotification() {
-    // 顯示同步通知
     const notification = document.createElement('div');
     notification.style.cssText = `
       position: fixed;
@@ -5250,88 +5305,45 @@ class FirebaseDB {
   }
 }
 
-// 創建全局 Firebase 數據庫實例
-const firebaseDB = new FirebaseDB();
+// 創建全局 Firebase 同步實例
+const firebaseSync = new FirebaseSync();
 
-// 包裝原有的 localStorage 函數，使其使用 Firebase
-async function getStorageItem(key) {
-  return await firebaseDB.getStorageItem(key);
-}
-
-async function setStorageItem(key, value) {
-  return await firebaseDB.setStorageItem(key, value);
-}
-
-async function removeStorageItem(key) {
-  return await firebaseDB.removeStorageItem(key);
-}
-
-// 設置所有數據的實時監聽
-async function setupFirebaseListeners() {
-  const keys = [
-    'schedule-checkin',
+// 創建 Firebase 同步函數（不包裝 localStorage.setItem）
+function syncToFirebase(key, value) {
+  // 異步同步到 Firebase（不影響原有功能）
+  const syncKeys = [
+    'schedule-checkin', 
     'schedule-history', 
     'key-records',
     'shift-change-requests',
     'key-item-history',
-    'member-list',
-    'key-items'
+    'colleague-history',
+    'temp-duty-override'
   ];
   
-  for (const key of keys) {
-    await firebaseDB.setupRealtimeListener(key);
-  }
+  console.log(`🔍 syncToFirebase 被調用: key="${key}"`);
   
-  console.log("✅ Firebase 實時監聽已設置");
-}
-
-// 數據遷移：首次運行時將本地數據上傳到 Firebase
-async function migrateToFirebase() {
-  const keys = [
-    'schedule-checkin',
-    'schedule-history', 
-    'key-records',
-    'shift-change-requests',
-    'key-item-history',
-    'member-list',
-    'key-items'
-  ];
-  
-  let migratedCount = 0;
-  
-  for (const key of keys) {
-    const localData = localStorage.getItem(key);
-    if (localData) {
-      try {
-        // 檢查 Firebase 是否已有數據
-        const firebaseData = await firebaseDB.getStorageItem(key);
-        if (!firebaseData) {
-          // Firebase 沒有數據，上傳本地數據
-          await firebaseDB.setStorageItem(key, localData);
-          migratedCount++;
-        }
-      } catch (error) {
-        console.error(`數據遷移錯誤 (${key}):`, error);
-      }
-    }
-  }
-  
-  if (migratedCount > 0) {
-    console.log(`✅ 已遷移 ${migratedCount} 項數據到 Firebase`);
-    firebaseDB.showSyncNotification();
+  if (syncKeys.includes(key)) {
+    console.log(`✅ "${key}" 在同步列表中，準備同步...`);
+    firebaseSync.syncToFirebase(key, value);
+  } else {
+    console.log(`⚠️ "${key}" 不在同步列表中，跳過同步`);
   }
 }
 
-// Firebase 初始化
-async function initializeFirebase() {
+// 初始化 Firebase 同步
+async function initializeFirebaseSync() {
   try {
-    console.log("🔄 正在初始化 Firebase...");
+    console.log("🔄 正在初始化 Firebase 同步...");
     
-    // 設置 Firebase 監聽器
-    await setupFirebaseListeners();
-    
-    // 數據遷移（如果需要的話）
-    await migrateToFirebase();
+    // 設置實時監聽
+    await firebaseSync.setupRealtimeListener('schedule-checkin');
+    await firebaseSync.setupRealtimeListener('schedule-history');
+    await firebaseSync.setupRealtimeListener('key-records');
+    await firebaseSync.setupRealtimeListener('shift-change-requests');
+    await firebaseSync.setupRealtimeListener('key-item-history');
+    await firebaseSync.setupRealtimeListener('colleague-history');
+    await firebaseSync.setupRealtimeListener('temp-duty-override');
     
     // 監聽數據變化事件
     window.addEventListener('firebaseDataChanged', (event) => {
@@ -5341,36 +5353,32 @@ async function initializeFirebase() {
       // 根據變化的數據類型重新渲染相應界面
       switch(key) {
         case 'schedule-checkin':
-          // 重新載入排班數據
           if (typeof hydrate === 'function') hydrate();
           if (typeof renderMemberList === 'function') renderMemberList();
           break;
         case 'schedule-history':
-          // 重新載入歷史數據
-          if (typeof loadHistory === 'function') loadHistory();
+          // 歷史數據變化處理
           break;
         case 'key-records':
-          // 重新載入鑰匙記錄
-          if (typeof loadKeyRecords === 'function') loadKeyRecords();
+          if (typeof renderKeyTable === 'function') renderKeyTable();
           break;
-        default:
-          console.log(`數據變化: ${key}`);
       }
     });
     
-    console.log("✅ Firebase 初始化完成");
+    console.log("✅ Firebase 同步初始化完成");
     
     // 更新頁面標題顯示雲端同步狀態
     document.title = "☁️ 常順地產值班key進出系統";
     
   } catch (error) {
-    console.error("❌ Firebase 初始化失敗:", error);
+    console.error("❌ Firebase 同步初始化失敗:", error);
     // 即使 Firebase 失敗，系統仍可使用本地存儲
   }
 }
 
-// 初始化 Firebase
-initializeFirebase();
+// 立即初始化 Firebase 同步
+initializeFirebaseSync();
+
 </script>
 
 </body>
