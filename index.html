@@ -117,11 +117,29 @@ td:hover{background:#f8f9fa;}
 #colleagueCustomInput{animation:slideDown 0.3s ease-out;}
 #companyHistorySelect{animation:slideDown 0.3s ease-out;}
 
-/* 借出類型按鈕樣式 */
+/* 借出類型按鈕樣式 - 更醒目的設計 */
 .borrow-type-label{position:relative;}
-.borrow-type-label:has(input:checked){background:linear-gradient(135deg,#007bff 0%,#0056b3 100%);box-shadow:0 2px 4px rgba(0,123,255,0.3);}
-.borrow-type-label:has(input:checked) span{color:#fff !important;}
-.borrow-type-label:hover{background:#e9ecef;}
+.borrow-type-label:has(input:checked){
+  background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+  box-shadow:0 4px 15px rgba(102,126,234,0.4);
+  transform:scale(1.05);
+}
+.borrow-type-label:has(input:checked) span{color:#fff !important;text-shadow:0 1px 2px rgba(0,0,0,0.2);}
+.borrow-type-label:not(:has(input:checked)){background:#f8f9fa;}
+.borrow-type-label:not(:has(input:checked)) span{color:#6c757d;}
+.borrow-type-label:hover{
+  background:linear-gradient(135deg,#e9ecef 0%,#dee2e6 100%);
+  transform:translateY(-1px);
+}
+.borrow-type-label:has(input:checked):hover{
+  background:linear-gradient(135deg,#5568d3 0%,#6a3d93 100%);
+  transform:scale(1.05) translateY(-1px);
+}
+
+/* 鑰匙項目多選樣式 */
+#keyItemHistory label.key-history-badge{margin:0;}
+#selectedKeysCount{animation:pulse 0.3s;}
+@keyframes pulse{0%{transform:scale(1);}50%{transform:scale(1.1);}100%{transform:scale(1);}}
 
 /* 說明框樣式 */
 #keyRecord details summary{transition:all 0.2s;}
@@ -132,9 +150,10 @@ td:hover{background:#f8f9fa;}
 @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
 @keyframes slideIn{from{opacity:0;transform:translateY(-30px);}to{opacity:1;transform:translateY(0);}}
 @keyframes shake{0%,100%{transform:translateX(0);}10%,30%,50%,70%,90%{transform:translateX(-5px);}20%,40%,60%,80%{transform:translateX(5px);}}
+@keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
 #keyTable{width:100%;border-collapse:collapse;margin-top:15px;box-shadow:0 2px 4px rgba(0,0,0,0.1);border-radius:8px;overflow:hidden;table-layout:fixed;}
-#keyTable th, #keyTable td{border:1px solid #e9ecef;padding:8px 6px;text-align:center;font-size:13px;word-wrap:break-word;overflow:hidden;}
-#keyTable th{background:linear-gradient(135deg,#6c757d 0%,#5a6268 100%);color:#fff;font-weight:bold;text-shadow:0 1px 2px rgba(0,0,0,0.1);font-size:12px;}
+#keyTable th, #keyTable td{border:1px solid #e9ecef;padding:6px 4px;text-align:center;font-size:13px;word-wrap:break-word;overflow:hidden;}
+#keyTable th{background:linear-gradient(135deg,#6c757d 0%,#5a6268 100%);color:#fff;font-weight:bold;text-shadow:0 1px 2px rgba(0,0,0,0.1);font-size:12px;padding:8px 4px;}
 #keyTable td{background:#fff;transition:background-color 0.2s;vertical-align:middle;}
 #keyTable td:hover{background:#f8f9fa;}
 #keyTable td.status-borrowed{background:linear-gradient(135deg,#e3f2fd 0%,#bbdefb 100%);color:#1565c0;border-left:3px solid #2196f3;}
@@ -155,10 +174,13 @@ td:hover{background:#f8f9fa;}
 .key-action-btn.confirm{background:linear-gradient(135deg,#17a2b8 0%,#138496 100%);color:#fff;}
 .key-action-btn.delete{background:linear-gradient(135deg,#dc3545 0%,#c82333 100%);color:#fff;}
 
-/* 鑰匙表格內文字大小調整 */
-#keyTable td > div{font-size:12px;line-height:1.4;}
-#keyTable .status-borrowed,#keyTable .status-returned{font-size:12px;font-weight:bold;padding:4px 8px;}
+/* 鑰匙表格內文字大小調整 - 動態自適應 */
+#keyTable td{position:relative;}
+#keyTable td > div{line-height:1.25;word-wrap:break-word;overflow-wrap:break-word;hyphens:auto;width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;}
+#keyTable .status-borrowed,#keyTable .status-returned{font-weight:bold;}
 #keyTable td span{display:inline-block;}
+#keyTable td.auto-size{font-size:inherit;} /* 標記為自動調整大小的儲存格 */
+#keyTable td > div > div{width:100%;}
 
 /* 自定義彈窗樣式 */
 .modal-overlay {
@@ -307,8 +329,8 @@ td:hover{background:#f8f9fa;}
   #memberList li { font-size: 13px; padding: 5px 8px; }
   .keyControls { flex-direction: column; align-items: stretch; }
   .keyControls > * { margin: 3px 0; }
-  #keyTable th, #keyTable td { padding: 6px 3px; font-size: 11px; }
-  #keyTable th { font-size: 10px; }
+  #keyTable th, #keyTable td { padding: 5px 3px; font-size: 11px; }
+  #keyTable th { font-size: 10px; padding: 6px 3px; }
   #keyTable th:nth-child(1),#keyTable td:nth-child(1){width:15%;min-width:65px;} 
   #keyTable th:nth-child(2),#keyTable td:nth-child(2){width:18%;min-width:80px;} 
   #keyTable th:nth-child(3),#keyTable td:nth-child(3){width:20%;min-width:80px;} 
@@ -318,8 +340,12 @@ td:hover{background:#f8f9fa;}
   .key-action-btn { padding: 4px 8px; font-size: 10px; margin: 1px; }
   select, input, button { padding: 8px 10px; margin: 3px; font-size: 0.9em; }
   #keyItemHistory { padding: 6px; }
+  #keyItemHistory > div:first-child { flex-direction: column; align-items: flex-start; }
   #keyItemHistoryList { gap: 5px; }
-  .key-history-badge { font-size: 12px !important; padding: 5px 10px !important; }
+  .key-history-badge { font-size: 12px !important; padding: 6px 10px !important; gap: 4px !important; }
+  .key-history-badge input[type="checkbox"] { width: 14px !important; height: 14px !important; }
+  #selectedKeysCount { font-size: 11px !important; padding: 2px 8px !important; }
+  #clearSelectionBtn { font-size: 11px !important; padding: 3px 8px !important; }
   th:first-child { width: 50px; min-width: 40px; font-size: 0.7em; }
   .keyDateNavigation { padding: 10px !important; gap: 5px !important; }
   .keyDateNavigation button { padding: 6px 10px !important; font-size: 12px !important; }
@@ -343,8 +369,8 @@ td:hover{background:#f8f9fa;}
   select, input, button { padding: 6px 8px; margin: 2px; font-size: 0.85em; }
   th:first-child { width: 45px; min-width: 35px; font-size: 0.65em; }
   h2 { font-size: 1.2em; padding: 8px 10px; }
-  #keyTable th, #keyTable td { padding: 5px 2px; font-size: 10px; }
-  #keyTable th { font-size: 9px; }
+  #keyTable th, #keyTable td { padding: 4px 2px; font-size: 10px; }
+  #keyTable th { font-size: 9px; padding: 5px 2px; }
   #keyTable th:nth-child(1),#keyTable td:nth-child(1){width:15%;min-width:60px;} 
   #keyTable th:nth-child(2),#keyTable td:nth-child(2){width:18%;min-width:75px;} 
   #keyTable th:nth-child(3),#keyTable td:nth-child(3){width:20%;min-width:70px;} 
@@ -362,8 +388,8 @@ td:hover{background:#f8f9fa;}
   th, td { padding: 0.2em 0.05em; font-size: 0.65em; border-width: 0.5px; }
   .cell { min-height: 1.5em; font-size: 0.65em; padding: 0.08em; }
   #memberList li { font-size: 11px; padding: 3px 5px; }
-  #keyTable th, #keyTable td { padding: 4px 2px; font-size: 9px; }
-  #keyTable th { font-size: 8px; }
+  #keyTable th, #keyTable td { padding: 3px 2px; font-size: 9px; }
+  #keyTable th { font-size: 8px; padding: 4px 2px; }
   #keyTable th:nth-child(1),#keyTable td:nth-child(1){width:15%;min-width:55px;} 
   #keyTable th:nth-child(2),#keyTable td:nth-child(2){width:18%;min-width:70px;} 
   #keyTable th:nth-child(3),#keyTable td:nth-child(3){width:20%;min-width:65px;} 
@@ -395,8 +421,8 @@ td:hover{background:#f8f9fa;}
   .cell { min-height: 1.4em; font-size: 0.6em; padding: 0.05em; }
   th:first-child { width: 35px; min-width: 25px; font-size: 0.55em; }
   h2 { font-size: 1em; padding: 6px 6px; }
-  #keyTable th, #keyTable td { padding: 3px 1px; font-size: 8px; }
-  #keyTable th { font-size: 7px; }
+  #keyTable th, #keyTable td { padding: 2px 1px; font-size: 8px; }
+  #keyTable th { font-size: 7px; padding: 3px 1px; }
   #keyTable th:nth-child(1),#keyTable td:nth-child(1){width:15%;min-width:45px;} 
   #keyTable th:nth-child(2),#keyTable td:nth-child(2){width:18%;min-width:60px;} 
   #keyTable th:nth-child(3),#keyTable td:nth-child(3){width:20%;min-width:55px;} 
@@ -502,18 +528,12 @@ td:hover{background:#f8f9fa;}
 <table id="grid"></table>
 </div>
 
-<div id="memberList">
-  <h3>成員編號對照表</h3>
-  <ul id="memberListUl"></ul>
-</div>
-
 <div id="keyRecord">
-  <h3>鑰匙借出表簿</h3>
-  <details open style="background:#e3f2fd;padding:10px;border-radius:6px;margin-bottom:15px;border-left:4px solid #2196f3;font-size:13px;color:#1565c0;">
+  <details style="background:#e3f2fd;padding:10px;border-radius:6px;margin-bottom:15px;border-left:4px solid #2196f3;font-size:13px;color:#1565c0;">
     <summary style="cursor:pointer;font-weight:bold;user-select:none;list-style:none;display:flex;align-items:center;gap:5px;">
       <span style="font-size:16px;">📌</span>
       <span>使用說明</span>
-      <span style="font-size:10px;color:#6c757d;margin-left:auto;">(點擊收起/展開)</span>
+      <span style="font-size:10px;color:#6c757d;margin-left:auto;">(點擊展開/收起)</span>
     </summary>
     <ul style="margin:8px 0 0 20px;padding:0;line-height:1.8;">
       <li><strong>成員借出：</strong>點擊下方成員 → 輸入鑰匙項目 → 登記借出</li>
@@ -522,69 +542,117 @@ td:hover{background:#f8f9fa;}
       <li><strong>視覺標識：</strong>同業借出顯示橙色標籤和按鈕</li>
     </ul>
   </details>
+
+<div id="memberList">
+  <h3>成員編號對照表</h3>
+  <ul id="memberListUl"></ul>
+</div>
+  
+  <div style="text-align:center;margin-bottom:20px;position:relative;">
+    <div style="display:inline-block;background:linear-gradient(135deg,#ffc107 0%,#ff9800 100%);padding:15px 40px;border-radius:20px;box-shadow:0 8px 25px rgba(255,152,0,0.5);position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(45deg,rgba(255,255,255,0.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,0.15) 50%,rgba(255,255,255,0.15) 75%,transparent 75%,transparent);background-size:20px 20px;opacity:0.5;"></div>
+      <h3 style="margin:0;font-size:24px;font-weight:900;color:#000;text-shadow:0 2px 4px rgba(255,255,255,0.3);letter-spacing:2px;position:relative;z-index:1;display:flex;align-items:center;gap:10px;justify-content:center;">
+        <span style="font-size:28px;">🔑</span>
+        鑰匙借出表簿
+        <span style="font-size:28px;">🔑</span>
+      </h3>
+    </div>
+  </div>
   <div class="keyControls">
-    <div style="display:inline-flex;gap:5px;margin-bottom:10px;background:#f8f9fa;padding:4px 8px;border-radius:20px;border:1px solid #dee2e6;">
-      <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border-radius:15px;transition:all 0.2s;" class="borrow-type-label" data-type="member">
-        <input type="radio" name="borrowType" value="member" checked onchange="switchBorrowType('member')" style="cursor:pointer;">
-        <span style="font-weight:600;color:#495057;font-size:13px;">成員借出</span>
-      </label>
-      <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border-radius:15px;transition:all 0.2s;" class="borrow-type-label" data-type="colleague">
-        <input type="radio" name="borrowType" value="colleague" onchange="switchBorrowType('colleague')" style="cursor:pointer;">
-        <span style="font-weight:600;color:#495057;font-size:13px;">同業借出</span>
-      </label>
+    <div style="margin-bottom:15px;text-align:center;">
+      <div style="display:inline-block;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);padding:3px;border-radius:25px;box-shadow:0 4px 12px rgba(102,126,234,0.3);">
+        <div style="display:flex;gap:3px;background:#fff;padding:3px;border-radius:22px;">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:10px 20px;border-radius:18px;transition:all 0.3s;min-width:120px;justify-content:center;" class="borrow-type-label" data-type="member">
+            <input type="radio" name="borrowType" value="member" checked onchange="switchBorrowType('member')" style="display:none;">
+            <span style="font-weight:700;font-size:15px;">👤 成員借出</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:10px 20px;border-radius:18px;transition:all 0.3s;min-width:120px;justify-content:center;" class="borrow-type-label" data-type="colleague">
+            <input type="radio" name="borrowType" value="colleague" onchange="switchBorrowType('colleague')" style="display:none;">
+            <span style="font-weight:700;font-size:15px;">🏢 同業借出</span>
+          </label>
+        </div>
+      </div>
     </div>
     <div id="memberBorrowSection">
-      <span id="selectedMember">請點擊下方成員選擇借用人</span>
+      <div style="text-align:center;padding:20px 25px;background:linear-gradient(135deg,#fff3e0 0%,#ffe0b2 100%);border-radius:12px;border:2px dashed #ff9800;margin-bottom:10px;">
+        <span id="selectedMember" style="font-size:20px;font-weight:700;color:#f57c00;text-shadow:0 1px 2px rgba(245,124,0,0.2);display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:nowrap;white-space:nowrap;">
+          <span style="font-size:28px;animation:bounce 1s infinite;flex-shrink:0;">👆</span>
+          <span style="flex-shrink:0;">請點擊上方成員選擇借用人</span>
+          <span style="font-size:28px;animation:bounce 1s infinite;animation-delay:0.1s;flex-shrink:0;">👆</span>
+        </span>
+      </div>
     </div>
     <div id="colleagueBorrowSection" style="display:none;">
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;align-items:start;">
-        <div>
-          <select id="colleagueCompany" style="width:100%;padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:13px;" onchange="handleCompanyChange()">
-            <option value="">-- 選擇公司 --</option>
-            <option value="中信房屋">中信房屋</option>
-            <option value="21世紀">21世紀</option>
-            <option value="有巢氏">有巢氏</option>
-            <option value="台灣房屋">台灣房屋</option>
-            <option value="住商不動產">住商不動產</option>
-            <option value="永慶房屋">永慶房屋</option>
-            <option value="信義房屋">信義房屋</option>
-            <option value="東森房屋">東森房屋</option>
-            <option value="其它">其它...</option>
-          </select>
-          <div id="companyHistorySelect" style="margin-top:6px;display:none;">
-            <select id="colleagueHistoryDropdown" style="width:100%;padding:6px 8px;border:1px solid #ff9800;border-radius:6px;font-size:12px;background:linear-gradient(135deg,#fff3e0 0%,#ffe0b2 100%);color:#e65100;font-weight:500;" onchange="selectFromHistoryDropdown()">
-              <option value="">-- 常用記錄 --</option>
+      <div style="padding:15px;background:linear-gradient(135deg,#fff3e0 0%,#ffe0b2 100%);border-radius:12px;border:2px solid #ff9800;margin-bottom:10px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;align-items:start;">
+          <div>
+            <label style="display:block;margin-bottom:5px;font-size:12px;font-weight:bold;color:#e65100;">🏢 公司品牌</label>
+            <select id="colleagueCompany" style="width:100%;padding:9px 12px;border:2px solid #ff9800;border-radius:8px;font-size:13px;font-weight:500;background:#fff;transition:all 0.3s;" onchange="handleCompanyChange()" onfocus="this.style.borderColor='#f57c00';this.style.boxShadow='0 0 0 3px rgba(255,152,0,0.1)'" onblur="this.style.borderColor='#ff9800';this.style.boxShadow='none'">
+              <option value="">-- 選擇公司 --</option>
+              <option value="中信房屋">中信房屋</option>
+              <option value="21世紀">21世紀</option>
+              <option value="有巢氏">有巢氏</option>
+              <option value="台灣房屋">台灣房屋</option>
+              <option value="住商不動產">住商不動產</option>
+              <option value="永慶房屋">永慶房屋</option>
+              <option value="信義房屋">信義房屋</option>
+              <option value="東森房屋">東森房屋</option>
+              <option value="其它">其它...</option>
             </select>
+            <div id="companyHistorySelect" style="margin-top:6px;display:none;">
+              <select id="colleagueHistoryDropdown" style="width:100%;padding:7px 10px;border:1px solid #ff9800;border-radius:6px;font-size:12px;background:linear-gradient(135deg,#fff3e0 0%,#ffe0b2 100%);color:#e65100;font-weight:500;" onchange="selectFromHistoryDropdown()">
+                <option value="">-- 常用記錄 --</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label style="display:block;margin-bottom:5px;font-size:12px;font-weight:bold;color:#e65100;">👤 姓名/分店</label>
+            <input type="text" id="colleagueName" placeholder="輸入姓名或分店" style="width:100%;padding:9px 12px;border:2px solid #ff9800;border-radius:8px;font-size:13px;font-weight:500;background:#fff;transition:all 0.3s;" onfocus="this.style.borderColor='#f57c00';this.style.boxShadow='0 0 0 3px rgba(255,152,0,0.1)'" onblur="this.style.borderColor='#ff9800';this.style.boxShadow='none'">
+          </div>
+          <div>
+            <label style="display:block;margin-bottom:5px;font-size:12px;font-weight:bold;color:#e65100;">📱 電話號碼</label>
+            <input type="tel" id="colleaguePhone" placeholder="輸入電話" style="width:100%;padding:9px 12px;border:2px solid #ff9800;border-radius:8px;font-size:13px;font-weight:500;background:#fff;transition:all 0.3s;" onfocus="this.style.borderColor='#f57c00';this.style.boxShadow='0 0 0 3px rgba(255,152,0,0.1)'" onblur="this.style.borderColor='#ff9800';this.style.boxShadow='none'">
           </div>
         </div>
-        <input type="text" id="colleagueName" placeholder="姓名/分店" style="padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:13px;">
-        <input type="tel" id="colleaguePhone" placeholder="電話號碼" style="padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:13px;">
-      </div>
-      <div id="colleagueCustomInput" style="margin-top:8px;display:none;">
-        <input type="text" id="colleagueCustomCompany" placeholder="請輸入其它公司名稱" style="width:100%;padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:13px;">
+        <div id="colleagueCustomInput" style="margin-top:10px;display:none;">
+          <label style="display:block;margin-bottom:5px;font-size:12px;font-weight:bold;color:#e65100;">✏️ 自訂公司名稱</label>
+          <input type="text" id="colleagueCustomCompany" placeholder="請輸入其它公司名稱" style="width:100%;padding:9px 12px;border:2px solid #ff9800;border-radius:8px;font-size:13px;font-weight:500;background:#fff;transition:all 0.3s;" onfocus="this.style.borderColor='#f57c00';this.style.boxShadow='0 0 0 3px rgba(255,152,0,0.1)'" onblur="this.style.borderColor='#ff9800';this.style.boxShadow='none'">
+        </div>
       </div>
     </div>
-    <input type="text" id="keyItem" placeholder="輸入鑰匙項目或點擊下方記錄快速選擇" maxlength="50">
-    <button onclick="borrowKey()">登記借出</button>
-    <button onclick="clearKeyHistory()">清除歷史</button>
+    <div style="margin-top:15px;">
+      <div style="display:flex;gap:10px;align-items:stretch;flex-wrap:nowrap;">
+        <div style="flex:2;min-width:200px;">
+          <input type="text" id="keyItem" placeholder="🔑 輸入鑰匙項目或勾選下方常用項目" maxlength="50" style="width:100%;padding:15px 22px;border:2px solid #ced4da;border-radius:10px;font-size:18px;font-weight:500;transition:all 0.3s;box-shadow:0 2px 8px rgba(0,0,0,0.05);" onfocus="this.style.borderColor='#667eea';this.style.boxShadow='0 4px 16px rgba(102,126,234,0.2)'" onblur="this.style.borderColor='#ced4da';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.05)'">
+        </div>
+        <button onclick="borrowKey()" style="flex:1;min-width:100px;padding:15px 20px;background:linear-gradient(135deg,#28a745 0%,#20c997 100%);color:#fff;border:none;border-radius:10px;cursor:pointer;font-size:18px;font-weight:bold;box-shadow:0 4px 12px rgba(40,167,69,0.3);transition:all 0.3s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(40,167,69,0.4)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 12px rgba(40,167,69,0.3)'">✅ 登記借出</button>
+        <button onclick="clearKeyHistory()" style="flex:1;min-width:100px;padding:15px 18px;background:linear-gradient(135deg,#6c757d 0%,#5a6268 100%);color:#fff;border:none;border-radius:10px;cursor:pointer;font-size:17px;font-weight:bold;box-shadow:0 4px 12px rgba(108,117,125,0.3);transition:all 0.3s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(108,117,125,0.4)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 12px rgba(108,117,125,0.3)'">🗑️ 清除歷史</button>
+      </div>
+    </div>
   </div>
   <div id="keyItemHistory" style="margin-bottom:15px;padding:10px;background:#fff;border-radius:8px;border:1px solid #dee2e6;display:none;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-      <strong style="color:#495057;">📝 常用鑰匙項目（點擊快速選擇）</strong>
-      <button onclick="clearKeyItemHistory()" style="padding:4px 10px;font-size:12px;background:#dc3545;color:#fff;border:none;border-radius:4px;cursor:pointer;">清除記錄</button>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <strong style="color:#495057;">📝 常用鑰匙項目（勾選紅色表示已選）</strong>
+        <span id="selectedKeysCount" style="font-size:13px;color:#f44336;font-weight:bold;background:#ffebee;padding:3px 10px;border-radius:12px;display:none;">已選 0 項</span>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button onclick="clearKeySelection()" id="clearSelectionBtn" style="padding:4px 10px;font-size:12px;background:#6c757d;color:#fff;border:none;border-radius:4px;cursor:pointer;display:none;">清除選擇</button>
+        <button onclick="clearKeyItemHistory()" style="padding:4px 10px;font-size:12px;background:#dc3545;color:#fff;border:none;border-radius:4px;cursor:pointer;">清除記錄</button>
+      </div>
     </div>
     <div id="keyItemHistoryList" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
   </div>
   <div class="dutyControls" style="display:flex;flex-direction:column;gap:8px;">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
-      <span id="dutyMember">值班人員：載入中...</span>
+      <span id="dutyMember" style="font-size:17px;font-weight:500;">值班人員：載入中...</span>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button onclick="quickSetTodayDuty()" style="padding:6px 12px;font-size:13px;background:linear-gradient(135deg,#ff9800 0%,#f57c00 100%);color:#fff;border:none;border-radius:6px;cursor:pointer;white-space:nowrap;">👥 臨時代班設定</button>
-        <button onclick="clearTempDuty()" id="clearTempBtn" style="padding:6px 12px;font-size:13px;background:linear-gradient(135deg,#dc3545 0%,#c82333 100%);color:#fff;border:none;border-radius:6px;cursor:pointer;white-space:nowrap;display:none;">❌ 取消代班</button>
-        <button onclick="showDebugInfo()" style="padding:6px 12px;font-size:13px;background:linear-gradient(135deg,#6c757d 0%,#5a6268 100%);color:#fff;border:none;border-radius:6px;cursor:pointer;white-space:nowrap;">🔍 查看排班數據</button>
+        <button onclick="quickSetTodayDuty()" style="padding:10px 18px;font-size:16px;background:linear-gradient(135deg,#ff9800 0%,#f57c00 100%);color:#fff;border:none;border-radius:8px;cursor:pointer;white-space:nowrap;font-weight:600;">👥 臨時代班設定</button>
+        <button onclick="clearTempDuty()" id="clearTempBtn" style="padding:10px 18px;font-size:16px;background:linear-gradient(135deg,#dc3545 0%,#c82333 100%);color:#fff;border:none;border-radius:8px;cursor:pointer;white-space:nowrap;display:none;font-weight:600;">❌ 取消代班</button>
+        <button onclick="showDebugInfo()" style="padding:10px 18px;font-size:16px;background:linear-gradient(135deg,#6c757d 0%,#5a6268 100%);color:#fff;border:none;border-radius:8px;cursor:pointer;white-space:nowrap;font-weight:600;">🔍 查看排班數據</button>
       </div>
     </div>
-    <div id="dutyHint" style="font-size:12px;color:#6c757d;display:none;">💡 提示：請先在上方排班表中點擊今天的日期格子，選擇值班人員完成排班</div>
+    <div id="dutyHint" style="font-size:14px;color:#6c757d;display:none;">💡 提示：請先在上方排班表中點擊今天的日期格子，選擇值班人員完成排班</div>
   </div>
   <div class="keyDateNavigation" style="margin-bottom:15px;padding:15px;background:#fff;border-radius:8px;border:1px solid #dee2e6;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
     <button onclick="changeViewDate(-1)" style="padding:8px 16px;background:linear-gradient(135deg,#6c757d 0%,#5a6268 100%);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;">← 前一天</button>
@@ -637,6 +705,9 @@ let currentViewDate = new Date();
 
 // 記錄上次檢查的日期
 let lastCheckedDate = new Date();
+
+// 已選擇的鑰匙項目
+let selectedKeyItems = new Set();
 
 // 聯絡電話資料
 const CONTACT_PHONES = {
@@ -920,22 +991,25 @@ function bindEvents(){
         // 再點同一人 → 清空
         delete data[key];
       }else if(currentMember){
-        // 已有人排班 → 確認換班
+        // 已有人排班 → 需要密碼驗證後才能換班
         const memberName = MEMBERS.find(m=>m.id===member)?.name || member;
         const currentMemberName = MEMBERS.find(m=>m.id===currentMember)?.name || currentMember;
-        showConfirmModal(
-          '🔄 確認換班',
-          `確定要將「${currentMemberName}」換成「${memberName}」嗎？`,
-          '此操作會覆蓋原有的排班',
+        
+        // 先驗證密碼
+        showPasswordForShiftChange(
+          currentMemberName,
+          memberName,
           () => {
+            // 密碼驗證成功後執行換班
             data[key]=member;
             localStorage.setItem(STORE_KEY,JSON.stringify(data));
             hydrate();
             renderMemberList(); // 更新成員統計
             updateDutyMember(); // 更新值班人員
+            showCustomAlert(`✅ 已將「${currentMemberName}」換成「${memberName}」`, 'success');
           }
         );
-        return; // 等待確認後再執行
+        return; // 等待驗證後再執行
       }else{
         // 空班別 → 直接排班
         data[key]=member;
@@ -1929,17 +2003,43 @@ function selectMember(member){
   
   selectedMember = member;
   
-  // 更新顯示
-  const selectedMemberSpan = document.getElementById('selectedMember');
-  selectedMemberSpan.textContent = `已選擇: ${member.id} ${member.name}`;
-  selectedMemberSpan.style.color = '#007bff';
-  selectedMemberSpan.style.fontWeight = 'bold';
+  // 更新顯示 - 改為醒目的成功狀態
+  const memberSection = document.getElementById('memberBorrowSection');
+  memberSection.innerHTML = `
+    <div style="text-align:center;padding:16px 20px;background:linear-gradient(135deg,#d4edda 0%,#c3e6cb 100%);border-radius:12px;border:2px solid #28a745;margin-bottom:10px;box-shadow:0 4px 12px rgba(40,167,69,0.2);cursor:pointer;transition:all 0.3s;" onclick="clearMemberSelection()" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 16px rgba(40,167,69,0.3)';" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 12px rgba(40,167,69,0.2)';">
+      <div style="font-size:17px;font-weight:700;color:#155724;display:flex;align-items:center;justify-content:center;gap:10px;">
+        <span style="font-size:26px;">✅</span>
+        已選擇：${member.id} ${member.name}
+        <span style="font-size:26px;">✅</span>
+      </div>
+    </div>
+  `;
   
   // 重新渲染成員清單以更新選中狀態
   renderMemberList();
   
   // 自動聚焦到鑰匙輸入框
   document.getElementById('keyItem').focus();
+}
+
+// 清除成員選擇
+function clearMemberSelection() {
+  selectedMember = null;
+  
+  // 恢復原始提示
+  const memberSection = document.getElementById('memberBorrowSection');
+  memberSection.innerHTML = `
+    <div style="text-align:center;padding:12px;background:linear-gradient(135deg,#fff3e0 0%,#ffe0b2 100%);border-radius:12px;border:2px dashed #ff9800;margin-bottom:10px;">
+      <span id="selectedMember" style="font-size:16px;font-weight:700;color:#f57c00;text-shadow:0 1px 2px rgba(245,124,0,0.2);display:inline-flex;align-items:center;gap:8px;">
+        <span style="font-size:24px;animation:bounce 1s infinite;">👆</span>
+        請點擊上方成員選擇借用人
+        <span style="font-size:24px;animation:bounce 1s infinite;animation-delay:0.1s;">👆</span>
+      </span>
+    </div>
+  `;
+  
+  // 重新渲染成員清單
+  renderMemberList();
 }
 
 // 檢查日期是否已經變更（跨日檢測）
@@ -2067,74 +2167,16 @@ function initKeyRecord(){
   });
 }
 
-// 過濾鑰匙項目歷史記錄
+// 過濾鑰匙項目歷史記錄（保持多選功能）
 function filterKeyItemHistory(searchText) {
-  const history = getKeyItemHistory();
-  const historyList = document.getElementById('keyItemHistoryList');
-  const historyContainer = document.getElementById('keyItemHistory');
-  
-  if (!historyList) return;
-  
-  historyList.innerHTML = '';
-  
-  // 如果沒有輸入，顯示所有記錄
-  const filteredHistory = searchText.trim() === '' 
-    ? history 
-    : history.filter(item => item.toLowerCase().includes(searchText.toLowerCase()));
-  
-  if (filteredHistory.length === 0) {
+  // 輸入時暫時隱藏歷史記錄（避免干擾）
+  // 當輸入為空時重新渲染
+  if (searchText.trim() === '') {
+    renderKeyItemHistory();
+  } else {
+    const historyContainer = document.getElementById('keyItemHistory');
     historyContainer.style.display = 'none';
-    return;
   }
-  
-  historyContainer.style.display = 'block';
-  
-  filteredHistory.forEach((item, index) => {
-    const badge = document.createElement('div');
-    badge.className = 'key-history-badge';
-    
-    // 高亮顯示匹配的文字
-    if (searchText.trim() !== '') {
-      const regex = new RegExp(`(${searchText})`, 'gi');
-      badge.innerHTML = item.replace(regex, '<span style="background:#ffc107;font-weight:bold;">$1</span>');
-    } else {
-      badge.textContent = item;
-    }
-    
-    badge.onclick = () => selectKeyItem(item);
-    
-    // 樣式
-    badge.style.cssText = `
-      padding: 8px 14px;
-      background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-      border: 1px solid #2196f3;
-      border-radius: 20px;
-      cursor: pointer;
-      transition: all 0.2s;
-      font-size: 14px;
-      color: #1565c0;
-      font-weight: 500;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      user-select: none;
-    `;
-    
-    // 懸停效果
-    badge.onmouseenter = function() {
-      this.style.background = 'linear-gradient(135deg, #2196f3 0%, #1976d2 100%)';
-      this.style.color = '#fff';
-      this.style.transform = 'translateY(-2px)';
-      this.style.boxShadow = '0 3px 8px rgba(33,150,243,0.3)';
-    };
-    
-    badge.onmouseleave = function() {
-      this.style.background = 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)';
-      this.style.color = '#1565c0';
-      this.style.transform = 'translateY(0)';
-      this.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
-    };
-    
-    historyList.appendChild(badge);
-  });
 }
 
 // 獲取鑰匙項目歷史記錄
@@ -2164,7 +2206,7 @@ function saveKeyItemToHistory(keyItem) {
   renderKeyItemHistory();
 }
 
-// 渲染鑰匙項目歷史記錄
+// 渲染鑰匙項目歷史記錄（支持多選）
 function renderKeyItemHistory() {
   const history = getKeyItemHistory();
   const historyList = document.getElementById('keyItemHistoryList');
@@ -2180,16 +2222,15 @@ function renderKeyItemHistory() {
   }
   
   history.forEach((item, index) => {
-    const badge = document.createElement('div');
+    const badge = document.createElement('label');
     badge.className = 'key-history-badge';
-    badge.textContent = item;
-    badge.onclick = () => selectKeyItem(item);
-    
-    // 樣式
     badge.style.cssText = `
-      padding: 8px 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
       background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-      border: 1px solid #2196f3;
+      border: 2px solid #2196f3;
       border-radius: 20px;
       cursor: pointer;
       transition: all 0.2s;
@@ -2200,38 +2241,229 @@ function renderKeyItemHistory() {
       user-select: none;
     `;
     
+    // 創建復選框
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.value = item;
+    checkbox.style.cssText = `
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+      accent-color: #2196f3;
+    `;
+    checkbox.onchange = () => toggleKeySelection(item, checkbox.checked, badge);
+    
+    // 如果已經被選中，設置狀態
+    if (selectedKeyItems.has(item)) {
+      checkbox.checked = true;
+      badge.style.background = 'linear-gradient(135deg, #f44336 0%, #e53935 100%)';
+      badge.style.color = '#fff';
+      badge.style.borderColor = '#d32f2f';
+      badge.style.boxShadow = '0 3px 8px rgba(244,67,54,0.4)';
+    }
+    
+    const text = document.createElement('span');
+    text.textContent = item;
+    
+    badge.appendChild(checkbox);
+    badge.appendChild(text);
+    
     // 懸停效果
     badge.onmouseenter = function() {
-      this.style.background = 'linear-gradient(135deg, #2196f3 0%, #1976d2 100%)';
-      this.style.color = '#fff';
-      this.style.transform = 'translateY(-2px)';
-      this.style.boxShadow = '0 3px 8px rgba(33,150,243,0.3)';
+      if (!checkbox.checked) {
+        this.style.background = 'linear-gradient(135deg, #bbdefb 0%, #90caf9 100%)';
+        this.style.transform = 'translateY(-2px)';
+        this.style.boxShadow = '0 3px 8px rgba(33,150,243,0.3)';
+      }
     };
     
     badge.onmouseleave = function() {
-      this.style.background = 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)';
-      this.style.color = '#1565c0';
-      this.style.transform = 'translateY(0)';
-      this.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+      if (!checkbox.checked) {
+        this.style.background = 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)';
+        this.style.transform = 'translateY(0)';
+        this.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+      }
     };
     
     historyList.appendChild(badge);
   });
+  
+  // 更新選擇數量顯示
+  updateSelectedKeysDisplay();
 }
 
-// 選擇歷史記錄中的鑰匙項目
+// 切換鑰匙選擇
+function toggleKeySelection(item, isChecked, badge) {
+  if (isChecked) {
+    selectedKeyItems.add(item);
+    // 選中時變紅色
+    badge.style.background = 'linear-gradient(135deg, #f44336 0%, #e53935 100%)';
+    badge.style.color = '#fff';
+    badge.style.borderColor = '#d32f2f';
+    badge.style.boxShadow = '0 3px 8px rgba(244,67,54,0.4)';
+  } else {
+    selectedKeyItems.delete(item);
+    // 取消選中時恢復藍色
+    badge.style.background = 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)';
+    badge.style.color = '#1565c0';
+    badge.style.borderColor = '#2196f3';
+    badge.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+  }
+  
+  updateSelectedKeysDisplay();
+}
+
+// 更新已選擇鑰匙數量顯示
+function updateSelectedKeysDisplay() {
+  const count = selectedKeyItems.size;
+  const countSpan = document.getElementById('selectedKeysCount');
+  const clearBtn = document.getElementById('clearSelectionBtn');
+  
+  if (count > 0) {
+    if (countSpan) {
+      countSpan.textContent = `已選 ${count} 項`;
+      countSpan.style.display = 'inline-block';
+    }
+    if (clearBtn) clearBtn.style.display = 'inline-block';
+  } else {
+    if (countSpan) countSpan.style.display = 'none';
+    if (clearBtn) clearBtn.style.display = 'none';
+  }
+}
+
+// 清除選擇
+function clearKeySelection() {
+  selectedKeyItems.clear();
+  
+  // 取消所有復選框的選中狀態
+  const checkboxes = document.querySelectorAll('#keyItemHistoryList input[type="checkbox"]');
+  checkboxes.forEach(cb => {
+    cb.checked = false;
+    const badge = cb.closest('.key-history-badge');
+    if (badge) {
+      badge.style.background = 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)';
+      badge.style.color = '#1565c0';
+      badge.style.borderColor = '#2196f3';
+      badge.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+    }
+  });
+  
+  updateSelectedKeysDisplay();
+}
+
+// 執行批量借出
+function executeBatchBorrow() {
+  if (selectedKeyItems.size === 0) {
+    showCustomAlert('請先選擇要借出的鑰匙項目', 'error');
+    return;
+  }
+  
+  // 檢查借用人
+  let borrowerInfo = {};
+  
+  if(currentBorrowType === 'member') {
+    if(!selectedMember){
+      showCustomAlert('請先點擊上方成員選擇借用人', 'error');
+      return;
+    }
+    borrowerInfo = {
+      type: 'member',
+      memberId: selectedMember.id,
+      memberName: selectedMember.name,
+      displayName: `${selectedMember.id} ${selectedMember.name}`
+    };
+  } else {
+    const companySelect = document.getElementById('colleagueCompany');
+    const colleagueName = document.getElementById('colleagueName').value.trim();
+    const colleaguePhone = document.getElementById('colleaguePhone').value.trim();
+    const customCompany = document.getElementById('colleagueCustomCompany').value.trim();
+    
+    let companyName = companySelect.value;
+    
+    if (companyName === '其它') {
+      if (!customCompany) {
+        showCustomAlert('請輸入其它公司名稱', 'error');
+        return;
+      }
+      companyName = customCompany;
+    }
+    
+    if (!companyName) {
+      showCustomAlert('請選擇公司', 'error');
+      return;
+    }
+    
+    if (!colleagueName) {
+      showCustomAlert('請輸入姓名/分店', 'error');
+      return;
+    }
+    
+    const fullName = `${companyName} ${colleagueName}`;
+    const displayWithPhone = colleaguePhone ? `${fullName} (${colleaguePhone})` : fullName;
+    
+    borrowerInfo = {
+      type: 'colleague',
+      colleagueName: fullName,
+      colleaguePhone: colleaguePhone || '',
+      displayName: displayWithPhone
+    };
+  }
+  const now = new Date();
+  const timeStr = `${now.getMonth()+1}/${now.getDate()} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+  const records = JSON.parse(localStorage.getItem(KEY_RECORD_KEY) || '[]');
+  
+  // 將所有選中的鑰匙項目合併成一筆記錄
+  const allKeyItems = Array.from(selectedKeyItems).join('、');
+  const itemCount = selectedKeyItems.size;
+  
+  const keyRecord = {
+    id: Date.now(),
+    time: timeStr,
+    borrowerType: borrowerInfo.type,
+    memberId: borrowerInfo.memberId || null,
+    memberName: borrowerInfo.memberName || null,
+    colleagueName: borrowerInfo.colleagueName || null,
+    colleaguePhone: borrowerInfo.colleaguePhone || null,
+    displayName: borrowerInfo.displayName,
+    keyItem: allKeyItems, // 所有項目用頓號分隔
+    itemCount: itemCount, // 記錄項目數量
+    status: 'borrowed',
+    borrowTime: now.toISOString(),
+    dutyConfirmed: false,
+    dutyConfirmedBy: null,
+    dutyConfirmedTime: null
+  };
+  
+  records.push(keyRecord);
+  localStorage.setItem(KEY_RECORD_KEY, JSON.stringify(records));
+  
+  // 保存所有鑰匙項目到歷史記錄
+  selectedKeyItems.forEach(item => {
+    saveKeyItemToHistory(item);
+  });
+  
+  // 如果是同業借出，保存到歷史
+  if(currentBorrowType === 'colleague' && borrowerInfo.colleagueName) {
+    saveColleagueToHistory(borrowerInfo.colleagueName, borrowerInfo.colleaguePhone);
+  }
+  
+  // 清除選擇
+  clearKeySelection();
+  
+  // 清理舊記錄
+  cleanOldRecords();
+  
+  // 切換到今天的記錄
+  currentViewDate = new Date();
+  renderKeyTable();
+  
+  showCustomAlert(`✅ 已為「${borrowerInfo.displayName}」登記 ${itemCount} 項鑰匙`, 'success');
+}
+
+// 選擇歷史記錄中的鑰匙項目（單個填入輸入框 - 已移除，改用多選）
 function selectKeyItem(item) {
-  const keyItemInput = document.getElementById('keyItem');
-  keyItemInput.value = item;
-  keyItemInput.focus();
-  
-  // 添加選中動畫效果
-  keyItemInput.style.background = '#e3f2fd';
-  setTimeout(() => {
-    keyItemInput.style.background = '#fff';
-  }, 300);
-  
-  showCustomAlert(`✅ 已選擇：${item}`, 'success');
+  // 此功能已整合到多選，不再使用
+  // 現在通過勾選復選框來選擇項目
 }
 
 // 清除鑰匙項目歷史記錄
@@ -2242,6 +2474,7 @@ function clearKeyItemHistory() {
     '這不會影響借出記錄，只會清除快速選擇列表',
     () => {
       localStorage.removeItem(KEY_HISTORY_KEY);
+      selectedKeyItems.clear(); // 同時清除選擇
       renderKeyItemHistory();
       showCustomAlert('✅ 已清除鑰匙項目記錄', 'success');
     }
@@ -2916,10 +3149,17 @@ function cleanOldRecords() {
 }
 
 function borrowKey(){
+  // 檢查是否有選中的鑰匙項目（批量模式）
+  if(selectedKeyItems.size > 0) {
+    executeBatchBorrow();
+    return;
+  }
+  
+  // 單個登記模式
   const keyItem = document.getElementById('keyItem').value.trim();
   
   if(!keyItem){
-    showCustomAlert('請輸入鑰匙項目', 'error');
+    showCustomAlert('請輸入鑰匙項目或勾選常用項目', 'error');
     return;
   }
   
@@ -2928,7 +3168,7 @@ function borrowKey(){
   if(currentBorrowType === 'member') {
     // 成員借出
     if(!selectedMember){
-      showCustomAlert('請先點擊下方成員選擇借用人', 'error');
+      showCustomAlert('請先點擊上方成員選擇借用人', 'error');
       return;
     }
     borrowerInfo = {
@@ -3019,6 +3259,11 @@ function borrowKey(){
     document.getElementById('companyHistorySelect').style.display = 'none';
   }
   
+  // 清除選擇的鑰匙項目（如果有）
+  if(selectedKeyItems.size > 0) {
+    clearKeySelection();
+  }
+  
   // 清理舊記錄
   cleanOldRecords();
   
@@ -3080,13 +3325,15 @@ function renderKeyTable(){
     const row = document.createElement('tr');
     
     const timeCell = document.createElement('td');
+    timeCell.className = 'auto-size';
     if(record.status === 'returned' && record.returnTimeStr){
-      timeCell.innerHTML = `<div style="font-size:11px;line-height:1.3;">借:${record.time}</div><div style="font-size:11px;line-height:1.3;color:#666;">還:${record.returnTimeStr}</div>`;
+      timeCell.innerHTML = `<div>借:${record.time}</div><div style="color:#666;">還:${record.returnTimeStr}</div>`;
     }else{
-      timeCell.innerHTML = `<div style="font-size:11px;">${record.time}</div>`;
+      timeCell.innerHTML = `<div>${record.time}</div>`;
     }
     
     const memberCell = document.createElement('td');
+    memberCell.className = 'auto-size';
     // 處理新舊格式的兼容
     const borrowerType = record.borrowerType || 'member';
     
@@ -3094,11 +3341,11 @@ function renderKeyTable(){
       // 同業借出
       const colleagueName = record.colleagueName || record.displayName;
       const colleaguePhone = record.colleaguePhone;
-      let displayHtml = `<div style="font-size:11px;"><span style="background:linear-gradient(135deg,#ff9800 0%,#f57c00 100%);color:#fff;padding:2px 6px;border-radius:10px;font-size:10px;font-weight:bold;display:inline-block;margin-bottom:2px;">同業</span>`;
-      displayHtml += `<div style="font-size:11px;color:#495057;word-break:break-word;">${colleagueName}</div>`;
+      let displayHtml = `<div><span style="background:linear-gradient(135deg,#ff9800 0%,#f57c00 100%);color:#fff;padding:2px 6px;border-radius:10px;font-size:10px;font-weight:bold;display:inline-block;margin-bottom:2px;">同業</span>`;
+      displayHtml += `<div style="color:#495057;word-break:break-word;">${colleagueName}</div>`;
       
       if(colleaguePhone) {
-        displayHtml += `<div style="font-size:10px;color:#ff9800;margin-top:2px;cursor:pointer;" onclick="showColleaguePhone('${colleaguePhone}', '${colleagueName}')">📞 ${colleaguePhone}</div>`;
+        displayHtml += `<div style="color:#ff9800;margin-top:2px;cursor:pointer;" onclick="showColleaguePhone('${colleaguePhone}', '${colleagueName}')">📞 ${colleaguePhone}</div>`;
       }
       
       displayHtml += `</div>`;
@@ -3110,24 +3357,29 @@ function renderKeyTable(){
       const phone = CONTACT_PHONES[memberId];
       
       if(phone){
-        memberCell.innerHTML = `<div style="font-size:11px;"><span style="cursor:pointer;color:#007bff;text-decoration:underline;" onclick="showPhone('${memberId}', '${memberName}')">${memberId} ${memberName}</span></div>`;
+        memberCell.innerHTML = `<div><span style="cursor:pointer;color:#007bff;text-decoration:underline;" onclick="showPhone('${memberId}', '${memberName}')">${memberId} ${memberName}</span></div>`;
       }else{
-        memberCell.innerHTML = `<div style="font-size:11px;">${memberId} ${memberName}</div>`;
+        memberCell.innerHTML = `<div>${memberId} ${memberName}</div>`;
       }
     }
     
     const keyCell = document.createElement('td');
-    keyCell.innerHTML = `<div style="font-size:11px;word-break:break-word;">${record.keyItem}</div>`;
+    keyCell.className = 'auto-size';
+    const itemCount = record.itemCount || 0;
+    const itemCountBadge = itemCount > 1 ? `<span style="background:#17a2b8;color:#fff;padding:2px 6px;border-radius:10px;font-size:10px;font-weight:bold;margin-left:4px;white-space:nowrap;">×${itemCount}</span>` : '';
+    keyCell.innerHTML = `<div style="word-break:break-word;line-height:1.5;">${record.keyItem}${itemCountBadge}</div>`;
     
     const statusCell = document.createElement('td');
-    statusCell.innerHTML = `<div style="font-size:11px;font-weight:bold;">${record.status === 'borrowed' ? '借出中' : '已歸還'}</div>`;
-    statusCell.className = `status-${record.status}`;
+    statusCell.className = 'auto-size';
+    statusCell.innerHTML = `<div style="font-weight:bold;">${record.status === 'borrowed' ? '借出中' : '已歸還'}</div>`;
+    statusCell.className += ` status-${record.status}`;
     
     const dutyCell = document.createElement('td');
+    dutyCell.className = 'auto-size';
     const isColleague = borrowerType === 'colleague';
     
     if(record.status === 'returned' && record.dutyConfirmed){
-      dutyCell.innerHTML = `<div style="font-size:11px;">✅ 已確認</div><div style="font-size:10px;color:#666;margin-top:2px;">${record.dutyConfirmedBy}</div>`;
+      dutyCell.innerHTML = `<div>✅ 已確認</div><div style="color:#666;margin-top:2px;">${record.dutyConfirmedBy}</div>`;
       dutyCell.style.background = '#d4edda';
     }else if(record.status === 'returned' && !record.dutyConfirmed){
       const buttonStyle = isColleague ? 
@@ -3139,10 +3391,10 @@ function renderKeyTable(){
       }
     }else{
       if(isColleague && record.status === 'borrowed') {
-        dutyCell.innerHTML = '<div style="font-size:10px;color:#ff9800;font-weight:bold;">待歸還</div>';
+        dutyCell.innerHTML = '<div style="color:#ff9800;font-weight:bold;">待歸還</div>';
         dutyCell.style.background = '#fff3e0';
       } else {
-        dutyCell.innerHTML = '<div style="font-size:11px;color:#999;">-</div>';
+        dutyCell.innerHTML = '<div style="color:#999;">-</div>';
       }
     }
     
@@ -3175,6 +3427,137 @@ function renderKeyTable(){
     row.appendChild(actionCell);
     
     tbody.appendChild(row);
+  });
+  
+  // 渲染完成後自動調整文字大小
+  setTimeout(() => {
+    optimizeKeyTableTextSize();
+  }, 100);
+}
+
+// 優化鑰匙表格文字大小 - 智能自適應算法
+function optimizeKeyTableTextSize() {
+  const table = document.getElementById('keyTable');
+  if (!table) return;
+  
+  const rows = table.querySelectorAll('tbody tr');
+  const windowWidth = window.innerWidth;
+  
+  // 根據視窗大小設定基礎字體範圍
+  let baseMin, baseMax;
+  if (windowWidth >= 1200) {
+    baseMin = 11; baseMax = 16;
+  } else if (windowWidth >= 768) {
+    baseMin = 10; baseMax = 14;
+  } else if (windowWidth >= 480) {
+    baseMin = 9; baseMax = 12;
+  } else {
+    baseMin = 8; baseMax = 10;
+  }
+  
+  rows.forEach(row => {
+    const cells = row.querySelectorAll('td');
+    
+    cells.forEach((cell, index) => {
+      // 跳過操作按鈕欄位（最後一欄）
+      if (index === cells.length - 1) return;
+      
+      const contentDiv = cell.querySelector('div');
+      if (!contentDiv) return;
+      
+      const cellWidth = cell.offsetWidth;
+      const cellHeight = cell.offsetHeight;
+      
+      // 根據視窗大小動態調整padding
+      let padding;
+      if (windowWidth >= 768) {
+        padding = 8;
+      } else if (windowWidth >= 480) {
+        padding = 6;
+      } else if (windowWidth >= 360) {
+        padding = 4;
+      } else {
+        padding = 2;
+      }
+      
+      const availableWidth = Math.max(20, cellWidth - padding);
+      
+      // 獲取純文字內容（不含HTML標籤和符號）
+      const text = contentDiv.textContent || contentDiv.innerText || '';
+      const textLength = text.length;
+      const hasMultipleLines = contentDiv.children.length > 1;
+      
+      // 計算理想字體大小：根據可用寬度和字數
+      // 假設每個字符平均寬度約為字體大小的 0.6-0.8 倍（中文）
+      const estimatedCharWidth = 0.7;
+      
+      let fontSize;
+      
+      if (index === 0) {
+        // 時間欄位 - 固定格式
+        if (hasMultipleLines) {
+          // 兩行時間，每行約10字符
+          fontSize = Math.max(baseMin - 1, Math.min(baseMax - 2, availableWidth / (10 * estimatedCharWidth)));
+        } else {
+          // 單行時間
+          fontSize = Math.max(baseMin, Math.min(baseMax - 1, availableWidth / (10 * estimatedCharWidth)));
+        }
+      } else if (index === 1) {
+        // 借用人欄位 - 內容少時放大，多時縮小
+        const effectiveLength = Math.max(6, textLength);
+        fontSize = Math.max(baseMin, Math.min(baseMax + 1, availableWidth / (effectiveLength * estimatedCharWidth)));
+        
+        // 確保單行短文字可以顯示大字體
+        if (textLength <= 8 && !hasMultipleLines) {
+          fontSize = Math.min(baseMax + 2, fontSize);
+        }
+      } else if (index === 2) {
+        // 鑰匙項目欄位 - 根據字數精確計算
+        const itemCount = text.split('、').length;
+        
+        // 根據總字數計算最佳字體大小
+        const effectiveLength = Math.max(5, textLength);
+        fontSize = Math.max(baseMin - 1, Math.min(baseMax, availableWidth / (effectiveLength * estimatedCharWidth * 1.1)));
+        
+        // 根據項目數量微調
+        if (itemCount === 1 && textLength <= 6) {
+          // 單項且很短：使用大字體
+          fontSize = Math.min(baseMax + 1, fontSize * 1.2);
+        } else if (itemCount >= 5) {
+          // 多項：適當縮小
+          fontSize = fontSize * 0.85;
+        }
+      } else if (index === 3) {
+        // 狀態欄位 - 固定3-4字
+        fontSize = Math.max(baseMin, Math.min(baseMax, availableWidth / (4 * estimatedCharWidth)));
+      } else if (index === 4) {
+        // 值班確認欄位
+        const effectiveLength = Math.max(4, textLength);
+        fontSize = Math.max(baseMin - 1, Math.min(baseMax - 1, availableWidth / (effectiveLength * estimatedCharWidth * 0.9)));
+        
+        if (hasMultipleLines) {
+          fontSize = fontSize * 0.9; // 多行時稍微縮小
+        }
+      }
+      
+      // 應用字體大小
+      if (fontSize) {
+        contentDiv.style.fontSize = `${Math.round(fontSize)}px`;
+        
+        // 子元素使用稍小的字體
+        const childDivs = contentDiv.querySelectorAll('div');
+        childDivs.forEach(child => {
+          child.style.fontSize = `${Math.round(fontSize * 0.9)}px`;
+        });
+        
+        // 特殊標籤保持固定小尺寸
+        const badges = contentDiv.querySelectorAll('span[style*="background"]');
+        badges.forEach(badge => {
+          const badgeSize = Math.max(9, Math.min(11, fontSize * 0.75));
+          badge.style.fontSize = `${Math.round(badgeSize)}px`;
+        });
+      }
+    });
   });
 }
 
@@ -3360,6 +3743,148 @@ function showConfirmModal(title, message, detail, onConfirm) {
     if(onConfirm) onConfirm();
     document.removeEventListener('keydown', escHandler);
   };
+}
+
+// 換班密碼驗證彈窗
+function showPasswordForShiftChange(fromMember, toMember, onSuccess) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.75);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: fadeIn 0.3s;
+  `;
+  
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    max-width: 450px;
+    width: 100%;
+    padding: 0;
+    overflow: hidden;
+    animation: slideIn 0.3s;
+  `;
+  
+  modal.innerHTML = `
+    <div style="background:#fff;padding:40px 30px;">
+      <div style="text-align:center;margin-bottom:30px;">
+        <div style="width:80px;height:80px;margin:0 auto 20px;background:linear-gradient(135deg,#f093fb 0%,#f5576c 100%);border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 30px rgba(245,87,108,0.3);">
+          <span style="font-size:40px;">🔄</span>
+        </div>
+        <h3 style="margin:0 0 10px;font-size:24px;color:#333;font-weight:bold;">換班驗證</h3>
+        <p style="margin:0 0 15px;color:#6c757d;font-size:14px;">請由秘書/主管輸入密碼</p>
+        <div style="background:#fff3cd;padding:12px;border-radius:8px;border-left:4px solid #ffc107;">
+          <div style="font-size:13px;color:#856404;text-align:left;">
+            <strong>換班內容：</strong><br>
+            <span style="color:#dc3545;">「${fromMember}」</span> 
+            <span style="margin:0 5px;">→</span> 
+            <span style="color:#28a745;">「${toMember}」</span>
+          </div>
+        </div>
+      </div>
+      
+      <div style="margin-bottom:25px;">
+        <input type="password" id="shiftChangePasswordInput" placeholder="請輸入密碼" 
+          style="width:100%;padding:15px 20px;border:2px solid #e9ecef;border-radius:12px;font-size:18px;text-align:center;letter-spacing:4px;transition:all 0.3s;box-sizing:border-box;"
+          maxlength="10"
+          onkeypress="if(event.key==='Enter') verifyShiftChangePassword(this.closest('.modal-overlay'))"
+          onfocus="this.style.borderColor='#f5576c';this.style.boxShadow='0 0 0 4px rgba(245,87,108,0.1)';"
+          onblur="this.style.borderColor='#e9ecef';this.style.boxShadow='none';"
+        >
+      </div>
+      
+      <div style="display:flex;gap:12px;">
+        <button onclick="verifyShiftChangePassword(this.closest('.modal-overlay'))" 
+          style="flex:1;padding:14px;background:linear-gradient(135deg,#f093fb 0%,#f5576c 100%);color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:bold;cursor:pointer;transition:all 0.3s;box-shadow:0 4px 15px rgba(245,87,108,0.4);"
+          onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(245,87,108,0.5)';"
+          onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 15px rgba(245,87,108,0.4)';">
+          ✓ 確認換班
+        </button>
+        <button onclick="closeModal(this.closest('.modal-overlay'))" 
+          style="flex:1;padding:14px;background:#f8f9fa;color:#495057;border:none;border-radius:12px;font-size:16px;font-weight:bold;cursor:pointer;transition:all 0.3s;"
+          onmouseover="this.style.background='#e9ecef';"
+          onmouseout="this.style.background='#f8f9fa';">
+          ✕ 取消
+        </button>
+      </div>
+    </div>
+  `;
+  
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+  
+  // 保存回調函數
+  window._shiftChangeCallback = onSuccess;
+  
+  // 自動聚焦到密碼輸入框
+  setTimeout(() => {
+    const input = document.getElementById('shiftChangePasswordInput');
+    if (input) input.focus();
+  }, 100);
+  
+  // 點擊遮罩關閉
+  overlay.addEventListener('click', function(e) {
+    if(e.target === overlay) {
+      closeModal(overlay);
+      window._shiftChangeCallback = null;
+    }
+  });
+  
+  // ESC鍵關閉
+  const escHandler = function(e) {
+    if(e.key === 'Escape') {
+      closeModal(overlay);
+      window._shiftChangeCallback = null;
+      document.removeEventListener('keydown', escHandler);
+    }
+  };
+  document.addEventListener('keydown', escHandler);
+}
+
+// 驗證換班密碼
+function verifyShiftChangePassword(overlay) {
+  const input = document.getElementById('shiftChangePasswordInput');
+  const password = input ? input.value : '';
+  
+  if (password === ADMIN_PASSWORD) {
+    closeModal(overlay);
+    
+    // 執行換班回調
+    if (window._shiftChangeCallback) {
+      window._shiftChangeCallback();
+      window._shiftChangeCallback = null;
+    }
+  } else {
+    // 密碼錯誤動畫
+    if (input) {
+      input.style.borderColor = '#dc3545';
+      input.style.background = '#fff5f5';
+      input.value = '';
+      input.placeholder = '❌ 密碼錯誤，請重試';
+      
+      // 抖動動畫
+      input.style.animation = 'shake 0.5s';
+      
+      setTimeout(() => {
+        input.style.borderColor = '#e9ecef';
+        input.style.background = '#fff';
+        input.placeholder = '請輸入密碼';
+        input.style.animation = '';
+        input.focus();
+      }, 500);
+    }
+  }
 }
 
 // 密碼驗證彈窗
@@ -4403,6 +4928,8 @@ function debounce(func, wait) {
 // 視窗大小改變時重新計算縮放
 window.addEventListener('resize', debounce(() => {
   optimizeScale();
+  // 同時重新調整鑰匙表格文字大小
+  optimizeKeyTableTextSize();
 }, 200));
 
 // 頁面加載時優化縮放
