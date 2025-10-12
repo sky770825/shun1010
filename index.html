@@ -334,7 +334,7 @@ td:hover{background:#f8f9fa;}
   }
   .controls label { min-width: 0 !important; }
   .controls label span { font-size: 10px !important; }
-  .controls select, .controls input { font-size: 16px !important; padding: 5px 4px !important; }
+  .controls select, .controls input { font-size: 16px !important; padding: 6px 6px !important; box-sizing: border-box !important; }
   .keyControls > div[style*="margin-bottom"] { text-align: center !important; width: 100% !important; }
   .keyControls > div[style*="margin-bottom"] > div { margin: 0 auto !important; }
   .borrow-type-label { padding: 8px 12px !important; min-width: 90px !important; }
@@ -412,7 +412,7 @@ td:hover{background:#f8f9fa;}
   .controls { grid-template-columns: repeat(3, 1fr) !important; gap: 3px !important; padding: 6px 3px !important; }
   .controls label { min-width: 0 !important; }
   .controls label span { font-size: 9px !important; }
-  .controls select, .controls input { font-size: 16px !important; padding: 4px 3px !important; }
+  .controls select, .controls input { font-size: 16px !important; padding: 5px 5px !important; box-sizing: border-box !important; }
   .keyControls > div[style*="margin-bottom"] { text-align: center !important; width: 100% !important; }
   .keyControls > div[style*="margin-bottom"] > div { margin: 0 auto !important; }
   .borrow-type-label { padding: 7px 10px !important; min-width: 80px !important; gap: 4px !important; }
@@ -473,7 +473,7 @@ td:hover{background:#f8f9fa;}
   .controls { grid-template-columns: repeat(3, 1fr) !important; gap: 2px !important; padding: 5px 2px !important; }
   .controls label { min-width: 0 !important; }
   .controls label span { font-size: 8px !important; }
-  .controls select, .controls input { font-size: 16px !important; padding: 4px 2px !important; }
+  .controls select, .controls input { font-size: 16px !important; padding: 5px 4px !important; box-sizing: border-box !important; }
   .keyControls > div[style*="margin-bottom"] { text-align: center !important; width: 100% !important; }
   .keyControls > div[style*="margin-bottom"] > div { margin: 0 auto !important; }
   .borrow-type-label { padding: 6px 8px !important; min-width: 70px !important; gap: 3px !important; }
@@ -548,7 +548,7 @@ td:hover{background:#f8f9fa;}
   .controls { grid-template-columns: repeat(3, 1fr) !important; gap: 2px !important; padding: 4px 2px !important; }
   .controls label { min-width: 0 !important; }
   .controls label span { font-size: 7px !important; }
-  .controls select, .controls input { font-size: 16px !important; padding: 3px 2px !important; }
+  .controls select, .controls input { font-size: 16px !important; padding: 4px 3px !important; box-sizing: border-box !important; }
   .keyControls > div[style*="margin-bottom"] { text-align: center !important; width: 100% !important; }
   .keyControls > div[style*="margin-bottom"] > div { margin: 0 auto !important; }
   .borrow-type-label { padding: 5px 6px !important; min-width: 60px !important; gap: 2px !important; }
@@ -609,7 +609,7 @@ td:hover{background:#f8f9fa;}
   .controls { grid-template-columns: repeat(3, 1fr) !important; padding: 3px 2px !important; gap: 2px !important; }
   .controls label { min-width: 0 !important; }
   .controls label span { font-size: 7px !important; }
-  .controls select, .controls input { font-size: 16px !important; padding: 3px 1px !important; }
+  .controls select, .controls input { font-size: 16px !important; padding: 4px 3px !important; box-sizing: border-box !important; }
   #keyRecord > div[style*="text-align:center"] > div[style*="display:inline-block"] { padding: 4px 10px !important; }
   #keyRecord h3 { font-size: 10px !important; }
   #keyRecord h3 span { font-size: 12px !important; }
@@ -4973,7 +4973,7 @@ function showAddKeyNameModal() {
   `;
   
   // 成員名單（開發業務下拉選單）
-  const memberOptions = members
+  const memberOptions = MEMBERS
     .filter(m => !m.disabled)
     .map(m => `<option value="${m.name}">${m.name}</option>`)
     .join('');
