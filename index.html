@@ -327,18 +327,21 @@ td:hover{background:#f8f9fa;}
   h2 { font-size: 1.3em; padding: 10px 12px; }
   .controls { 
     grid-template-columns: repeat(3, 1fr) !important; 
-    gap: 4px !important;
+    gap: 3px !important;
     margin-left: 3px !important; 
     margin-right: 3px !important; 
-    padding: 6px !important; 
+    padding: 5px 3px !important; 
   }
-  .controls label { min-width: 0 !important; }
-  .controls label span { font-size: 10px !important; }
-  .controls select, .controls input { font-size: 16px !important; padding: 6px 6px !important; box-sizing: border-box !important; }
+  .controls label { min-width: 0 !important; gap: 2px !important; }
+  .controls label span { font-size: 10px !important; line-height: 1.2 !important; }
+  .controls select, .controls input { font-size: 16px !important; padding: 5px 4px !important; box-sizing: border-box !important; }
   .keyControls > div[style*="margin-bottom"] { text-align: center !important; width: 100% !important; }
   .keyControls > div[style*="margin-bottom"] > div { margin: 0 auto !important; }
+  .key-header-row { grid-template-columns: 1fr auto !important; gap: 8px !important; padding: 0 5px !important; }
   .borrow-type-label { padding: 8px 12px !important; min-width: 90px !important; }
   .borrow-type-label span { font-size: 13px !important; }
+  #addKeyNameBtn { padding: 8px 15px !important; font-size: 13px !important; }
+  #addKeyNameBtn span:first-child { font-size: 14px !important; }
   #colleagueBorrowSection > div > div[style*="grid-template-columns"] { grid-template-columns: 1fr !important; gap: 8px !important; }
   #colleagueBorrowSection label { font-size: 11px !important; }
   #colleagueBorrowSection input, #colleagueBorrowSection select { font-size: 16px !important; padding: 7px 8px !important; }
@@ -409,14 +412,17 @@ td:hover{background:#f8f9fa;}
 }
 
 @media (max-width: 576px) {
-  .controls { grid-template-columns: repeat(3, 1fr) !important; gap: 3px !important; padding: 6px 3px !important; }
-  .controls label { min-width: 0 !important; }
-  .controls label span { font-size: 9px !important; }
-  .controls select, .controls input { font-size: 16px !important; padding: 5px 5px !important; box-sizing: border-box !important; }
+  .controls { grid-template-columns: repeat(3, 1fr) !important; gap: 2px !important; padding: 4px 2px !important; }
+  .controls label { min-width: 0 !important; gap: 1px !important; }
+  .controls label span { font-size: 9px !important; line-height: 1.1 !important; }
+  .controls select, .controls input { font-size: 16px !important; padding: 4px 3px !important; box-sizing: border-box !important; }
   .keyControls > div[style*="margin-bottom"] { text-align: center !important; width: 100% !important; }
   .keyControls > div[style*="margin-bottom"] > div { margin: 0 auto !important; }
+  .key-header-row { grid-template-columns: 1fr auto !important; gap: 6px !important; padding: 0 3px !important; }
   .borrow-type-label { padding: 7px 10px !important; min-width: 80px !important; gap: 4px !important; }
   .borrow-type-label span { font-size: 12px !important; }
+  #addKeyNameBtn { padding: 7px 12px !important; font-size: 12px !important; gap: 4px !important; }
+  #addKeyNameBtn span:first-child { font-size: 13px !important; }
   #colleagueBorrowSection > div > div[style*="grid-template-columns"] { grid-template-columns: 1fr !important; gap: 8px !important; }
   #colleagueBorrowSection label { font-size: 10px !important; }
   #colleagueBorrowSection input, #colleagueBorrowSection select { font-size: 16px !important; padding: 6px 8px !important; }
@@ -470,14 +476,18 @@ td:hover{background:#f8f9fa;}
 }
 
 @media (max-width: 480px) {
-  .controls { grid-template-columns: repeat(3, 1fr) !important; gap: 2px !important; padding: 5px 2px !important; }
-  .controls label { min-width: 0 !important; }
-  .controls label span { font-size: 8px !important; }
-  .controls select, .controls input { font-size: 16px !important; padding: 5px 4px !important; box-sizing: border-box !important; }
+  .controls { grid-template-columns: repeat(3, 1fr) !important; gap: 2px !important; padding: 3px 2px !important; }
+  .controls label { min-width: 0 !important; gap: 1px !important; }
+  .controls label span { font-size: 8px !important; line-height: 1.1 !important; }
+  .controls select, .controls input { font-size: 16px !important; padding: 4px 2px !important; box-sizing: border-box !important; }
   .keyControls > div[style*="margin-bottom"] { text-align: center !important; width: 100% !important; }
   .keyControls > div[style*="margin-bottom"] > div { margin: 0 auto !important; }
+  .key-header-row { grid-template-columns: 1fr auto !important; gap: 5px !important; padding: 0 2px !important; }
   .borrow-type-label { padding: 6px 8px !important; min-width: 70px !important; gap: 3px !important; }
   .borrow-type-label span { font-size: 11px !important; }
+  #addKeyNameBtn { padding: 6px 10px !important; font-size: 11px !important; gap: 3px !important; }
+  #addKeyNameBtn span:first-child { font-size: 12px !important; }
+  #addKeyNameBtn span:last-child { display: inline !important; }
   #colleagueBorrowSection > div > div[style*="grid-template-columns"] { grid-template-columns: 1fr !important; gap: 6px !important; }
   #colleagueBorrowSection label { font-size: 9px !important; }
   #colleagueBorrowSection input, #colleagueBorrowSection select { font-size: 16px !important; padding: 5px 6px !important; }
@@ -545,14 +555,18 @@ td:hover{background:#f8f9fa;}
 }
 
 @media (max-width: 360px) {
-  .controls { grid-template-columns: repeat(3, 1fr) !important; gap: 2px !important; padding: 4px 2px !important; }
-  .controls label { min-width: 0 !important; }
-  .controls label span { font-size: 7px !important; }
-  .controls select, .controls input { font-size: 16px !important; padding: 4px 3px !important; box-sizing: border-box !important; }
+  .controls { grid-template-columns: repeat(3, 1fr) !important; gap: 2px !important; padding: 3px 1px !important; }
+  .controls label { min-width: 0 !important; gap: 1px !important; }
+  .controls label span { font-size: 7px !important; line-height: 1 !important; }
+  .controls select, .controls input { font-size: 16px !important; padding: 3px 2px !important; box-sizing: border-box !important; }
   .keyControls > div[style*="margin-bottom"] { text-align: center !important; width: 100% !important; }
   .keyControls > div[style*="margin-bottom"] > div { margin: 0 auto !important; }
+  .key-header-row { grid-template-columns: 1fr auto !important; gap: 4px !important; padding: 0 2px !important; }
   .borrow-type-label { padding: 5px 6px !important; min-width: 60px !important; gap: 2px !important; }
   .borrow-type-label span { font-size: 10px !important; }
+  #addKeyNameBtn { padding: 5px 8px !important; font-size: 10px !important; gap: 2px !important; }
+  #addKeyNameBtn span:first-child { font-size: 11px !important; }
+  #addKeyNameBtn span:last-child { display: inline !important; }
   #colleagueBorrowSection > div > div[style*="grid-template-columns"] { grid-template-columns: 1fr !important; gap: 5px !important; }
   #colleagueBorrowSection label { font-size: 8px !important; }
   #colleagueBorrowSection input, #colleagueBorrowSection select { font-size: 16px !important; padding: 4px 5px !important; }
@@ -606,10 +620,16 @@ td:hover{background:#f8f9fa;}
 /* 极小屏幕优化 (320px以下) */
 @media (max-width: 320px) {
   h2 { font-size: 0.9em; padding: 5px; }
-  .controls { grid-template-columns: repeat(3, 1fr) !important; padding: 3px 2px !important; gap: 2px !important; }
-  .controls label { min-width: 0 !important; }
-  .controls label span { font-size: 7px !important; }
-  .controls select, .controls input { font-size: 16px !important; padding: 4px 3px !important; box-sizing: border-box !important; }
+  .controls { grid-template-columns: repeat(3, 1fr) !important; padding: 2px 1px !important; gap: 1px !important; }
+  .controls label { min-width: 0 !important; gap: 0px !important; }
+  .controls label span { font-size: 7px !important; line-height: 1 !important; margin-bottom: 1px !important; }
+  .controls select, .controls input { font-size: 16px !important; padding: 3px 1px !important; box-sizing: border-box !important; }
+  .key-header-row { grid-template-columns: 1fr auto !important; gap: 3px !important; padding: 0 2px !important; }
+  .borrow-type-label { padding: 4px 5px !important; min-width: 55px !important; gap: 2px !important; }
+  .borrow-type-label span { font-size: 9px !important; }
+  #addKeyNameBtn { padding: 4px 6px !important; font-size: 9px !important; gap: 2px !important; border-radius: 15px !important; }
+  #addKeyNameBtn span:first-child { font-size: 10px !important; }
+  #addKeyNameBtn span:last-child { display: inline !important; }
   #keyRecord > div[style*="text-align:center"] > div[style*="display:inline-block"] { padding: 4px 10px !important; }
   #keyRecord h3 { font-size: 10px !important; }
   #keyRecord h3 span { font-size: 12px !important; }
@@ -787,27 +807,31 @@ td:hover{background:#f8f9fa;}
     </div>
   </div>
   
-  <!-- 新增鑰匙名稱按鈕 -->
-  <div style="text-align:center;margin-bottom:15px;">
-    <button id="addKeyNameBtn" onclick="showAddKeyNameModal()" style="background:linear-gradient(135deg,#28a745 0%,#20c997 100%);color:#fff;border:none;padding:12px 30px;border-radius:25px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(40,167,69,0.3);transition:all 0.3s;display:inline-flex;align-items:center;gap:8px;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(40,167,69,0.4)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 12px rgba(40,167,69,0.3)'">
-      <span style="font-size:18px;">➕</span>
-      <span>新增鑰匙名稱</span>
-    </button>
-  </div>
-  
   <div class="keyControls">
-    <div style="margin-bottom:15px;text-align:center;">
-      <div style="display:inline-block;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);padding:3px;border-radius:25px;box-shadow:0 4px 12px rgba(102,126,234,0.3);">
-        <div style="display:flex;gap:3px;background:#fff;padding:3px;border-radius:22px;">
-          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:10px 20px;border-radius:18px;transition:all 0.3s;min-width:120px;justify-content:center;" class="borrow-type-label" data-type="member">
-            <input type="radio" name="borrowType" value="member" checked onchange="switchBorrowType('member')" style="display:none;">
-            <span style="font-weight:700;font-size:15px;">👤 成員借出</span>
-          </label>
-          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:10px 20px;border-radius:18px;transition:all 0.3s;min-width:120px;justify-content:center;" class="borrow-type-label" data-type="colleague">
-            <input type="radio" name="borrowType" value="colleague" onchange="switchBorrowType('colleague')" style="display:none;">
-            <span style="font-weight:700;font-size:15px;">🏢 同業借出</span>
-          </label>
+    <!-- 兩欄佈局：左邊是借出類型切換，右邊是新增按鈕 -->
+    <div class="key-header-row" style="margin-bottom:15px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:0 10px;">
+      <!-- 左欄：成員/同業切換按鈕 -->
+      <div style="text-align:center;">
+        <div style="display:inline-block;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);padding:3px;border-radius:25px;box-shadow:0 4px 12px rgba(102,126,234,0.3);max-width:100%;">
+          <div style="display:flex;gap:3px;background:#fff;padding:3px;border-radius:22px;">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:10px 20px;border-radius:18px;transition:all 0.3s;min-width:120px;justify-content:center;" class="borrow-type-label" data-type="member">
+              <input type="radio" name="borrowType" value="member" checked onchange="switchBorrowType('member')" style="display:none;">
+              <span style="font-weight:700;font-size:15px;">👤 成員借出</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:10px 20px;border-radius:18px;transition:all 0.3s;min-width:120px;justify-content:center;" class="borrow-type-label" data-type="colleague">
+              <input type="radio" name="borrowType" value="colleague" onchange="switchBorrowType('colleague')" style="display:none;">
+              <span style="font-weight:700;font-size:15px;">🏢 同業借出</span>
+            </label>
+          </div>
         </div>
+      </div>
+      
+      <!-- 右欄：新增鑰匙名稱按鈕 -->
+      <div>
+        <button id="addKeyNameBtn" onclick="showAddKeyNameModal()" style="background:linear-gradient(135deg,#28a745 0%,#20c997 100%);color:#fff;border:none;padding:10px 20px;border-radius:20px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(40,167,69,0.3);transition:all 0.3s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(40,167,69,0.4)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 12px rgba(40,167,69,0.3)'">
+          <span style="font-size:16px;">➕</span>
+          <span>新增</span>
+        </button>
       </div>
     </div>
     <div id="memberBorrowSection">
