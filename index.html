@@ -326,7 +326,7 @@ td:hover{background:#f8f9fa;}
   :root { --base-font-size: 13px; --scale-factor: 0.85; --table-scale: 0.75; }
   h2 { font-size: 1.3em; padding: 10px 12px; }
   .controls { 
-    grid-template-columns: 0.75fr 1.15fr 1.1fr !important; 
+    grid-template-columns: 0.9fr 1.1fr 1fr !important; 
     gap: 3px !important;
     margin-left: 3px !important; 
     margin-right: 3px !important; 
@@ -334,7 +334,8 @@ td:hover{background:#f8f9fa;}
   }
   .controls label { min-width: 0 !important; gap: 2px !important; }
   .controls label span { font-size: 10px !important; line-height: 1.2 !important; }
-  .controls select, .controls input { font-size: 16px !important; padding: 5px 4px !important; box-sizing: border-box !important; }
+  .controls select, .controls input { font-size: 16px !important; padding: 5px 3px !important; box-sizing: border-box !important; }
+  #monthPicker { padding: 5px 2px !important; font-size: 14px !important; }
   .keyControls > div[style*="margin-bottom"] { text-align: center !important; width: 100% !important; }
   .keyControls > div[style*="margin-bottom"] > div { margin: 0 auto !important; }
   .key-header-row { grid-template-columns: 1fr auto !important; gap: 8px !important; padding: 0 5px !important; }
@@ -412,10 +413,11 @@ td:hover{background:#f8f9fa;}
 }
 
 @media (max-width: 576px) {
-  .controls { grid-template-columns: 0.75fr 1.15fr 1.1fr !important; gap: 2px !important; padding: 4px 2px !important; }
+  .controls { grid-template-columns: 0.9fr 1.1fr 1fr !important; gap: 2px !important; padding: 4px 2px !important; }
   .controls label { min-width: 0 !important; gap: 1px !important; }
   .controls label span { font-size: 9px !important; line-height: 1.1 !important; }
-  .controls select, .controls input { font-size: 16px !important; padding: 4px 3px !important; box-sizing: border-box !important; }
+  .controls select, .controls input { font-size: 16px !important; padding: 4px 2px !important; box-sizing: border-box !important; }
+  #monthPicker { padding: 4px 1px !important; font-size: 13px !important; }
   .keyControls > div[style*="margin-bottom"] { text-align: center !important; width: 100% !important; }
   .keyControls > div[style*="margin-bottom"] > div { margin: 0 auto !important; }
   .key-header-row { grid-template-columns: 1fr auto !important; gap: 6px !important; padding: 0 3px !important; }
@@ -476,10 +478,11 @@ td:hover{background:#f8f9fa;}
 }
 
 @media (max-width: 480px) {
-  .controls { grid-template-columns: 0.75fr 1.15fr 1.1fr !important; gap: 2px !important; padding: 3px 2px !important; }
+  .controls { grid-template-columns: 0.9fr 1.1fr 1fr !important; gap: 2px !important; padding: 3px 2px !important; }
   .controls label { min-width: 0 !important; gap: 1px !important; }
   .controls label span { font-size: 8px !important; line-height: 1.1 !important; }
-  .controls select, .controls input { font-size: 16px !important; padding: 4px 2px !important; box-sizing: border-box !important; }
+  .controls select, .controls input { font-size: 16px !important; padding: 3px 1px !important; box-sizing: border-box !important; }
+  #monthPicker { padding: 3px 1px !important; font-size: 12px !important; }
   .keyControls > div[style*="margin-bottom"] { text-align: center !important; width: 100% !important; }
   .keyControls > div[style*="margin-bottom"] > div { margin: 0 auto !important; }
   .key-header-row { grid-template-columns: 1fr auto !important; gap: 5px !important; padding: 0 2px !important; }
@@ -555,10 +558,11 @@ td:hover{background:#f8f9fa;}
 }
 
 @media (max-width: 360px) {
-  .controls { grid-template-columns: 0.75fr 1.15fr 1.1fr !important; gap: 2px !important; padding: 3px 1px !important; }
+  .controls { grid-template-columns: 0.9fr 1.1fr 1fr !important; gap: 2px !important; padding: 3px 1px !important; }
   .controls label { min-width: 0 !important; gap: 1px !important; }
   .controls label span { font-size: 7px !important; line-height: 1 !important; }
-  .controls select, .controls input { font-size: 16px !important; padding: 3px 2px !important; box-sizing: border-box !important; }
+  .controls select, .controls input { font-size: 16px !important; padding: 3px 1px !important; box-sizing: border-box !important; }
+  #monthPicker { padding: 3px 1px !important; font-size: 12px !important; }
   .keyControls > div[style*="margin-bottom"] { text-align: center !important; width: 100% !important; }
   .keyControls > div[style*="margin-bottom"] > div { margin: 0 auto !important; }
   .key-header-row { grid-template-columns: 1fr auto !important; gap: 4px !important; padding: 0 2px !important; }
@@ -620,10 +624,11 @@ td:hover{background:#f8f9fa;}
 /* 极小屏幕优化 (320px以下) */
 @media (max-width: 320px) {
   h2 { font-size: 0.9em; padding: 5px; }
-  .controls { grid-template-columns: 0.75fr 1.15fr 1.1fr !important; padding: 2px 1px !important; gap: 1px !important; }
+  .controls { grid-template-columns: 0.9fr 1.1fr 1fr !important; padding: 2px 1px !important; gap: 1px !important; }
   .controls label { min-width: 0 !important; gap: 0px !important; }
   .controls label span { font-size: 7px !important; line-height: 1 !important; margin-bottom: 1px !important; }
-  .controls select, .controls input { font-size: 16px !important; padding: 3px 1px !important; box-sizing: border-box !important; }
+  .controls select, .controls input { font-size: 16px !important; padding: 2px 1px !important; box-sizing: border-box !important; }
+  #monthPicker { padding: 2px 1px !important; font-size: 11px !important; }
   .key-header-row { grid-template-columns: 1fr auto !important; gap: 3px !important; padding: 0 2px !important; }
   .borrow-type-label { padding: 4px 5px !important; min-width: 55px !important; gap: 2px !important; }
   .borrow-type-label span { font-size: 9px !important; }
@@ -720,7 +725,7 @@ td:hover{background:#f8f9fa;}
 
 <h2>常順地產值班key進出系統</h2>
 
-<div class="controls" style="display:grid;grid-template-columns:0.75fr 1.15fr 1.1fr;gap:10px;align-items:start;">
+<div class="controls" style="display:grid;grid-template-columns:0.9fr 1.1fr 1fr;gap:10px;align-items:start;">
   <label style="display:flex;flex-direction:column;gap:4px;">
     <span style="font-size:13px;font-weight:600;color:#495057;">選擇月份</span>
     <input type="month" id="monthPicker" style="width:100%;padding:8px;border:1px solid #ced4da;border-radius:4px;font-size:14px;">
