@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5, user-scalable=yes">
-<title>☁️ 常順地產值班key進出系統</title>
+<title>常順地產值班key進出系統</title>
 <style>
 :root {
   --base-font-size: 16px;
@@ -13,7 +13,8 @@
 * {
   box-sizing: border-box;
 }
-body{font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;background:linear-gradient(135deg,#f8f9fa 0%,#e9ecef 100%);margin:0;padding:0;font-size:calc(var(--base-font-size) * var(--scale-factor));min-height:100vh;overflow-x:hidden;width:100%;}
+body{font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;background:linear-gradient(135deg,#f8f9fa 0%,#e9ecef 100%);margin:0;padding:0;font-size:calc(var(--base-font-size) * var(--scale-factor));min-height:100vh;overflow-x:hidden;width:100%;max-width:100vw;}
+html{overflow-x:hidden;max-width:100vw;}
 h2{margin:0;font-size:1.6em;color:#495057;text-align:center;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;padding:15px 20px;box-shadow:0 2px 4px rgba(0,0,0,0.1);text-shadow:0 1px 2px rgba(0,0,0,0.1);position:sticky;top:0;z-index:100;}
 select,input,button{padding:10px 14px;margin:6px;font-size:1em;border-radius:6px;transition:all 0.2s;}
 select,input{border:1px solid #ced4da;background:#fff;}
@@ -21,7 +22,7 @@ select:focus,input:focus{outline:none;border-color:#007bff;box-shadow:0 0 0 3px 
 button{background:linear-gradient(135deg,#007bff 0%,#0056b3 100%);color:#fff;border:none;cursor:pointer;box-shadow:0 2px 4px rgba(0,123,255,0.3);}
 button:hover{background:linear-gradient(135deg,#0056b3 0%,#004085 100%);transform:translateY(-1px);box-shadow:0 4px 8px rgba(0,123,255,0.4);}
 table{border-collapse:collapse;width:100%;margin:0 auto;font-size:calc(1em * var(--table-scale));box-shadow:0 4px 8px rgba(0,0,0,0.1);border-radius:8px;overflow:hidden;table-layout:fixed;}
-.table-container{margin:0 10px 20px 10px;background:#fff;padding:10px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);overflow:hidden;max-width:100%;}
+.table-container{margin:0 10px 20px 10px;background:#fff;padding:10px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);overflow-x:auto;max-width:calc(100vw - 20px);}
 th,td{border:1px solid #e9ecef;text-align:center;padding:0.5em 0.3em;word-wrap:break-word;overflow:hidden;text-overflow:ellipsis;}
 th{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;font-weight:bold;text-shadow:0 1px 2px rgba(0,0,0,0.1);font-size:0.85em;}
 th.weekend-header{background:linear-gradient(135deg,#dc3545 0%,#c82333 100%);color:#fff;font-weight:bold;text-shadow:0 1px 2px rgba(0,0,0,0.1);}
@@ -35,9 +36,9 @@ th.noon-title{background:linear-gradient(135deg,#2196f3 0%,#1976d2 100%);color:#
 th.evening-title{background:linear-gradient(135deg,#9c27b0 0%,#7b1fa2 100%);color:#fff;font-weight:bold;text-shadow:0 1px 2px rgba(0,0,0,0.3);border-right:3px solid #6a1b9a;}
 td{background:#fff;transition:background-color 0.2s;}
 td:hover{background:#f8f9fa;}
-.cell{cursor:pointer;min-height:2.5em;transition:all 0.2s;border-radius:4px;font-size:0.9em;padding:0.3em;}
+.cell{cursor:pointer;min-height:2.5em;transition:all 0.2s;border-radius:4px;font-size:1em;padding:0.3em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .cell:hover{background:#e3f2fd;transform:scale(1.02);}
-.cell.checked{color:#fff;box-shadow:0 2px 4px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;font-weight:bold;}
+.cell.checked{color:#fff;box-shadow:0 2px 4px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;font-weight:bold;white-space:nowrap;}
 
 /* 班別顏色區分 */
 .cell.morning-shift{background:linear-gradient(135deg,#ffc107 0%,#ff9800 100%);color:#fff;border-left:4px solid #ff5722;}
@@ -52,8 +53,8 @@ td:hover{background:#f8f9fa;}
 .cell.disabled:hover{background:#f5f5f5;transform:none;}
 
 .cell.weekday-shift{min-height:4em;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:8px;}
-.cell.weekday-shift .shift-time{font-size:0.8em;color:#666;margin-bottom:4px;font-weight:bold;}
-.cell.weekday-shift .member-display{font-size:1.1em;font-weight:bold;color:#333;}
+.cell.weekday-shift .shift-time{font-size:0.75em;color:#666;margin-bottom:4px;font-weight:bold;white-space:nowrap;}
+.cell.weekday-shift .member-display{font-size:1.3em;font-weight:bold;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
 .cell.weekday-shift.checked{background:linear-gradient(135deg,#4caf50 0%,#45a049 100%);color:#fff;}
 .cell.weekday-shift.checked .shift-time{color:#fff;opacity:0.9;}
 .cell.weekday-shift.checked .member-display{color:#fff;}
@@ -64,7 +65,7 @@ td:hover{background:#f8f9fa;}
 .shift-slot{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:8px;cursor:pointer;transition:all 0.2s;border-bottom:2px solid #dee2e6;position:relative;min-height:4em;}
 .shift-slot:last-child{border-bottom:none;}
 .shift-slot:hover{background:#e3f2fd;}
-.shift-slot .member-display{font-size:1.2em;font-weight:bold;color:#333;}
+.shift-slot .member-display{font-size:1.4em;font-weight:bold;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
 .shift-slot.checked{background:linear-gradient(135deg,#4caf50 0%,#45a049 100%);color:#fff;}
 .shift-slot.checked .member-display{color:#fff;}
 
@@ -73,17 +74,20 @@ td:hover{background:#f8f9fa;}
 .shift-slot.evening-slot{background:#f0f8ff;}
 .shift-slot.morning-slot:hover{background:#fff3cd;}
 .shift-slot.evening-slot:hover{background:#e3f2fd;}
-.controls{margin:15px 10px;padding:10px;background:#fff;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;max-width:100%;overflow-x:hidden;}
-#memberList{margin:0 10px 20px 10px;background:#fff;padding:15px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);max-width:100%;overflow-x:hidden;}
+.controls{margin:15px 10px;padding:15px;background:#fff;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);max-width:calc(100vw - 20px);overflow:hidden;}
+.controls label{display:flex;flex-direction:column;gap:4px;width:100%;}
+.controls label span{font-size:13px;font-weight:600;color:#495057;}
+.controls select,.controls input{width:100%;padding:8px;border:1px solid #ced4da;border-radius:4px;font-size:14px;}
+#memberList{margin:0 10px 20px 10px;background:#fff;padding:15px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);max-width:calc(100vw - 20px);overflow-x:hidden;}
 #memberList h3{margin:0 0 15px;font-size:16px;text-align:center;color:#495057;background:linear-gradient(135deg,#f8f9fa 0%,#e9ecef 100%);padding:10px;border-radius:8px;border-left:4px solid #007bff;}
-#memberList ul{list-style:none;padding:0;margin:0;display:flex;flex-wrap:wrap;gap:8px;justify-content:center;}
-#memberList li{background:linear-gradient(135deg,#f8f9fa 0%,#e9ecef 100%);padding:6px 10px;border-radius:8px;font-size:14px;cursor:pointer;transition:all 0.2s;border:1px solid #dee2e6;box-shadow:0 1px 3px rgba(0,0,0,0.1);}
+#memberList ul{list-style:none;padding:0;margin:0;display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:100%;}
+#memberList li{background:linear-gradient(135deg,#f8f9fa 0%,#e9ecef 100%);padding:6px 10px;border-radius:8px;font-size:14px;cursor:pointer;transition:all 0.2s;border:1px solid #dee2e6;box-shadow:0 1px 3px rgba(0,0,0,0.1);white-space:nowrap;}
 #memberList li:hover{background:linear-gradient(135deg,#e3f2fd 0%,#bbdefb 100%);transform:translateY(-1px);box-shadow:0 2px 6px rgba(0,0,0,0.15);}
 #memberList li.disabled{background:#f8f9fa;color:#6c757d;text-decoration:line-through;cursor:default;opacity:0.6;}
 #memberList li.disabled:hover{background:#f8f9fa;transform:none;box-shadow:0 1px 3px rgba(0,0,0,0.1);}
 #memberList li.selected{background:linear-gradient(135deg,#007bff 0%,#0056b3 100%);color:#fff;box-shadow:0 3px 8px rgba(0,123,255,0.3);}
 
-#keyRecord{margin:0 10px 20px 10px;background:#fff;padding:15px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);max-width:100%;overflow-x:hidden;}
+#keyRecord{margin:0 10px 20px 10px;background:#fff;padding:15px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);max-width:calc(100vw - 20px);overflow:hidden;}
 #keyRecord h3{margin:0 0 15px;font-size:16px;text-align:center;color:#495057;background:linear-gradient(135deg,#f8f9fa 0%,#e9ecef 100%);padding:10px;border-radius:8px;border-left:4px solid #28a745;}
 .keyControls{margin-bottom:15px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px;background:linear-gradient(135deg,#f8f9fa 0%,#e9ecef 100%);border-radius:8px;border:1px solid #dee2e6;max-width:100%;}
 .keyControls select, .keyControls input{padding:8px 12px;font-size:14px;border:1px solid #ced4da;border-radius:6px;background:#fff;transition:border-color 0.2s;flex:1;min-width:120px;}
@@ -152,10 +156,11 @@ td:hover{background:#f8f9fa;}
 @keyframes shake{0%,100%{transform:translateX(0);}10%,30%,50%,70%,90%{transform:translateX(-5px);}20%,40%,60%,80%{transform:translateX(5px);}}
 @keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
 #keyTable{width:100%;border-collapse:collapse;margin-top:15px;box-shadow:0 2px 4px rgba(0,0,0,0.1);border-radius:8px;overflow:hidden;table-layout:fixed;}
-#keyTable th, #keyTable td{border:1px solid #e9ecef;padding:6px 4px;text-align:center;font-size:13px;word-wrap:break-word;overflow:hidden;}
-#keyTable th{background:linear-gradient(135deg,#6c757d 0%,#5a6268 100%);color:#fff;font-weight:bold;text-shadow:0 1px 2px rgba(0,0,0,0.1);font-size:12px;padding:8px 4px;}
+#keyTable th, #keyTable td{border:1px solid #e9ecef;padding:6px 4px;text-align:center;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+#keyTable th{background:linear-gradient(135deg,#6c757d 0%,#5a6268 100%);color:#fff;font-weight:bold;text-shadow:0 1px 2px rgba(0,0,0,0.1);font-size:11px;padding:8px 4px;}
 #keyTable td{background:#fff;transition:background-color 0.2s;vertical-align:middle;}
 #keyTable td:hover{background:#f8f9fa;}
+#keyTable td > div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 #keyTable td.status-borrowed{background:linear-gradient(135deg,#e3f2fd 0%,#bbdefb 100%);color:#1565c0;border-left:3px solid #2196f3;}
 #keyTable td.status-borrowed div{color:#1565c0;}
 #keyTable td.status-returned{background:linear-gradient(135deg,#ffebee 0%,#ffcdd2 100%);color:#c62828;border-left:3px solid #f44336;}
@@ -320,9 +325,16 @@ td:hover{background:#f8f9fa;}
 @media (max-width: 768px) {
   :root { --base-font-size: 13px; --scale-factor: 0.85; --table-scale: 0.75; }
   h2 { font-size: 1.3em; padding: 10px 12px; }
-  .controls, #memberList, #keyRecord, .table-container { margin-left: 5px; margin-right: 5px; padding: 8px; }
-  .controls { flex-direction: column; align-items: stretch; }
-  .controls > * { margin: 3px 0; }
+  .controls { 
+    grid-template-columns: 1fr !important; 
+    gap: 8px !important;
+    margin-left: 5px !important; 
+    margin-right: 5px !important; 
+    padding: 10px !important; 
+  }
+  .controls label span { font-size: 12px !important; }
+  .controls select, .controls input { font-size: 13px !important; padding: 7px !important; }
+  #memberList, #keyRecord, .table-container { margin-left: 5px; margin-right: 5px; padding: 8px; }
   th, td { padding: 0.3em 0.1em; font-size: 0.75em; }
   .cell { min-height: 1.8em; font-size: 0.75em; padding: 0.15em; }
   #memberList ul { gap: 6px; }
@@ -338,6 +350,8 @@ td:hover{background:#f8f9fa;}
   #keyTable th:nth-child(5),#keyTable td:nth-child(5){width:18%;min-width:75px;} 
   #keyTable th:nth-child(6),#keyTable td:nth-child(6){width:17%;min-width:85px;}
   .key-action-btn { padding: 4px 8px; font-size: 10px; margin: 1px; }
+  #keyTable td > div { font-size: 11px !important; }
+  #keyTable td span { font-size: 11px !important; }
   select, input, button { padding: 8px 10px; margin: 3px; font-size: 0.9em; }
   #keyItemHistory { padding: 6px; }
   #keyItemHistory > div:first-child { flex-direction: column; align-items: flex-start; }
@@ -353,19 +367,38 @@ td:hover{background:#f8f9fa;}
   #currentDateRecordCount { font-size: 11px !important; }
   #colleagueBorrowSection > div:first-child { grid-template-columns: 1fr !important; gap: 6px !important; }
   #colleagueBorrowSection input, #colleagueBorrowSection select { width: 100% !important; max-width: 100% !important; min-width: auto !important; }
-  .dutyControls button { font-size: 11px !important; padding: 5px 8px !important; }
-  #dutyMember { font-size: 13px !important; }
-  #keyItem { font-size: 14px !important; padding: 10px 14px !important; }
-  button[onclick="borrowKey()"] { font-size: 13px !important; padding: 10px 16px !important; }
-  button[onclick="clearKeyHistory()"] { font-size: 12px !important; padding: 10px 14px !important; }
-  #keyRecord details { font-size: 11px !important; padding: 8px !important; }
-  #keyRecord details summary { gap: 3px !important; }
+  .dutyControls { margin-bottom: 20px !important; }
+  .dutyControls > div:first-child { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; }
+  .dutyControls button { font-size: 13px !important; padding: 8px 12px !important; }
+  #dutyMember { 
+    font-size: 18px !important; 
+    font-weight: 700 !important; 
+    line-height: 1.4 !important;
+    padding: 12px !important;
+    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%) !important;
+    border-radius: 8px !important;
+    border-left: 4px solid #28a745 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  #keyItem { font-size: 16px !important; padding: 12px 16px !important; }
+  button[onclick="borrowKey()"] { font-size: 15px !important; padding: 12px 18px !important; }
+  button[onclick="clearKeyHistory()"] { font-size: 14px !important; padding: 12px 16px !important; }
+  #keyRecord details { font-size: 12px !important; padding: 10px !important; }
+  #keyRecord details summary { gap: 5px !important; }
   #keyRecord details summary span:last-child { display: none; }
   #keyRecord details ul { margin: 5px 0 0 15px !important; }
-  #keyRecord details li { line-height: 1.5 !important; }
+  #keyRecord details li { line-height: 1.6 !important; }
+  #keyRecord h3 { font-size: 16px !important; }
+  #keyRecord h3 span { font-size: 18px !important; }
 }
 
 @media (max-width: 576px) {
+  .controls { grid-template-columns: 1fr !important; gap: 6px !important; padding: 8px !important; }
+  .controls label span { font-size: 11px !important; }
+  .controls select, .controls input { font-size: 12px !important; padding: 6px !important; }
+  #keyRecord h3 { font-size: 15px !important; }
+  #keyRecord h3 span { font-size: 17px !important; }
   :root { --base-font-size: 12px; --scale-factor: 0.8; --table-scale: 0.65; }
   th, td { padding: 0.25em 0.05em; font-size: 0.7em; border-width: 0.5px; }
   .cell { min-height: 1.6em; font-size: 0.7em; padding: 0.1em; }
@@ -382,15 +415,35 @@ td:hover{background:#f8f9fa;}
   #keyTable th:nth-child(5),#keyTable td:nth-child(5){width:18%;min-width:65px;} 
   #keyTable th:nth-child(6),#keyTable td:nth-child(6){width:17%;min-width:75px;}
   .key-action-btn { padding: 3px 7px; font-size: 10px; margin: 1px; }
-  #keyTable td > div { font-size: 10px; }
-  #dutyMember { font-size: 12px !important; }
-  #keyItem { font-size: 13px !important; padding: 8px 12px !important; }
-  button[onclick="borrowKey()"] { font-size: 12px !important; padding: 8px 12px !important; }
-  button[onclick="clearKeyHistory()"] { font-size: 11px !important; padding: 8px 10px !important; }
-  button[onclick="quickSetTodayDuty()"], button[onclick="clearTempDuty()"], button[onclick="showDebugInfo()"] { font-size: 11px !important; padding: 7px 12px !important; }
+  #keyTable td > div { font-size: 10px !important; }
+  #keyTable td span { font-size: 10px !important; }
+  .dutyControls { margin-bottom: 18px !important; }
+  .dutyControls > div:first-child { flex-direction: column !important; align-items: flex-start !important; gap: 10px !important; }
+  .dutyControls button { font-size: 12px !important; padding: 7px 10px !important; }
+  #dutyMember { 
+    font-size: 17px !important; 
+    font-weight: 700 !important; 
+    line-height: 1.4 !important;
+    padding: 10px !important;
+    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%) !important;
+    border-radius: 8px !important;
+    border-left: 4px solid #28a745 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  #keyItem { font-size: 15px !important; padding: 10px 14px !important; }
+  button[onclick="borrowKey()"] { font-size: 14px !important; padding: 10px 16px !important; }
+  button[onclick="clearKeyHistory()"] { font-size: 13px !important; padding: 10px 14px !important; }
+  #keyRecord h3 { font-size: 14px !important; }
+  #keyRecord h3 span { font-size: 16px !important; }
 }
 
 @media (max-width: 480px) {
+  .controls { grid-template-columns: 1fr !important; gap: 6px !important; padding: 6px !important; }
+  .controls label span { font-size: 10px !important; }
+  .controls select, .controls input { font-size: 11px !important; padding: 5px !important; }
+  #keyRecord h3 { font-size: 13px !important; }
+  #keyRecord h3 span { font-size: 15px !important; }
   :root { --base-font-size: 11px; --scale-factor: 0.75; --table-scale: 0.6; }
   h2 { font-size: 1.1em; padding: 8px 8px; }
   .controls, #memberList, #keyRecord, .table-container { margin-left: 3px; margin-right: 3px; padding: 6px; }
@@ -406,7 +459,8 @@ td:hover{background:#f8f9fa;}
   #keyTable th:nth-child(5),#keyTable td:nth-child(5){width:18%;min-width:60px;} 
   #keyTable th:nth-child(6),#keyTable td:nth-child(6){width:17%;min-width:70px;}
   .key-action-btn { padding: 3px 6px; font-size: 9px; margin: 1px; }
-  #keyTable td > div { font-size: 9px; }
+  #keyTable td > div { font-size: 9px !important; }
+  #keyTable td span { font-size: 9px !important; }
   .modal-content { padding: 12px; max-width: 95%; }
   .modal-title { font-size: 14px; }
   .modal-phone { font-size: 16px; }
@@ -421,14 +475,33 @@ td:hover{background:#f8f9fa;}
   #currentDateRecordCount { font-size: 10px !important; }
   #keyRecord details { font-size: 10px !important; padding: 6px !important; }
   #keyRecord details ul { margin: 5px 0 0 12px !important; font-size: 10px !important; }
-  #dutyMember { font-size: 11px !important; }
-  #keyItem { font-size: 11px !important; padding: 7px 10px !important; }
-  button[onclick="borrowKey()"] { font-size: 10px !important; padding: 7px 10px !important; }
-  button[onclick="clearKeyHistory()"] { font-size: 10px !important; padding: 7px 8px !important; }
-  button[onclick="quickSetTodayDuty()"], button[onclick="clearTempDuty()"], button[onclick="showDebugInfo()"] { font-size: 10px !important; padding: 6px 10px !important; }
+  .dutyControls { margin-bottom: 16px !important; }
+  .dutyControls > div:first-child { flex-direction: column !important; align-items: flex-start !important; gap: 8px !important; }
+  .dutyControls button { font-size: 11px !important; padding: 6px 10px !important; }
+  #dutyMember { 
+    font-size: 16px !important; 
+    font-weight: 700 !important; 
+    line-height: 1.3 !important;
+    padding: 10px !important;
+    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%) !important;
+    border-radius: 6px !important;
+    border-left: 4px solid #28a745 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  #keyItem { font-size: 14px !important; padding: 9px 12px !important; }
+  button[onclick="borrowKey()"] { font-size: 13px !important; padding: 9px 14px !important; }
+  button[onclick="clearKeyHistory()"] { font-size: 12px !important; padding: 9px 12px !important; }
+  #keyRecord h3 { font-size: 12px !important; }
+  #keyRecord h3 span { font-size: 14px !important; }
 }
 
 @media (max-width: 360px) {
+  .controls { grid-template-columns: 1fr !important; gap: 5px !important; padding: 5px !important; }
+  .controls label span { font-size: 9px !important; }
+  .controls select, .controls input { font-size: 10px !important; padding: 4px !important; }
+  #keyRecord h3 { font-size: 11px !important; }
+  #keyRecord h3 span { font-size: 13px !important; }
   :root { --base-font-size: 10px; --scale-factor: 0.7; --table-scale: 0.55; }
   .controls, #memberList, #keyRecord, .table-container { margin-left: 2px; margin-right: 2px; padding: 4px; }
   th, td { padding: 0.15em 0.03em; font-size: 0.6em; }
@@ -444,12 +517,25 @@ td:hover{background:#f8f9fa;}
   #keyTable th:nth-child(5),#keyTable td:nth-child(5){width:18%;min-width:50px;} 
   #keyTable th:nth-child(6),#keyTable td:nth-child(6){width:17%;min-width:60px;}
   .key-action-btn { padding: 2px 4px; font-size: 8px; margin: 1px; }
-  #keyTable td > div { font-size: 8px; line-height: 1.2; }
-  #dutyMember { font-size: 10px !important; }
-  #keyItem { font-size: 10px !important; padding: 6px 8px !important; }
-  button[onclick="borrowKey()"] { font-size: 9px !important; padding: 6px 8px !important; }
-  button[onclick="clearKeyHistory()"] { font-size: 9px !important; padding: 6px 6px !important; }
-  button[onclick="quickSetTodayDuty()"], button[onclick="clearTempDuty()"], button[onclick="showDebugInfo()"] { font-size: 9px !important; padding: 5px 8px !important; }
+  #keyTable td > div { font-size: 8px !important; line-height: 1.2; }
+  #keyTable td span { font-size: 8px !important; }
+  .dutyControls { margin-bottom: 14px !important; }
+  .dutyControls > div:first-child { flex-direction: column !important; align-items: flex-start !important; gap: 6px !important; }
+  .dutyControls button { font-size: 10px !important; padding: 6px 8px !important; }
+  #dutyMember { 
+    font-size: 15px !important; 
+    font-weight: 700 !important; 
+    line-height: 1.3 !important;
+    padding: 8px !important;
+    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%) !important;
+    border-radius: 6px !important;
+    border-left: 4px solid #28a745 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  #keyItem { font-size: 13px !important; padding: 8px 10px !important; }
+  button[onclick="borrowKey()"] { font-size: 12px !important; padding: 8px 12px !important; }
+  button[onclick="clearKeyHistory()"] { font-size: 11px !important; padding: 8px 10px !important; }
 }
 
 /* 統計報表樣式 */
@@ -502,48 +588,20 @@ td:hover{background:#f8f9fa;}
 .group4{background:linear-gradient(135deg,#f39c12 0%,#e67e22 100%);color:#000;border-left:4px solid #d35400;}
 </style>
 
-<!-- Firebase SDK -->
-<script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getDatabase, ref, set, get, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-
-  // Your web app's Firebase configuration
-  const firebaseConfig = {
-    apiKey: "AIzaSyCE19uWXxpAwzdNNZEiyPQ8szjx6KgX50w",
-    authDomain: "shun1010-361e6.firebaseapp.com",
-    databaseURL: "https://shun1010-361e6-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "shun1010-361e6",
-    storageBucket: "shun1010-361e6.firebasestorage.app",
-    messagingSenderId: "896998848995",
-    appId: "1:896998848995:web:5e52780de3dc8dab0488d6",
-    measurementId: "G-V8DBJJ14LL"
-  };
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const database = getDatabase(app);
-
-  // 將 Firebase 對象設為全局變量
-  window.firebaseDB = database;
-  window.firebaseRef = ref;
-  window.firebaseSet = set;
-  window.firebaseGet = get;
-  window.firebaseOnValue = onValue;
-  window.firebaseRemove = remove;
-
-  console.log("✅ Firebase 初始化完成");
-</script>
 
 </head>
 <body>
 
 <h2>常順地產值班key進出系統</h2>
 
-<div class="controls">
-  <label>選擇月份：<input type="month" id="monthPicker"></label>
-  <label>選擇成員：
-    <select id="memberInput">
+<div class="controls" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;align-items:start;">
+  <label style="display:flex;flex-direction:column;gap:4px;">
+    <span style="font-size:13px;font-weight:600;color:#495057;">選擇月份</span>
+    <input type="month" id="monthPicker" style="width:100%;padding:8px;border:1px solid #ced4da;border-radius:4px;font-size:14px;">
+  </label>
+  <label style="display:flex;flex-direction:column;gap:4px;">
+    <span style="font-size:13px;font-weight:600;color:#495057;">選擇成員</span>
+    <select id="memberInput" style="width:100%;padding:8px;border:1px solid #ced4da;border-radius:4px;font-size:14px;">
       <option value="">-- 請選擇成員 --</option>
       <option value="01">01 以蓁</option>
       <option value="02" disabled>02 景翔（不列入排班）</option>
@@ -575,11 +633,17 @@ td:hover{background:#f8f9fa;}
       <option value="94" disabled>94 羅珍妮（主管）</option>
     </select>
   </label>
-  <button onclick="requirePassword('autoAssign')">🔐 隨機平均排班</button>
-  <button onclick="requirePassword('clearData')">🔐 清除本月資料</button>
-  <button onclick="requirePassword('exportCsv')">🔐 匯出 CSV</button>
-  <button onclick="requirePassword('quickFill')">🔐 快速填班</button>
-  <button onclick="requirePassword('showStatistics')">🔐 排班統計</button>
+  <label style="display:flex;flex-direction:column;gap:4px;">
+    <span style="font-size:13px;font-weight:600;color:#495057;">管理功能</span>
+    <select id="adminActionSelect" onchange="executeAdminAction(this.value)" style="width:100%;padding:8px;border:1px solid #ced4da;border-radius:4px;font-size:14px;cursor:pointer;">
+      <option value="">▼ 選擇功能</option>
+      <option value="autoAssign">🔐 隨機平均排班</option>
+      <option value="clearData">🔐 清除本月資料</option>
+      <option value="showStatistics">🔐 排班統計</option>
+      <option value="syncFromSheets">📥 從 Sheets 同步</option>
+      <option value="openSheets">📊 開啟 Sheets</option>
+    </select>
+  </label>
 </div>
 
 <div class="table-container">
@@ -609,10 +673,10 @@ td:hover{background:#f8f9fa;}
   <div style="text-align:center;margin-bottom:20px;position:relative;">
     <div style="display:inline-block;background:linear-gradient(135deg,#ffc107 0%,#ff9800 100%);padding:15px 40px;border-radius:20px;box-shadow:0 8px 25px rgba(255,152,0,0.5);position:relative;overflow:hidden;">
       <div style="position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(45deg,rgba(255,255,255,0.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,0.15) 50%,rgba(255,255,255,0.15) 75%,transparent 75%,transparent);background-size:20px 20px;opacity:0.5;"></div>
-      <h3 style="margin:0;font-size:24px;font-weight:900;color:#000;text-shadow:0 2px 4px rgba(255,255,255,0.3);letter-spacing:2px;position:relative;z-index:1;display:flex;align-items:center;gap:10px;justify-content:center;">
-        <span style="font-size:28px;">🔑</span>
+      <h3 style="margin:0;font-size:18px;font-weight:700;color:#000;text-shadow:0 2px 4px rgba(255,255,255,0.3);letter-spacing:1px;position:relative;z-index:1;display:flex;align-items:center;gap:6px;justify-content:center;">
+        <span style="font-size:20px;">🔑</span>
         鑰匙借出表簿
-        <span style="font-size:28px;">🔑</span>
+        <span style="font-size:20px;">🔑</span>
       </h3>
     </div>
   </div>
@@ -683,8 +747,8 @@ td:hover{background:#f8f9fa;}
         <div style="flex:2;min-width:200px;">
           <input type="text" id="keyItem" placeholder="🔑 輸入鑰匙項目或勾選下方常用項目" maxlength="50" style="width:100%;padding:15px 22px;border:2px solid #ced4da;border-radius:10px;font-size:18px;font-weight:500;transition:all 0.3s;box-shadow:0 2px 8px rgba(0,0,0,0.05);" onfocus="this.style.borderColor='#667eea';this.style.boxShadow='0 4px 16px rgba(102,126,234,0.2)'" onblur="this.style.borderColor='#ced4da';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.05)'">
         </div>
-        <button onclick="borrowKey()" style="flex:1;min-width:100px;padding:15px 20px;background:linear-gradient(135deg,#28a745 0%,#20c997 100%);color:#fff;border:none;border-radius:10px;cursor:pointer;font-size:18px;font-weight:bold;box-shadow:0 4px 12px rgba(40,167,69,0.3);transition:all 0.3s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(40,167,69,0.4)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 12px rgba(40,167,69,0.3)'">✅ 登記借出</button>
-        <button onclick="clearKeyHistory()" style="flex:1;min-width:100px;padding:15px 18px;background:linear-gradient(135deg,#6c757d 0%,#5a6268 100%);color:#fff;border:none;border-radius:10px;cursor:pointer;font-size:17px;font-weight:bold;box-shadow:0 4px 12px rgba(108,117,125,0.3);transition:all 0.3s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(108,117,125,0.4)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 12px rgba(108,117,125,0.3)'">🗑️ 清除歷史</button>
+        <button onclick="borrowKey()" style="flex:1;min-width:120px;padding:15px 20px;background:linear-gradient(135deg,#28a745 0%,#20c997 100%);color:#fff;border:none;border-radius:10px;cursor:pointer;font-size:18px;font-weight:bold;box-shadow:0 4px 12px rgba(40,167,69,0.3);transition:all 0.3s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(40,167,69,0.4)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 12px rgba(40,167,69,0.3)'">✅ 登記借出</button>
+        <button onclick="clearKeyHistory()" style="flex:1;min-width:120px;padding:15px 18px;background:linear-gradient(135deg,#dc3545 0%,#c82333 100%);color:#fff;border:none;border-radius:10px;cursor:pointer;font-size:17px;font-weight:bold;box-shadow:0 4px 12px rgba(220,53,69,0.3);transition:all 0.3s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(220,53,69,0.4)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 12px rgba(220,53,69,0.3)'">🗑️ 清除歷史</button>
       </div>
     </div>
   </div>
@@ -747,6 +811,7 @@ const SHIFT_CHANGE_KEY = 'shift-change-requests';
 const KEY_HISTORY_KEY = 'key-item-history';
 const COLLEAGUE_HISTORY_KEY = 'colleague-history';
 const TEMP_DUTY_KEY = 'temp-duty-override'; // 临时代班数据
+const KEY_LIST_KEY = 'key-name-list'; // 鑰匙名稱清單
 const ADMIN_PASSWORD = '10108888'; // 管理員密碼
 
 // 當前選擇的成員（用於鑰匙借出）
@@ -766,6 +831,12 @@ let lastCheckedDate = new Date();
 
 // 已選擇的鑰匙項目
 let selectedKeyItems = new Set();
+
+// 鑰匙名稱清單（從 Google Sheets 載入）
+let keyNameList = [];
+
+// Google Sheets Web App URL（請在部署 Apps Script 後替換此 URL）
+const GOOGLE_SHEETS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyW0u1Rpjf2RMhR0kZ4WBZYJrpm2HJSyOgq6U-M5wxNDlRP29WOzibwiQuW4hB98Q-cZQ/exec';
 
 // 聯絡電話資料
 const CONTACT_PHONES = {
@@ -1086,20 +1157,36 @@ function bindEvents(){
         const memberName = MEMBERS.find(m=>m.id===member)?.name || member;
         const currentMemberName = MEMBERS.find(m=>m.id===currentMember)?.name || currentMember;
         
+        // 獲取完整的日期和班別資訊
+        const dateStr = `${ym}-${String(day).padStart(2, '0')}`;
+        const shiftNames = {
+          'morning': isWeekend ? '早班 (09:30-13:30)' : '早班 (09:30-15:30)',
+          'noon': '中班 (13:30-17:30)',
+          'evening': isWeekend ? '晚班 (17:30-21:00)' : '晚班 (15:30-21:00)'
+        };
+        const shiftName = shiftNames[shift] || shift;
+        
         // 先驗證密碼
         showPasswordForShiftChange(
+          dateStr,
+          shiftName,
           currentMemberName,
           memberName,
           () => {
             // 密碼驗證成功後執行換班
             data[key]=member;
             localStorage.setItem(STORE_KEY,JSON.stringify(data));
-            // 同步到 Firebase
-            syncToFirebase(STORE_KEY, JSON.stringify(data));
             hydrate();
             renderMemberList(); // 更新成員統計
             updateDutyMember(); // 更新值班人員
+            
             showCustomAlert(`✅ 已將「${currentMemberName}」換成「${memberName}」`, 'success');
+            
+            // 同步到 Google Sheets（異步執行 - 只更新這一筆）
+            (async () => {
+              await updateSingleScheduleToSheets(ym, day, shift, member);
+              showSyncNotification('📊 換班已同步到 Google Sheets');
+            })();
           }
         );
         return; // 等待驗證後再執行
@@ -1110,11 +1197,15 @@ function bindEvents(){
       
       // 儲存資料並更新顯示
       localStorage.setItem(STORE_KEY,JSON.stringify(data));
-      // 同步到 Firebase
-      syncToFirebase(STORE_KEY, JSON.stringify(data));
       hydrate();
       renderMemberList(); // 更新成員統計
       updateDutyMember(); // 更新值班人員
+      
+      // 同步到 Google Sheets（異步執行）
+      (async () => {
+        await syncCurrentMonthToGoogleSheets('手動排班');
+        showSyncNotification('📊 排班已同步到 Google Sheets');
+      })();
     });
   });
 }
@@ -1154,27 +1245,12 @@ function hydrate(){
 // 清除本月資料
 function clearData(){
   if(confirm('確定清除本月簽到資料？')){
-    console.log('🗑️ 開始清除本月資料...');
     const ym=document.getElementById('monthPicker').value;
-    console.log(`📅 目標月份: ${ym}`);
     const data=JSON.parse(localStorage.getItem(STORE_KEY)||'{}');
-    console.log(`📊 清除前的數據:`, data);
-    let deletedCount = 0;
     for(const k in data){
-      if(k.startsWith(ym+':')){
-        console.log(`❌ 刪除: ${k}`);
-        delete data[k];
-        deletedCount++;
-      }
+      if(k.startsWith(ym+':')) delete data[k];
     }
-    console.log(`🗑️ 刪除了 ${deletedCount} 個項目`);
-    console.log(`📊 清除後的數據:`, data);
     localStorage.setItem(STORE_KEY,JSON.stringify(data));
-    console.log('💾 localStorage 更新完成');
-    // 同步到 Firebase
-    console.log('📡 準備同步到 Firebase...');
-    syncToFirebase(STORE_KEY, JSON.stringify(data));
-    console.log('✅ syncToFirebase 調用完成');
     hydrate();
   }
 }
@@ -1275,8 +1351,6 @@ function recordScheduleHistory(ym, shuffled, remainder){
   }
   
   localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
-  // 同步到 Firebase
-  syncToFirebase(HISTORY_KEY, JSON.stringify(history));
 }
 
 // 獲取前3次增額分配的成員
@@ -1778,8 +1852,6 @@ function executeAutoAssign(){
   }
 
   localStorage.setItem(STORE_KEY,JSON.stringify(data));
-  // 同步到 Firebase
-  syncToFirebase(STORE_KEY, JSON.stringify(data));
   hydrate();
   renderMemberList(); // 更新成員統計
   updateDutyMember(); // 更新值班人員
@@ -1828,6 +1900,859 @@ function executeAutoAssign(){
   }
   
   showCustomAlert(statsMessage, 'success');
+  
+  // 發送數據到 Google Sheets（使用覆蓋模式，從第2行開始重寫）
+  // 異步執行，不阻塞用戶界面
+  (async () => {
+    const success = await sendScheduleToGoogleSheets(ym, data, 'update', '隨機平均排班');
+    if (success) {
+      // 顯示同步成功的通知
+      showSyncNotification('📊 排班已同步到 Google Sheets');
+    }
+  })();
+}
+
+// 發送排班數據到 Google Sheets
+async function sendScheduleToGoogleSheets(yearMonth, scheduleData, action = 'append', scheduleType = '隨機平均排班') {
+  // 檢查是否已設定 Web App URL
+  if (!GOOGLE_SHEETS_WEB_APP_URL || GOOGLE_SHEETS_WEB_APP_URL === 'YOUR_WEB_APP_URL_HERE') {
+    console.warn('⚠️ Google Sheets Web App URL 尚未設定，跳過自動記錄');
+    return false;
+  }
+  
+  try {
+    // 準備成員名稱對照表
+    const memberNames = {};
+    MEMBERS.forEach(member => {
+      memberNames[member.id] = member.name;
+    });
+    
+    // 準備要發送的數據
+    const postData = {
+      yearMonth: yearMonth,
+      scheduleType: scheduleType,
+      scheduleData: scheduleData,
+      members: memberNames,
+      timestamp: new Date().toISOString(),
+      action: action // 'append' 追加新記錄，'update' 覆蓋更新
+    };
+    
+    console.log(`📤 正在${action === 'update' ? '更新' : '發送'}排班數據到 Google Sheets...`);
+    if (scheduleType === '隨機平均排班') {
+      console.log('🔄 使用完全覆蓋模式，從第2行開始重寫所有資料');
+    }
+    
+    // 發送 POST 請求到 Google Apps Script Web App
+    const response = await fetch(GOOGLE_SHEETS_WEB_APP_URL, {
+      method: 'POST',
+      mode: 'no-cors', // 使用 no-cors 模式避免 CORS 問題
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(postData)
+    });
+    
+    // 等待 Google Sheets 寫入完成（預估時間）
+    const recordCount = Object.keys(scheduleData).length;
+    const estimatedTime = Math.max(2000, recordCount * 50); // 至少2秒，每筆記錄約50ms
+    
+    console.log(`⏳ 等待 Google Sheets 寫入 ${recordCount} 筆資料...（預估 ${Math.round(estimatedTime/1000)} 秒）`);
+    await new Promise(resolve => setTimeout(resolve, estimatedTime));
+    
+    console.log(`✅ 排班數據已${action === 'update' ? '更新到' : '發送到'} Google Sheets`);
+    
+    // 由於使用 no-cors 模式，無法讀取回應內容
+    // 但請求已成功發送
+    return true;
+    
+  } catch (error) {
+    console.error('❌ 發送數據到 Google Sheets 時發生錯誤:', error);
+    // 不顯示錯誤提示，避免影響用戶體驗
+    return false;
+  }
+}
+
+// 更新單筆排班到 Google Sheets（換班專用 - 只更新一行）
+async function updateSingleScheduleToSheets(yearMonth, day, shift, memberId) {
+  if (!GOOGLE_SHEETS_WEB_APP_URL || GOOGLE_SHEETS_WEB_APP_URL === 'YOUR_WEB_APP_URL_HERE') {
+    console.warn('⚠️ Google Sheets Web App URL 尚未設定，跳過同步');
+    return false;
+  }
+  
+  try {
+    // 獲取成員姓名
+    const memberName = MEMBERS.find(m => m.id === memberId)?.name || memberId;
+    
+    // 判斷是否為假日
+    const dateStr = `${yearMonth}-${String(day).padStart(2, '0')}`;
+    const weekday = new Date(dateStr).getDay();
+    const isWeekend = (weekday === 0 || weekday === 6);
+    
+    // 根據班別和日期類型確定時段
+    let shiftTime = '';
+    if (isWeekend) {
+      // 假日時段
+      if (shift === 'morning') shiftTime = '09:30-13:30';
+      else if (shift === 'noon') shiftTime = '13:30-17:30';
+      else if (shift === 'evening') shiftTime = '17:30-21:00';
+    } else {
+      // 平日時段
+      if (shift === 'morning') shiftTime = '09:30-15:30';
+      else if (shift === 'evening') shiftTime = '15:30-21:00';
+    }
+    
+    // 準備要發送的數據
+    const postData = {
+      dataType: 'singleUpdate',
+      yearMonth: yearMonth,
+      day: day,
+      shiftKey: shift,
+      memberId: memberId,
+      memberName: memberName,
+      shiftTime: shiftTime
+    };
+    
+    console.log(`📤 正在更新單筆排班到 Google Sheets: ${yearMonth} 日期${day} ${shift} → ${memberName}(${memberId})`);
+    
+    // 發送 POST 請求
+    const response = await fetch(GOOGLE_SHEETS_WEB_APP_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(postData)
+    });
+    
+    // 等待寫入完成
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    console.log(`✅ 單筆排班已更新到 Google Sheets`);
+    return true;
+    
+  } catch (error) {
+    console.error('❌ 更新單筆排班時發生錯誤:', error);
+    return false;
+  }
+}
+
+// 同步當前月份的完整排班到 Google Sheets（覆蓋更新）
+async function syncCurrentMonthToGoogleSheets(scheduleType = '手動換班') {
+  const ym = document.getElementById('monthPicker').value;
+  const allData = JSON.parse(localStorage.getItem(STORE_KEY) || '{}');
+  
+  // 只提取當前月份的排班數據
+  const monthData = {};
+  Object.keys(allData).forEach(key => {
+    if (key.startsWith(ym + ':')) {
+      monthData[key] = allData[key];
+    }
+  });
+  
+  // 使用 update 模式發送（會先刪除舊記錄再寫入新記錄）
+  await sendScheduleToGoogleSheets(ym, monthData, 'update', scheduleType);
+}
+
+// 發送鑰匙記錄到 Google Sheets
+async function sendKeyRecordToGoogleSheets(record, action) {
+  // 檢查是否已設定 Web App URL
+  if (!GOOGLE_SHEETS_WEB_APP_URL || GOOGLE_SHEETS_WEB_APP_URL === 'YOUR_WEB_APP_URL_HERE') {
+    console.warn('⚠️ Google Sheets Web App URL 尚未設定，跳過鑰匙記錄');
+    return;
+  }
+  
+  try {
+    const postData = {
+      dataType: 'key',
+      action: action, // 'borrow', 'return', 'confirm'
+      record: record
+    };
+    
+    console.log(`📤 正在${action === 'borrow' ? '記錄鑰匙借出' : action === 'return' ? '更新歸還記錄' : '更新值班確認'}到 Google Sheets...`);
+    
+    const response = await fetch(GOOGLE_SHEETS_WEB_APP_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(postData)
+    });
+    
+    console.log(`✅ 鑰匙記錄已${action === 'borrow' ? '寫入' : '更新到'} Google Sheets`);
+    
+  } catch (error) {
+    console.error('❌ 發送鑰匙記錄到 Google Sheets 時發生錯誤:', error);
+  }
+}
+
+// 從 Google Sheets 讀取鑰匙借還記錄（使用 JSONP）
+async function loadKeyRecordsFromGoogleSheets() {
+  if (!GOOGLE_SHEETS_WEB_APP_URL || GOOGLE_SHEETS_WEB_APP_URL === 'YOUR_WEB_APP_URL_HERE') {
+    console.warn('⚠️ Google Sheets Web App URL 尚未設定');
+    return null;
+  }
+  
+  return new Promise((resolve) => {
+    try {
+      console.log('📥 正在從 Google Sheets 讀取鑰匙借還記錄...');
+      
+      const callbackName = 'keyCallback_' + Date.now();
+      const url = `${GOOGLE_SHEETS_WEB_APP_URL}?action=getKeys&callback=${callbackName}`;
+      
+      window[callbackName] = function(result) {
+        delete window[callbackName];
+        const scriptTag = document.getElementById(callbackName);
+        if (scriptTag) scriptTag.remove();
+        
+        if (result.status === 'success') {
+          console.log(`✅ 成功讀取 ${result.recordCount} 筆鑰匙記錄`);
+          resolve(result.data);
+        } else {
+          console.error('❌ 讀取失敗:', result.message);
+          resolve(null);
+        }
+      };
+      
+      const script = document.createElement('script');
+      script.id = callbackName;
+      script.src = url;
+      script.onerror = () => {
+        delete window[callbackName];
+        console.error('❌ 載入鑰匙記錄失敗');
+        resolve(null);
+      };
+      
+      document.head.appendChild(script);
+      
+      // 超時處理
+      setTimeout(() => {
+        if (window[callbackName]) {
+          delete window[callbackName];
+          const scriptTag = document.getElementById(callbackName);
+          if (scriptTag) scriptTag.remove();
+          console.error('❌ 讀取鑰匙記錄超時');
+          resolve(null);
+        }
+      }, 30000);
+      
+    } catch (error) {
+      console.error('❌ 讀取鑰匙記錄錯誤:', error);
+      resolve(null);
+    }
+  });
+}
+
+// 自動載入今天的鑰匙記錄（靜默模式，不顯示錯誤提示）
+async function autoLoadTodayKeyRecords() {
+  try {
+    console.log('🔄 自動從 Google Sheets 載入今日鑰匙記錄...');
+    const sheetsRecords = await loadKeyRecordsFromGoogleSheets();
+    
+    if (!sheetsRecords || sheetsRecords.length === 0) {
+      console.log('📝 Google Sheets 中暫無鑰匙記錄');
+      return;
+    }
+    
+    // 轉換 Sheets 記錄格式為本地格式
+    const localRecords = [];
+    const today = getDateString(currentViewDate);
+    
+    sheetsRecords.forEach(sheetRecord => {
+      // 檢查是否為當天的記錄
+      const borrowDate = sheetRecord.borrowTime ? new Date(sheetRecord.borrowTime) : null;
+      
+      if (borrowDate && getDateString(borrowDate) === today) {
+        // 轉換為本地記錄格式
+        const localRecord = {
+          id: sheetRecord.id || Date.now(),
+          time: borrowDate ? `${borrowDate.getMonth()+1}/${borrowDate.getDate()} ${borrowDate.getHours().toString().padStart(2,'0')}:${borrowDate.getMinutes().toString().padStart(2,'0')}` : '',
+          borrowerType: sheetRecord.borrowerType === '同業' ? 'colleague' : 'member',
+          memberId: sheetRecord.borrowerId || null,
+          memberName: sheetRecord.borrowerType === '成員' ? sheetRecord.borrowerName : null,
+          colleagueName: sheetRecord.borrowerType === '同業' ? sheetRecord.borrowerName : null,
+          colleaguePhone: sheetRecord.borrowerPhone || null,
+          displayName: sheetRecord.borrowerType === '同業' 
+            ? (sheetRecord.borrowerPhone ? `${sheetRecord.borrowerName} (${sheetRecord.borrowerPhone})` : sheetRecord.borrowerName)
+            : `${sheetRecord.borrowerId} ${sheetRecord.borrowerName}`,
+          keyItem: sheetRecord.keyItem,
+          status: sheetRecord.status === '已歸還' ? 'returned' : 'borrowed',
+          borrowTime: borrowDate ? borrowDate.toISOString() : new Date().toISOString(),
+          dutyConfirmed: sheetRecord.dutyConfirmedBy ? true : false,
+          dutyConfirmedBy: sheetRecord.dutyConfirmedBy || null,
+          dutyConfirmedTime: null
+        };
+        
+        // 處理歸還時間
+        if (sheetRecord.returnTime) {
+          const returnDate = new Date(sheetRecord.returnTime);
+          localRecord.returnTime = returnDate.toISOString();
+          localRecord.returnTimeStr = `${returnDate.getMonth()+1}/${returnDate.getDate()} ${returnDate.getHours().toString().padStart(2,'0')}:${returnDate.getMinutes().toString().padStart(2,'0')}`;
+        }
+        
+        localRecords.push(localRecord);
+      }
+    });
+    
+    if (localRecords.length > 0) {
+      // 合併到本地記錄（避免重複）
+      const existingRecords = JSON.parse(localStorage.getItem(KEY_RECORD_KEY) || '[]');
+      const existingIds = new Set(existingRecords.map(r => r.id));
+      
+      let newCount = 0;
+      localRecords.forEach(newRecord => {
+        if (!existingIds.has(newRecord.id)) {
+          existingRecords.push(newRecord);
+          newCount++;
+        }
+      });
+      
+      if (newCount > 0) {
+        localStorage.setItem(KEY_RECORD_KEY, JSON.stringify(existingRecords));
+        renderKeyTable();
+        console.log(`✅ 已自動載入 ${newCount} 筆今日鑰匙記錄`);
+        showSyncNotification(`🔑 已載入 ${newCount} 筆鑰匙記錄`);
+      } else {
+        console.log('✓ 本地記錄已是最新');
+      }
+    } else {
+      console.log('📝 Google Sheets 中暫無今日鑰匙記錄');
+    }
+  } catch (error) {
+    console.error('❌ 自動載入鑰匙記錄失敗:', error);
+  }
+}
+
+// 從 Sheets 同步當天的鑰匙記錄到本地（手動同步，顯示提示）
+async function syncTodayKeyRecordsFromSheets() {
+  const sheetsRecords = await loadKeyRecordsFromGoogleSheets();
+  
+  if (!sheetsRecords || sheetsRecords.length === 0) {
+    showCustomAlert('Google Sheets 中沒有鑰匙記錄', 'error');
+    return;
+  }
+  
+  // 轉換 Sheets 記錄格式為本地格式
+  const localRecords = [];
+  const today = getDateString(currentViewDate);
+  
+  sheetsRecords.forEach(sheetRecord => {
+    // 檢查是否為當天的記錄
+    const borrowDate = sheetRecord.borrowTime ? new Date(sheetRecord.borrowTime) : null;
+    
+    if (borrowDate && getDateString(borrowDate) === today) {
+      // 轉換為本地記錄格式
+      const localRecord = {
+        id: sheetRecord.id || Date.now(),
+        time: borrowDate ? `${borrowDate.getMonth()+1}/${borrowDate.getDate()} ${borrowDate.getHours().toString().padStart(2,'0')}:${borrowDate.getMinutes().toString().padStart(2,'0')}` : '',
+        borrowerType: sheetRecord.borrowerType === '同業' ? 'colleague' : 'member',
+        memberId: sheetRecord.borrowerId || null,
+        memberName: sheetRecord.borrowerType === '成員' ? sheetRecord.borrowerName : null,
+        colleagueName: sheetRecord.borrowerType === '同業' ? sheetRecord.borrowerName : null,
+        colleaguePhone: sheetRecord.borrowerPhone || null,
+        displayName: sheetRecord.borrowerType === '同業' 
+          ? (sheetRecord.borrowerPhone ? `${sheetRecord.borrowerName} (${sheetRecord.borrowerPhone})` : sheetRecord.borrowerName)
+          : `${sheetRecord.borrowerId} ${sheetRecord.borrowerName}`,
+        keyItem: sheetRecord.keyItem,
+        status: sheetRecord.status === '已歸還' ? 'returned' : 'borrowed',
+        borrowTime: borrowDate ? borrowDate.toISOString() : new Date().toISOString(),
+        dutyConfirmed: sheetRecord.dutyConfirmedBy ? true : false,
+        dutyConfirmedBy: sheetRecord.dutyConfirmedBy || null,
+        dutyConfirmedTime: null
+      };
+      
+      // 處理歸還時間
+      if (sheetRecord.returnTime) {
+        const returnDate = new Date(sheetRecord.returnTime);
+        localRecord.returnTime = returnDate.toISOString();
+        localRecord.returnTimeStr = `${returnDate.getMonth()+1}/${returnDate.getDate()} ${returnDate.getHours().toString().padStart(2,'0')}:${returnDate.getMinutes().toString().padStart(2,'0')}`;
+      }
+      
+      localRecords.push(localRecord);
+    }
+  });
+  
+  if (localRecords.length === 0) {
+    showCustomAlert('Google Sheets 中沒有今天的鑰匙記錄', 'error');
+    return;
+  }
+  
+  // 合併到本地記錄（避免重複）
+  const existingRecords = JSON.parse(localStorage.getItem(KEY_RECORD_KEY) || '[]');
+  const existingIds = new Set(existingRecords.map(r => r.id));
+  
+  localRecords.forEach(newRecord => {
+    if (!existingIds.has(newRecord.id)) {
+      existingRecords.push(newRecord);
+    }
+  });
+  
+  localStorage.setItem(KEY_RECORD_KEY, JSON.stringify(existingRecords));
+  renderKeyTable();
+  
+  showCustomAlert(`✅ 已從 Google Sheets 同步 ${localRecords.length} 筆今日鑰匙記錄`, 'success');
+  showSyncNotification('🔑 鑰匙記錄已從 Sheets 同步');
+}
+
+// 從 Google Sheets 讀取鑰匙名稱清單（使用 JSONP）
+async function loadKeyListFromGoogleSheets() {
+  if (!GOOGLE_SHEETS_WEB_APP_URL || GOOGLE_SHEETS_WEB_APP_URL === 'YOUR_WEB_APP_URL_HERE') {
+    console.warn('⚠️ Google Sheets Web App URL 尚未設定');
+    return null;
+  }
+  
+  return new Promise((resolve) => {
+    try {
+      console.log('📥 正在從 Google Sheets 讀取鑰匙名稱清單...');
+      
+      const callbackName = 'keyListCallback_' + Date.now();
+      const url = `${GOOGLE_SHEETS_WEB_APP_URL}?action=getKeyList&callback=${callbackName}`;
+      
+      window[callbackName] = function(result) {
+        delete window[callbackName];
+        const scriptTag = document.getElementById(callbackName);
+        if (scriptTag) scriptTag.remove();
+        
+        if (result.status === 'success') {
+          console.log(`✅ 成功讀取 ${result.recordCount} 個鑰匙項目`);
+          resolve(result.data);
+        } else {
+          console.error('❌ 讀取失敗:', result.message);
+          resolve(null);
+        }
+      };
+      
+      const script = document.createElement('script');
+      script.id = callbackName;
+      script.src = url;
+      script.onerror = () => {
+        delete window[callbackName];
+        console.error('❌ 載入鑰匙名稱清單失敗');
+        resolve(null);
+      };
+      
+      document.head.appendChild(script);
+      
+      // 超時處理
+      setTimeout(() => {
+        if (window[callbackName]) {
+          delete window[callbackName];
+          const scriptTag = document.getElementById(callbackName);
+          if (scriptTag) scriptTag.remove();
+          console.error('❌ 讀取鑰匙名稱清單超時');
+          resolve(null);
+        }
+      }, 15000);
+      
+    } catch (error) {
+      console.error('❌ 讀取鑰匙名稱清單錯誤:', error);
+      resolve(null);
+    }
+  });
+}
+
+// 載入並快取鑰匙名稱清單
+async function loadAndCacheKeyList() {
+  const keyList = await loadKeyListFromGoogleSheets();
+  
+  if (keyList && keyList.length > 0) {
+    keyNameList = keyList;
+    localStorage.setItem(KEY_LIST_KEY, JSON.stringify(keyList));
+    console.log(`✅ 已載入 ${keyList.length} 個鑰匙項目到搜尋清單`);
+    
+    // 初始化搜索功能
+    initKeySearch();
+  } else {
+    // 如果 Sheets 沒有資料，嘗試從本地讀取
+    const cached = localStorage.getItem(KEY_LIST_KEY);
+    if (cached) {
+      keyNameList = JSON.parse(cached);
+      console.log(`📦 從快取載入 ${keyNameList.length} 個鑰匙項目`);
+      initKeySearch();
+    } else {
+      console.log('📝 尚無鑰匙名稱清單');
+    }
+  }
+}
+
+// 初始化鑰匙搜索功能
+function initKeySearch() {
+  const keyInput = document.getElementById('keyItem');
+  if (!keyInput) return;
+  
+  // 創建搜索建議下拉框
+  let searchDropdown = document.getElementById('keySearchDropdown');
+  if (!searchDropdown) {
+    searchDropdown = document.createElement('div');
+    searchDropdown.id = 'keySearchDropdown';
+    searchDropdown.style.cssText = `
+      position: absolute;
+      background: white;
+      border: 2px solid #667eea;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      max-height: 300px;
+      overflow-y: auto;
+      z-index: 1000;
+      display: none;
+      width: ${keyInput.offsetWidth}px;
+    `;
+    keyInput.parentElement.style.position = 'relative';
+    keyInput.parentElement.appendChild(searchDropdown);
+  }
+  
+  // 監聽輸入事件
+  keyInput.addEventListener('input', function() {
+    const searchText = this.value.trim().toLowerCase();
+    
+    if (searchText.length === 0) {
+      searchDropdown.style.display = 'none';
+      return;
+    }
+    
+    // 過濾匹配的鑰匙項目
+    const matches = keyNameList.filter(key => 
+      key.name.toLowerCase().includes(searchText) ||
+      (key.category && key.category.toLowerCase().includes(searchText))
+    );
+    
+    if (matches.length > 0) {
+      searchDropdown.innerHTML = matches.map(key => `
+        <div class="key-search-item" 
+          onclick="selectKeyFromSearch('${key.name}')"
+          style="padding: 10px 15px; cursor: pointer; border-bottom: 1px solid #eee; transition: all 0.2s;"
+          onmouseover="this.style.background='#f0f7ff'"
+          onmouseout="this.style.background='white'">
+          <div style="font-weight: 600; color: #333; margin-bottom: 2px;">${key.name}</div>
+          ${key.category ? `<div style="font-size: 11px; color: #666;">分類：${key.category}</div>` : ''}
+        </div>
+      `).join('');
+      searchDropdown.style.display = 'block';
+    } else {
+      searchDropdown.style.display = 'none';
+    }
+  });
+  
+  // 點擊外部關閉下拉框
+  document.addEventListener('click', function(e) {
+    if (e.target !== keyInput && !searchDropdown.contains(e.target)) {
+      searchDropdown.style.display = 'none';
+    }
+  });
+}
+
+// 從搜索建議中選擇鑰匙項目
+function selectKeyFromSearch(keyName) {
+  const keyInput = document.getElementById('keyItem');
+  const searchDropdown = document.getElementById('keySearchDropdown');
+  
+  if (keyInput) {
+    keyInput.value = keyName;
+    searchDropdown.style.display = 'none';
+    keyInput.focus();
+  }
+}
+
+// 顯示同步成功通知
+function showSyncNotification(message) {
+  const notification = document.createElement('div');
+  notification.style.cssText = `
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    padding: 15px 25px;
+    border-radius: 10px;
+    z-index: 10000;
+    font-size: 16px;
+    font-weight: bold;
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+    animation: slideInRight 0.5s ease-out;
+  `;
+  notification.textContent = message;
+  document.body.appendChild(notification);
+  
+  // 3秒後淡出並移除
+  setTimeout(() => {
+    notification.style.animation = 'fadeOut 0.5s ease-out';
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification);
+      }
+    }, 500);
+  }, 3000);
+}
+
+// 開啟 Google Sheets
+function openGoogleSheets() {
+  const sheetsUrl = 'https://docs.google.com/spreadsheets/d/1_eujc5OwWR4riQ0oAkGbkkIQQXaX5U3a9xCLvi_qgoU/edit';
+  
+  showConfirmModal(
+    '📊 開啟 Google Sheets',
+    '即將在新分頁開啟 Google Sheets 排班記錄',
+    '您可以查看最新的排班和鑰匙借還記錄',
+    () => {
+      window.open(sheetsUrl, '_blank');
+      showSyncNotification('📊 已開啟 Google Sheets');
+    }
+  );
+}
+
+// 執行管理功能（下拉選單）
+function executeAdminAction(action) {
+  if (!action) return; // 如果選擇的是預設選項，不執行任何操作
+  
+  // 重置選單到預設選項
+  const select = document.getElementById('adminActionSelect');
+  if (select) select.value = '';
+  
+  // 執行對應的功能
+  switch(action) {
+    case 'autoAssign':
+      requirePassword('autoAssign');
+      break;
+    case 'clearData':
+      requirePassword('clearData');
+      break;
+    case 'showStatistics':
+      requirePassword('showStatistics');
+      break;
+    case 'syncFromSheets':
+      syncScheduleFromSheets();
+      break;
+    case 'openSheets':
+      openGoogleSheets();
+      break;
+  }
+}
+
+// 從 Google Sheets 讀取排班資料（使用 JSONP 避免 CORS 問題）
+async function loadScheduleFromGoogleSheets(yearMonth) {
+  if (!GOOGLE_SHEETS_WEB_APP_URL || GOOGLE_SHEETS_WEB_APP_URL === 'YOUR_WEB_APP_URL_HERE') {
+    showCustomAlert('⚠️ Google Sheets Web App URL 尚未設定', 'error');
+    return null;
+  }
+  
+  return new Promise((resolve, reject) => {
+    try {
+      console.log(`📥 正在從 Google Sheets 讀取 ${yearMonth || '所有'} 排班資料...`);
+      
+      // 生成唯一的 callback 函數名稱
+      const callbackName = 'jsonpCallback_' + Date.now();
+      
+      // 建立 JSONP 請求
+      const url = yearMonth 
+        ? `${GOOGLE_SHEETS_WEB_APP_URL}?action=getSchedule&yearMonth=${yearMonth}&callback=${callbackName}`
+        : `${GOOGLE_SHEETS_WEB_APP_URL}?action=getSchedule&callback=${callbackName}`;
+      
+      // 定義全局 callback 函數
+      window[callbackName] = function(result) {
+        // 清除 script 標籤和 callback 函數
+        delete window[callbackName];
+        const scriptTag = document.getElementById(callbackName);
+        if (scriptTag) {
+          scriptTag.parentNode.removeChild(scriptTag);
+        }
+        
+        if (result.status === 'success') {
+          console.log(`✅ 成功讀取 ${result.recordCount} 筆排班記錄`);
+          resolve(result.data);
+        } else {
+          console.error('❌ 讀取失敗:', result.message);
+          showCustomAlert(`讀取失敗：${result.message}`, 'error');
+          resolve(null);
+        }
+      };
+      
+      // 建立 script 標籤來發送 JSONP 請求
+      const script = document.createElement('script');
+      script.id = callbackName;
+      script.src = url;
+      
+      console.log('📡 JSONP 請求 URL:', url);
+      
+      script.onload = function() {
+        console.log('✅ JSONP script 載入成功');
+      };
+      
+      script.onerror = function(error) {
+        delete window[callbackName];
+        console.error('❌ JSONP script 載入失敗');
+        console.error('錯誤詳情:', error);
+        console.error('請求 URL:', url);
+        console.error('可能原因：1) Apps Script 未部署 2) URL 不正確 3) 網路問題');
+        resolve(null);
+      };
+      
+      document.head.appendChild(script);
+      console.log('✅ JSONP script 標籤已添加到頁面');
+      
+      // 設置超時（30秒）
+      setTimeout(() => {
+        if (window[callbackName]) {
+          delete window[callbackName];
+          const scriptTag = document.getElementById(callbackName);
+          if (scriptTag) {
+            scriptTag.parentNode.removeChild(scriptTag);
+          }
+          console.error('❌ 讀取 Google Sheets 超時');
+          resolve(null);
+        }
+      }, 30000);
+      
+    } catch (error) {
+      console.error('❌ 從 Google Sheets 讀取資料時發生錯誤:', error);
+      resolve(null);
+    }
+  });
+}
+
+// 同步排班：從 Google Sheets 讀取並更新本地
+async function syncScheduleFromSheets() {
+  const ym = document.getElementById('monthPicker').value;
+  
+  showConfirmModal(
+    '🔄 從 Google Sheets 同步排班',
+    `確定要從 Google Sheets 讀取 ${ym} 的排班資料嗎？`,
+    '這會覆蓋本地的排班資料！',
+    async () => {
+      const scheduleData = await loadScheduleFromGoogleSheets(ym);
+      
+      if (scheduleData) {
+        // 更新 localStorage
+        const allData = JSON.parse(localStorage.getItem(STORE_KEY) || '{}');
+        
+        // 刪除本地該月份的舊排班
+        Object.keys(allData).forEach(key => {
+          if (key.startsWith(ym + ':')) {
+            delete allData[key];
+          }
+        });
+        
+        // 合併 Google Sheets 的資料
+        Object.assign(allData, scheduleData);
+        
+        localStorage.setItem(STORE_KEY, JSON.stringify(allData));
+        
+        // 重新渲染
+        buildGrid();
+        renderMemberList();
+        updateDutyMember();
+        
+        showCustomAlert(`✅ 已從 Google Sheets 同步 ${Object.keys(scheduleData).length} 筆排班記錄`, 'success');
+        showSyncNotification('📥 排班已從 Google Sheets 同步');
+      }
+    }
+  );
+}
+
+// 首次自動載入標記
+let isFirstAutoLoad = true;
+
+// 自動從 Google Sheets 刷新排班（定時或手動）
+async function autoRefreshFromSheets(showLoadingHint = false) {
+  const ym = document.getElementById('monthPicker').value;
+  
+  if (showLoadingHint || isFirstAutoLoad) {
+    console.log('🔄 正在從 Google Sheets 載入最新班表...');
+  } else {
+    console.log('🔄 自動刷新：檢查 Google Sheets 是否有更新...');
+  }
+  
+  const scheduleData = await loadScheduleFromGoogleSheets(ym);
+  
+  if (scheduleData) {
+    const allData = JSON.parse(localStorage.getItem(STORE_KEY) || '{}');
+    
+    // 比較本地和 Sheets 的資料是否一致
+    let hasChanges = false;
+    const localMonthData = {};
+    Object.keys(allData).forEach(key => {
+      if (key.startsWith(ym + ':')) {
+        localMonthData[key] = allData[key];
+      }
+    });
+    
+    // 檢查是否有差異
+    const localKeys = Object.keys(localMonthData).sort();
+    const sheetsKeys = Object.keys(scheduleData).sort();
+    
+    if (localKeys.length !== sheetsKeys.length) {
+      hasChanges = true;
+    } else {
+      for (let i = 0; i < localKeys.length; i++) {
+        if (localKeys[i] !== sheetsKeys[i] || localMonthData[localKeys[i]] !== scheduleData[sheetsKeys[i]]) {
+          hasChanges = true;
+          break;
+        }
+      }
+    }
+    
+    if (hasChanges) {
+      console.log('🔄 檢測到 Google Sheets 有更新，正在同步...');
+      
+      // 刪除本地該月份的舊排班
+      Object.keys(allData).forEach(key => {
+        if (key.startsWith(ym + ':')) {
+          delete allData[key];
+        }
+      });
+      
+      // 合併 Google Sheets 的資料
+      Object.assign(allData, scheduleData);
+      
+      localStorage.setItem(STORE_KEY, JSON.stringify(allData));
+      
+      // 重新渲染
+      buildGrid();
+      renderMemberList();
+      updateDutyMember();
+      
+      if (isFirstAutoLoad) {
+        showSyncNotification('✅ 已自動載入最新班表');
+      } else {
+        showSyncNotification('📥 已從 Google Sheets 同步最新排班');
+      }
+    } else {
+      console.log('✅ 排班資料已是最新，無需更新');
+      if (isFirstAutoLoad) {
+        console.log('📋 班表已載入完成');
+      }
+    }
+    
+    // 首次載入完成後重置標記
+    if (isFirstAutoLoad) {
+      isFirstAutoLoad = false;
+    }
+  }
+}
+
+// 添加動畫樣式
+if (!document.getElementById('syncNotificationStyles')) {
+  const style = document.createElement('style');
+  style.id = 'syncNotificationStyles';
+  style.textContent = `
+    @keyframes slideInRight {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    @keyframes fadeOut {
+      from {
+        opacity: 1;
+      }
+      to {
+        opacity: 0;
+      }
+    }
+  `;
+  document.head.appendChild(style);
 }
 
 // 快速填班功能
@@ -1873,12 +2798,17 @@ function executeQuickFill(){
   }
   
   localStorage.setItem(STORE_KEY,JSON.stringify(data));
-  // 同步到 Firebase
-  syncToFirebase(STORE_KEY, JSON.stringify(data));
   hydrate();
   renderMemberList(); // 更新成員統計
   updateDutyMember(); // 更新值班人員
+  
   showCustomAlert(`✅ 已為「${memberName}」填滿本月空班`, 'success');
+  
+  // 同步到 Google Sheets（異步執行）
+  (async () => {
+    await syncCurrentMonthToGoogleSheets('快速填班');
+    showSyncNotification('📊 排班已同步到 Google Sheets');
+  })();
 }
 
 // 複製上週排班
@@ -2110,8 +3040,6 @@ function saveColleagueToHistory(fullColleagueName, phone) {
   }
   
   localStorage.setItem(COLLEAGUE_HISTORY_KEY, JSON.stringify(allHistory));
-  // 同步到 Firebase
-  syncToFirebase(COLLEAGUE_HISTORY_KEY, JSON.stringify(allHistory));
 }
 
 
@@ -2183,6 +3111,9 @@ function checkDateChange() {
       renderKeyTable();
       updateDutyMember();
       
+      // 自動從 Google Sheets 載入新一天的鑰匙記錄
+      autoLoadTodayKeyRecords();
+      
       // 顯示提示
       showCustomAlert('🌙 已自動切換到新的一天！', 'success');
     }
@@ -2202,12 +3133,19 @@ function startAutoDateCheck() {
     updateDutyMember();
   }, 180000); // 180000ms = 3分鐘
   
+  // 每5分鐘自動從 Google Sheets 同步鑰匙記錄
+  setInterval(() => {
+    console.log('⏰ 定期自動同步鑰匙記錄...');
+    autoLoadTodayKeyRecords();
+  }, 300000); // 300000ms = 5分鐘
+  
   // 當頁面重新獲得焦點時也檢查一次
   document.addEventListener('visibilitychange', function() {
     if (!document.hidden) {
       console.log('頁面重新獲得焦點，檢查日期是否變更');
       checkDateChange();
       updateDutyMember(); // 同時更新值班人員
+      autoLoadTodayKeyRecords(); // 重新載入鑰匙記錄
     }
   });
   
@@ -2216,10 +3154,12 @@ function startAutoDateCheck() {
     console.log('視窗重新獲得焦點，檢查日期是否變更');
     checkDateChange();
     updateDutyMember(); // 同時更新值班人員
+    autoLoadTodayKeyRecords(); // 重新載入鑰匙記錄
   });
   
   console.log('✅ 已啟動自動跨日檢測（每分鐘檢查 + 頁面/視窗焦點時檢查）');
   console.log('✅ 已啟動自動更新值班人員（每3分鐘檢查一次班別變更）');
+  console.log('✅ 已啟動自動同步鑰匙記錄（每5分鐘 + 頁面/視窗焦點時同步）');
 }
 
 // 鑰匙借出表簿功能
@@ -2236,6 +3176,9 @@ function initKeyRecord(){
   
   renderKeyTable();
   renderKeyItemHistory(); // 渲染鑰匙項目歷史記錄
+  
+  // 自動從 Google Sheets 載入今天的鑰匙記錄
+  autoLoadTodayKeyRecords();
   
   // 啟動自動跨日檢測
   startAutoDateCheck();
@@ -2326,8 +3269,6 @@ function saveKeyItemToHistory(keyItem) {
   }
   
   localStorage.setItem(KEY_HISTORY_KEY, JSON.stringify(history));
-  // 同步到 Firebase
-  syncToFirebase(KEY_HISTORY_KEY, JSON.stringify(history));
   renderKeyItemHistory();
 }
 
@@ -2535,11 +3476,7 @@ function executeBatchBorrow() {
   }
   const now = new Date();
   const timeStr = `${now.getMonth()+1}/${now.getDate()} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
-  let records = JSON.parse(localStorage.getItem(KEY_RECORD_KEY) || '[]');
-  // 確保 records 是數組
-  if (!Array.isArray(records)) {
-    records = [];
-  }
+  const records = JSON.parse(localStorage.getItem(KEY_RECORD_KEY) || '[]');
   
   // 將所有選中的鑰匙項目合併成一筆記錄
   const allKeyItems = Array.from(selectedKeyItems).join('、');
@@ -2565,8 +3502,9 @@ function executeBatchBorrow() {
   
   records.push(keyRecord);
   localStorage.setItem(KEY_RECORD_KEY, JSON.stringify(records));
-  // 同步到 Firebase
-  syncToFirebase(KEY_RECORD_KEY, JSON.stringify(records));
+  
+  // 發送鑰匙借出記錄到 Google Sheets
+  sendKeyRecordToGoogleSheets(keyRecord, 'borrow');
   
   // 保存所有鑰匙項目到歷史記錄
   selectedKeyItems.forEach(item => {
@@ -2605,8 +3543,6 @@ function clearKeyItemHistory() {
     '這不會影響借出記錄，只會清除快速選擇列表',
     () => {
       localStorage.removeItem(KEY_HISTORY_KEY);
-      // 同步到 Firebase（清空數據）
-      syncToFirebase(KEY_HISTORY_KEY, '[]');
       selectedKeyItems.clear(); // 同時清除選擇
       renderKeyItemHistory();
       showCustomAlert('✅ 已清除鑰匙項目記錄', 'success');
@@ -2752,8 +3688,6 @@ function clearTempDuty() {
       const tempDutyData = JSON.parse(localStorage.getItem(TEMP_DUTY_KEY) || '{}');
       delete tempDutyData[dateKey];
       localStorage.setItem(TEMP_DUTY_KEY, JSON.stringify(tempDutyData));
-      // 同步到 Firebase
-      syncToFirebase(TEMP_DUTY_KEY, JSON.stringify(tempDutyData));
       
       updateDutyMember();
       showCustomAlert('✅ 已取消臨時代班設定，恢復使用排班表數據', 'success');
@@ -3130,11 +4064,7 @@ function updateDutyMember(){
 
 // 值班確認歸還
 function dutyConfirm(recordId){
-  let records = JSON.parse(localStorage.getItem(KEY_RECORD_KEY) || '[]');
-  // 確保 records 是數組
-  if (!Array.isArray(records)) {
-    records = [];
-  }
+  const records = JSON.parse(localStorage.getItem(KEY_RECORD_KEY) || '[]');
   const record = records.find(r => r.id === recordId);
   
   if(!record){
@@ -3212,8 +4142,10 @@ function dutyConfirm(recordId){
       record.dutyConfirmedTime = now.toISOString();
       
       localStorage.setItem(KEY_RECORD_KEY, JSON.stringify(records));
-      // 同步到 Firebase
-      syncToFirebase(KEY_RECORD_KEY, JSON.stringify(records));
+      
+      // 發送值班確認記錄到 Google Sheets
+      sendKeyRecordToGoogleSheets(record, 'confirm');
+      
       renderKeyTable();
       showCustomAlert(`✅ ${currentDutyMember.name} 已確認「${record.keyItem}」歸還`, 'success');
     }
@@ -3274,11 +4206,7 @@ function isSameDay(date1, date2) {
 
 // 清理30天前的記錄
 function cleanOldRecords() {
-  let records = JSON.parse(localStorage.getItem(KEY_RECORD_KEY) || '[]');
-  // 確保 records 是數組
-  if (!Array.isArray(records)) {
-    records = [];
-  }
+  const records = JSON.parse(localStorage.getItem(KEY_RECORD_KEY) || '[]');
   const now = new Date();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
   
@@ -3289,8 +4217,6 @@ function cleanOldRecords() {
   
   if (filteredRecords.length !== records.length) {
     localStorage.setItem(KEY_RECORD_KEY, JSON.stringify(filteredRecords));
-    // 同步到 Firebase
-    syncToFirebase(KEY_RECORD_KEY, JSON.stringify(filteredRecords));
     console.log(`已清理 ${records.length - filteredRecords.length} 條超過30天的記錄`);
   }
 }
@@ -3383,15 +4309,12 @@ function borrowKey(){
     dutyConfirmedTime: null
   };
   
-  let records = JSON.parse(localStorage.getItem(KEY_RECORD_KEY) || '[]');
-  // 確保 records 是數組
-  if (!Array.isArray(records)) {
-    records = [];
-  }
+  const records = JSON.parse(localStorage.getItem(KEY_RECORD_KEY) || '[]');
   records.push(keyRecord);
   localStorage.setItem(KEY_RECORD_KEY, JSON.stringify(records));
-  // 同步到 Firebase
-  syncToFirebase(KEY_RECORD_KEY, JSON.stringify(records));
+  
+  // 發送鑰匙借出記錄到 Google Sheets
+  sendKeyRecordToGoogleSheets(keyRecord, 'borrow');
   
   // 保存鑰匙項目到歷史記錄
   saveKeyItemToHistory(keyItem);
@@ -3433,15 +4356,9 @@ function deleteKeyRecord(recordId){
     '確定要刪除此記錄嗎？',
     '此操作無法復原！',
     () => {
-      let records = JSON.parse(localStorage.getItem(KEY_RECORD_KEY) || '[]');
-      // 確保 records 是數組
-      if (!Array.isArray(records)) {
-        records = [];
-      }
+      const records = JSON.parse(localStorage.getItem(KEY_RECORD_KEY) || '[]');
       const filteredRecords = records.filter(r => r.id !== recordId);
       localStorage.setItem(KEY_RECORD_KEY, JSON.stringify(filteredRecords));
-      // 同步到 Firebase
-      syncToFirebase(KEY_RECORD_KEY, JSON.stringify(filteredRecords));
       
       renderKeyTable();
       showCustomAlert('✅ 記錄已刪除', 'success');
@@ -3450,11 +4367,7 @@ function deleteKeyRecord(recordId){
 }
 
 function renderKeyTable(){
-  let allRecords = JSON.parse(localStorage.getItem(KEY_RECORD_KEY) || '[]');
-  // 確保 allRecords 是數組
-  if (!Array.isArray(allRecords)) {
-    allRecords = [];
-  }
+  const allRecords = JSON.parse(localStorage.getItem(KEY_RECORD_KEY) || '[]');
   const tbody = document.getElementById('keyTableBody');
   tbody.innerHTML = '';
   
@@ -3490,9 +4403,23 @@ function renderKeyTable(){
     const timeCell = document.createElement('td');
     timeCell.className = 'auto-size';
     if(record.status === 'returned' && record.returnTimeStr){
-      timeCell.innerHTML = `<div>借:${record.time}</div><div style="color:#666;">還:${record.returnTimeStr}</div>`;
+      timeCell.innerHTML = `
+        <div style="font-size:12px;line-height:1.4;margin-bottom:3px;">
+          <span style="color:#2196f3;font-weight:600;">借:</span>
+          <span style="color:#2196f3;">${record.time}</span>
+        </div>
+        <div style="font-size:12px;line-height:1.4;">
+          <span style="color:#28a745;font-weight:600;">還:</span>
+          <span style="color:#28a745;">${record.returnTimeStr}</span>
+        </div>
+      `;
     }else{
-      timeCell.innerHTML = `<div>${record.time}</div>`;
+      timeCell.innerHTML = `
+        <div style="font-size:12px;line-height:1.4;">
+          <span style="color:#2196f3;font-weight:600;">借:</span>
+          <span style="color:#2196f3;">${record.time}</span>
+        </div>
+      `;
     }
     
     const memberCell = document.createElement('td');
@@ -3729,11 +4656,7 @@ function optimizeKeyTableTextSize() {
 }
 
 function quickReturn(recordId){
-  let records = JSON.parse(localStorage.getItem(KEY_RECORD_KEY) || '[]');
-  // 確保 records 是數組
-  if (!Array.isArray(records)) {
-    records = [];
-  }
+  const records = JSON.parse(localStorage.getItem(KEY_RECORD_KEY) || '[]');
   const record = records.find(r => r.id === recordId);
   
   if(!record){
@@ -3763,8 +4686,10 @@ function quickReturn(recordId){
       record.returnTimeStr = `${now.getMonth()+1}/${now.getDate()} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
       
       localStorage.setItem(KEY_RECORD_KEY, JSON.stringify(records));
-      // 同步到 Firebase
-      syncToFirebase(KEY_RECORD_KEY, JSON.stringify(records));
+      
+      // 發送歸還記錄到 Google Sheets
+      sendKeyRecordToGoogleSheets(record, 'return');
+      
       cleanOldRecords(); // 清理舊記錄
       renderKeyTable();
       showCustomAlert(`✅ ${borrowerDisplay} 已歸還「${record.keyItem}」`, 'success');
@@ -3773,16 +4698,23 @@ function quickReturn(recordId){
 }
 
 function clearKeyHistory(){
-  showConfirmModal(
-    '🗑️ 清除記錄',
-    '確定要清除所有鑰匙借出記錄嗎？',
-    '此操作無法復原！',
+  // 顯示密碼驗證彈窗
+  showPasswordModal(
+    '🔒 管理員驗證',
+    '清除所有鑰匙借出記錄需要管理員權限',
+    '⚠️ 此操作無法復原！',
     () => {
-      localStorage.removeItem(KEY_RECORD_KEY);
-      // 同步到 Firebase（清空數據）
-      syncToFirebase(KEY_RECORD_KEY, '[]');
-      renderKeyTable();
-      showCustomAlert('✅ 已清除所有鑰匙借出記錄', 'success');
+      // 密碼驗證成功後，再次確認
+      showConfirmModal(
+        '🗑️ 確認清除記錄',
+        '確定要清除所有鑰匙借出記錄嗎？',
+        '此操作無法復原！',
+        () => {
+          localStorage.removeItem(KEY_RECORD_KEY);
+          renderKeyTable();
+          showCustomAlert('✅ 已清除所有鑰匙借出記錄', 'success');
+        }
+      );
     }
   );
 }
@@ -3934,18 +4866,15 @@ function showConfirmModal(title, message, detail, onConfirm) {
   document.addEventListener('keydown', escHandler);
   
   // 確認按鈕功能
-  const originalConfirmAction = window.confirmAction;
   window.confirmAction = function(btn) {
     closeModal(overlay);
     if(onConfirm) onConfirm();
     document.removeEventListener('keydown', escHandler);
-    // 恢復原始的 confirmAction 函數
-    window.confirmAction = originalConfirmAction;
   };
 }
 
 // 換班密碼驗證彈窗
-function showPasswordForShiftChange(fromMember, toMember, onSuccess) {
+function showPasswordForShiftChange(date, shift, fromMember, toMember, onSuccess) {
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
   overlay.style.cssText = `
@@ -3968,12 +4897,18 @@ function showPasswordForShiftChange(fromMember, toMember, onSuccess) {
     background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
     border-radius: 20px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-    max-width: 450px;
+    max-width: 500px;
     width: 100%;
     padding: 0;
     overflow: hidden;
     animation: slideIn 0.3s;
   `;
+  
+  // 格式化日期顯示
+  const dateObj = new Date(date);
+  const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+  const weekDay = weekDays[dateObj.getDay()];
+  const displayDate = `${dateObj.getFullYear()}年${dateObj.getMonth()+1}月${dateObj.getDate()}日 (${weekDay})`;
   
   modal.innerHTML = `
     <div style="background:#fff;padding:40px 30px;">
@@ -3982,13 +4917,31 @@ function showPasswordForShiftChange(fromMember, toMember, onSuccess) {
           <span style="font-size:40px;">🔄</span>
         </div>
         <h3 style="margin:0 0 10px;font-size:24px;color:#333;font-weight:bold;">換班驗證</h3>
-        <p style="margin:0 0 15px;color:#6c757d;font-size:14px;">請由秘書/主管輸入密碼</p>
-        <div style="background:#fff3cd;padding:12px;border-radius:8px;border-left:4px solid #ffc107;">
-          <div style="font-size:13px;color:#856404;text-align:left;">
-            <strong>換班內容：</strong><br>
-            <span style="color:#dc3545;">「${fromMember}」</span> 
-            <span style="margin:0 5px;">→</span> 
-            <span style="color:#28a745;">「${toMember}」</span>
+        <p style="margin:0 0 20px;color:#6c757d;font-size:14px;">請由秘書/主管輸入密碼</p>
+        
+        <div style="background:#e3f2fd;padding:15px;border-radius:10px;margin-bottom:15px;border-left:4px solid #2196f3;">
+          <div style="font-size:14px;color:#1565c0;text-align:left;">
+            <div style="margin-bottom:8px;">
+              <strong>📅 日期：</strong>
+              <span style="font-size:15px;font-weight:bold;">${displayDate}</span>
+            </div>
+            <div style="margin-bottom:8px;">
+              <strong>⏰ 班別：</strong>
+              <span style="font-size:15px;font-weight:bold;">${shift}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div style="background:#fff3cd;padding:15px;border-radius:10px;border-left:4px solid #ffc107;">
+          <div style="font-size:14px;color:#856404;text-align:left;">
+            <strong>👥 換班內容：</strong><br>
+            <div style="margin-top:10px;font-size:15px;text-align:center;">
+              <span style="color:#dc3545;font-weight:bold;">「${fromMember}」</span> 
+              <br>
+              <span style="font-size:20px;margin:5px 0;display:inline-block;">⬇️</span>
+              <br>
+              <span style="color:#28a745;font-weight:bold;">「${toMember}」</span>
+            </div>
           </div>
         </div>
       </div>
@@ -4229,6 +5182,115 @@ function verifyPassword(functionName, overlay) {
         input.style.borderColor = '#e9ecef';
         input.style.background = '#fff';
         input.placeholder = '請輸入密碼';
+        input.style.animation = '';
+        input.focus();
+      }, 500);
+    }
+  }
+}
+
+// 通用密碼驗證彈窗（支援自定義回調）
+function showPasswordModal(title, message, warning, onSuccess) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.style.cssText = 'display:flex;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:10000;align-items:center;justify-content:center;animation:fadeIn 0.3s;';
+  
+  const modal = document.createElement('div');
+  modal.className = 'modal-content';
+  modal.style.cssText = 'background:#fff;padding:30px;border-radius:15px;box-shadow:0 10px 40px rgba(0,0,0,0.3);max-width:450px;width:90%;position:relative;animation:slideIn 0.3s;';
+  
+  modal.innerHTML = `
+    <button class="modal-close" onclick="closeModal(this)" style="position:absolute;top:15px;right:15px;background:none;border:none;font-size:28px;cursor:pointer;color:#999;line-height:1;padding:0;width:30px;height:30px;display:flex;align-items:center;justify-content:center;transition:all 0.3s;" onmouseover="this.style.color='#333';this.style.transform='rotate(90deg)'" onmouseout="this.style.color='#999';this.style.transform='rotate(0deg)'">&times;</button>
+    
+    <div style="text-align:center;margin-bottom:25px;">
+      <h3 style="margin:0 0 10px;font-size:24px;color:#333;font-weight:bold;">${title}</h3>
+      <p style="margin:0 0 5px;color:#666;font-size:16px;line-height:1.5;">${message}</p>
+      ${warning ? `<p style="margin:8px 0 0;color:#dc3545;font-size:14px;font-weight:500;">${warning}</p>` : ''}
+    </div>
+    
+    <div style="margin-bottom:20px;">
+      <input type="password" id="generalPasswordInput" placeholder="請輸入管理員密碼" 
+        style="width:100%;padding:12px 15px;border:2px solid #dee2e6;border-radius:8px;font-size:16px;transition:all 0.3s;box-sizing:border-box;"
+        onfocus="this.style.borderColor='#667eea';this.style.boxShadow='0 0 0 3px rgba(102,126,234,0.1)'"
+        onblur="this.style.borderColor='#dee2e6';this.style.boxShadow='none'"
+        onkeypress="if(event.key==='Enter') verifyGeneralPassword(this.closest('.modal-overlay'))">
+    </div>
+    
+    <div style="display:flex;gap:10px;justify-content:center;">
+      <button onclick="verifyGeneralPassword(this.closest('.modal-overlay'))" 
+        style="flex:1;padding:12px 20px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:16px;font-weight:bold;transition:all 0.3s;"
+        onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 5px 15px rgba(102,126,234,0.4)'"
+        onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none'">
+        ✓ 確認
+      </button>
+      <button onclick="closeModal(this)" 
+        style="flex:1;padding:12px 20px;background:#f8f9fa;color:#666;border:1px solid #dee2e6;border-radius:8px;cursor:pointer;font-size:16px;font-weight:500;transition:all 0.3s;"
+        onmouseover="this.style.background='#e9ecef'"
+        onmouseout="this.style.background='#f8f9fa'">
+        ✕ 取消
+      </button>
+    </div>
+  `;
+  
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+  
+  // 保存回調函數
+  window._generalPasswordCallback = onSuccess;
+  
+  // 自動聚焦到密碼輸入框
+  setTimeout(() => {
+    const input = document.getElementById('generalPasswordInput');
+    if (input) input.focus();
+  }, 100);
+  
+  // 點擊遮罩關閉
+  overlay.addEventListener('click', function(e) {
+    if(e.target === overlay) {
+      closeModal(overlay);
+      window._generalPasswordCallback = null;
+    }
+  });
+  
+  // ESC鍵關閉
+  const escHandler = function(e) {
+    if(e.key === 'Escape') {
+      closeModal(overlay);
+      window._generalPasswordCallback = null;
+      document.removeEventListener('keydown', escHandler);
+    }
+  };
+  document.addEventListener('keydown', escHandler);
+}
+
+// 驗證通用密碼
+function verifyGeneralPassword(overlay) {
+  const input = document.getElementById('generalPasswordInput');
+  const password = input ? input.value : '';
+  
+  if (password === ADMIN_PASSWORD) {
+    closeModal(overlay);
+    
+    // 執行回調
+    if (window._generalPasswordCallback) {
+      window._generalPasswordCallback();
+      window._generalPasswordCallback = null;
+    }
+  } else {
+    // 密碼錯誤動畫
+    if (input) {
+      input.style.borderColor = '#dc3545';
+      input.style.background = '#fff5f5';
+      input.value = '';
+      input.placeholder = '❌ 密碼錯誤，請重試';
+      
+      // 抖動動畫
+      input.style.animation = 'shake 0.5s';
+      
+      setTimeout(() => {
+        input.style.borderColor = '#dee2e6';
+        input.style.background = '#fff';
+        input.placeholder = '請輸入管理員密碼';
         input.style.animation = '';
         input.focus();
       }, 500);
@@ -4585,8 +5647,6 @@ function showStatisticsModal(content) {
   window.closeModal = function(element) {
     if (element === overlay) {
       document.removeEventListener('keydown', escHandler);
-      // 恢復原始的 closeModal 函數
-      window.closeModal = originalCloseModal;
     }
     originalCloseModal(element);
   };
@@ -4875,8 +5935,6 @@ function handleShiftChangeSubmit(e) {
   const requests = JSON.parse(localStorage.getItem(SHIFT_CHANGE_KEY) || '[]');
   requests.push(request);
   localStorage.setItem(SHIFT_CHANGE_KEY, JSON.stringify(requests));
-  // 同步到 Firebase
-  syncToFirebase(SHIFT_CHANGE_KEY, JSON.stringify(requests));
   
   showCustomAlert('✅ 調班申請已提交，等待審核', 'success');
   
@@ -4913,8 +5971,6 @@ function processShiftChange(requestId, action) {
     
     // 儲存更新後的排班資料
     localStorage.setItem(STORE_KEY, JSON.stringify(data));
-    // 同步到 Firebase
-    syncToFirebase(STORE_KEY, JSON.stringify(data));
     
     // 更新頁面顯示
     hydrate();
@@ -4922,6 +5978,12 @@ function processShiftChange(requestId, action) {
     updateDutyMember();
     
     showCustomAlert('✅ 調班申請已核准並執行', 'success');
+    
+    // 同步到 Google Sheets（異步執行）
+    (async () => {
+      await syncCurrentMonthToGoogleSheets('調班申請核准');
+      showSyncNotification('📊 調班已同步到 Google Sheets');
+    })();
   } else {
     showCustomAlert('❌ 調班申請已拒絕', 'error');
   }
@@ -4930,8 +5992,6 @@ function processShiftChange(requestId, action) {
   requests[requestIndex].status = action;
   requests[requestIndex].processTime = new Date().toISOString();
   localStorage.setItem(SHIFT_CHANGE_KEY, JSON.stringify(requests));
-  // 同步到 Firebase
-  syncToFirebase(SHIFT_CHANGE_KEY, JSON.stringify(requests));
   
   // 重新顯示申請列表
   setTimeout(() => {
@@ -5148,237 +6208,76 @@ window.addEventListener('load', () => {
   }, 500);
 });
 
-// 應用程式初始化（等待 Firebase 完成後執行）
-async function initializeApp() {
-  // 等待 Firebase 初始化完成
-  await new Promise(resolve => {
-    const checkFirebase = () => {
-      if (window.firebaseDB && window.syncToFirebase) {
-        console.log('✅ Firebase 同步準備就緒，開始初始化應用程式');
-        resolve();
-      } else {
-        setTimeout(checkFirebase, 100);
-      }
-    };
-    checkFirebase();
-  });
-  
-  // 初始化應用程式
-  renderMemberList();
-  buildGrid();
-  initKeyRecord();
-  optimizeScale();
-  
-  // 表格渲染後確保適應視窗
+// 跨視窗同步監聽器 - 實現多視窗即時同步
+window.addEventListener('storage', function(e) {
+  // 當其他視窗修改 localStorage 時觸發
+  if (e.key === KEY_RECORD_KEY) {
+    // 鑰匙借還記錄變更，重新渲染鑰匙表格
+    renderKeyTable();
+    console.log('🔄 檢測到其他視窗更新鑰匙記錄，已同步');
+  } else if (e.key === STORE_KEY) {
+    // 排班表數據變更，重新渲染排班表及相關資訊
+    buildGrid();
+    renderMemberList(); // 更新成員統計
+    updateDutyMember(); // 更新值班人員
+    console.log('🔄 檢測到其他視窗更新排班表，已同步');
+  } else if (e.key === TEMP_DUTY_KEY) {
+    // 臨時代班數據變更，重新渲染排班表及相關資訊
+    buildGrid();
+    updateDutyMember(); // 更新值班人員
+    console.log('🔄 檢測到其他視窗更新臨時代班，已同步');
+  } else if (e.key === SHIFT_CHANGE_KEY) {
+    // 班別變更請求變更，重新渲染排班表及相關資訊
+    buildGrid();
+    renderMemberList(); // 更新成員統計
+    updateDutyMember(); // 更新值班人員
+    console.log('🔄 檢測到其他視窗更新班別變更請求，已同步');
+  } else if (e.key === KEY_HISTORY_KEY) {
+    // 鑰匙歷史記錄變更
+    console.log('🔄 檢測到其他視窗更新鑰匙歷史記錄，已同步');
+  } else if (e.key === COLLEAGUE_HISTORY_KEY) {
+    // 同業電話歷史變更
+    console.log('🔄 檢測到其他視窗更新同業電話記錄，已同步');
+  } else if (e.key === HISTORY_KEY) {
+    // 排班歷史記錄變更
+    console.log('🔄 檢測到其他視窗更新排班歷史記錄，已同步');
+  }
+});
+
+// 月份選擇器變更時自動從 Sheets 同步
+document.getElementById('monthPicker').addEventListener('change', function() {
+  console.log('📅 月份已切換，自動從 Google Sheets 同步最新排班...');
   setTimeout(() => {
-    optimizeScale();
-    adjustTableToFit();
-  }, 300);
-}
+    autoRefreshFromSheets();
+  }, 500);
+});
 
-// 啟動應用程式
-initializeApp();
+// 初始化
+renderMemberList();
+buildGrid();
+initKeyRecord();
+optimizeScale();
 
-// ========================================
-// Firebase 同步層 - 不影響原有功能
-// ========================================
+// 表格渲染後確保適應視窗
+setTimeout(() => {
+  optimizeScale();
+  adjustTableToFit();
+}, 300);
 
-// Firebase 數據訪問層
-class FirebaseSync {
-  constructor() {
-    this.initialized = false;
-    this.initPromise = null;
-  }
+// 自動從 Google Sheets 載入資料（頁面載入時）
+console.log('🔄 正在自動從 Google Sheets 載入資料...');
+setTimeout(() => {
+  autoRefreshFromSheets(); // 載入班表
+  loadAndCacheKeyList();   // 載入鑰匙名稱清單
+}, 1000);
 
-  async init() {
-    if (this.initialized) return;
-    if (this.initPromise) return this.initPromise;
+// 定時自動刷新（每5分鐘檢查一次是否有更新）
+setInterval(() => {
+  autoRefreshFromSheets();
+}, 5 * 60 * 1000);
 
-    this.initPromise = new Promise((resolve) => {
-      const checkFirebase = () => {
-        if (window.firebaseDB && window.firebaseRef && window.firebaseSet && window.firebaseGet) {
-          this.initialized = true;
-          console.log("✅ Firebase 同步層初始化完成");
-          resolve();
-        } else {
-          setTimeout(checkFirebase, 100);
-        }
-      };
-      checkFirebase();
-    });
-
-    return this.initPromise;
-  }
-
-  // 同步數據到 Firebase（不影響原有功能）
-  async syncToFirebase(key, value) {
-    try {
-      console.log(`🔄 firebaseSync.syncToFirebase 開始: key="${key}"`);
-      await this.init();
-      console.log(`✅ Firebase 初始化完成`);
-      const dbRef = window.firebaseRef(window.firebaseDB, key);
-      console.log(`✅ Firebase 參考建立: ${key}`);
-      await window.firebaseSet(dbRef, JSON.parse(value));
-      console.log(`📡 數據已成功同步到 Firebase: ${key}`);
-      this.showSyncNotification();
-    } catch (error) {
-      console.error(`❌ Firebase 同步錯誤 (key="${key}"):`, error);
-      console.error(`❌ 錯誤詳情:`, error.message, error.stack);
-      // 靜默失敗，不影響原有功能
-    }
-  }
-
-  // 從 Firebase 同步數據
-  async syncFromFirebase(key) {
-    try {
-      await this.init();
-      const dbRef = window.firebaseRef(window.firebaseDB, key);
-      const snapshot = await window.firebaseGet(dbRef);
-      
-      if (snapshot.exists()) {
-        const firebaseData = JSON.stringify(snapshot.val());
-        const localData = localStorage.getItem(key);
-        
-        // 如果數據不同，更新本地緩存
-        if (localData !== firebaseData) {
-          localStorage.setItem(key, firebaseData);
-          this.triggerDataChangeEvent(key);
-        }
-      }
-    } catch (error) {
-      console.error("Firebase 同步錯誤:", error);
-    }
-  }
-
-  // 設置實時監聽
-  async setupRealtimeListener(key) {
-    try {
-      await this.init();
-      const dbRef = window.firebaseRef(window.firebaseDB, key);
-      window.firebaseOnValue(dbRef, (snapshot) => {
-        if (snapshot.exists()) {
-          const firebaseData = JSON.stringify(snapshot.val());
-          const localData = localStorage.getItem(key);
-          
-          // 如果數據不同，更新本地緩存並觸發事件
-          if (localData !== firebaseData) {
-            localStorage.setItem(key, firebaseData);
-            this.triggerDataChangeEvent(key);
-            this.showSyncNotification();
-          }
-        }
-      });
-    } catch (error) {
-      console.error("Firebase 監聽設置錯誤:", error);
-    }
-  }
-
-  // 觸發數據變化事件
-  triggerDataChangeEvent(key) {
-    const event = new CustomEvent('firebaseDataChanged', { detail: { key } });
-    window.dispatchEvent(event);
-  }
-
-  // 顯示同步通知
-  showSyncNotification() {
-    const notification = document.createElement('div');
-    notification.style.cssText = `
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: #4CAF50;
-      color: white;
-      padding: 10px 20px;
-      border-radius: 5px;
-      z-index: 10000;
-      font-size: 14px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-    `;
-    notification.textContent = '📡 數據已同步';
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-      if (notification.parentNode) {
-        notification.parentNode.removeChild(notification);
-      }
-    }, 3000);
-  }
-}
-
-// 創建全局 Firebase 同步實例
-const firebaseSync = new FirebaseSync();
-
-// 創建 Firebase 同步函數（不包裝 localStorage.setItem）
-function syncToFirebase(key, value) {
-  // 異步同步到 Firebase（不影響原有功能）
-  const syncKeys = [
-    'schedule-checkin', 
-    'schedule-history', 
-    'key-records',
-    'shift-change-requests',
-    'key-item-history',
-    'colleague-history',
-    'temp-duty-override'
-  ];
-  
-  console.log(`🔍 syncToFirebase 被調用: key="${key}"`);
-  
-  if (syncKeys.includes(key)) {
-    console.log(`✅ "${key}" 在同步列表中，準備同步...`);
-    firebaseSync.syncToFirebase(key, value);
-  } else {
-    console.log(`⚠️ "${key}" 不在同步列表中，跳過同步`);
-  }
-}
-
-// 初始化 Firebase 同步
-async function initializeFirebaseSync() {
-  try {
-    console.log("🔄 正在初始化 Firebase 同步...");
-    
-    // 設置實時監聽
-    await firebaseSync.setupRealtimeListener('schedule-checkin');
-    await firebaseSync.setupRealtimeListener('schedule-history');
-    await firebaseSync.setupRealtimeListener('key-records');
-    await firebaseSync.setupRealtimeListener('shift-change-requests');
-    await firebaseSync.setupRealtimeListener('key-item-history');
-    await firebaseSync.setupRealtimeListener('colleague-history');
-    await firebaseSync.setupRealtimeListener('temp-duty-override');
-    
-    // 監聽數據變化事件
-    window.addEventListener('firebaseDataChanged', (event) => {
-      const key = event.detail.key;
-      console.log(`📡 檢測到數據變化: ${key}`);
-      
-      // 根據變化的數據類型重新渲染相應界面
-      switch(key) {
-        case 'schedule-checkin':
-          if (typeof hydrate === 'function') hydrate();
-          if (typeof renderMemberList === 'function') renderMemberList();
-          break;
-        case 'schedule-history':
-          // 歷史數據變化處理
-          break;
-        case 'key-records':
-          if (typeof renderKeyTable === 'function') renderKeyTable();
-          break;
-      }
-    });
-    
-    console.log("✅ Firebase 同步初始化完成");
-    
-    // 更新頁面標題顯示雲端同步狀態
-    document.title = "☁️ 常順地產值班key進出系統";
-    
-  } catch (error) {
-    console.error("❌ Firebase 同步初始化失敗:", error);
-    // 即使 Firebase 失敗，系統仍可使用本地存儲
-  }
-}
-
-// 立即初始化 Firebase 同步
-initializeFirebaseSync();
-
+console.log('💾 使用 localStorage + Google Sheets 雲端備份模式');
+console.log('✅ 自動載入功能已啟用：頁面載入時自動同步，每5分鐘檢查更新');
 </script>
 
 </body>
