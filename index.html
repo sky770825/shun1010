@@ -326,19 +326,27 @@ td:hover{background:#f8f9fa;}
   :root { --base-font-size: 13px; --scale-factor: 0.85; --table-scale: 0.75; }
   h2 { font-size: 1.3em; padding: 10px 12px; }
   .controls { 
-    grid-template-columns: 1fr !important; 
-    gap: 8px !important;
+    grid-template-columns: repeat(3, 1fr) !important; 
+    gap: 6px !important;
     margin-left: 5px !important; 
     margin-right: 5px !important; 
-    padding: 10px !important; 
+    padding: 8px !important; 
   }
-  .controls label span { font-size: 12px !important; }
-  .controls select, .controls input { font-size: 13px !important; padding: 7px !important; }
+  .controls label span { font-size: 11px !important; }
+  .controls select, .controls input { font-size: 12px !important; padding: 6px !important; }
+  .borrow-type-label { padding: 8px 12px !important; min-width: 90px !important; }
+  .borrow-type-label span { font-size: 13px !important; }
+  #colleagueBorrowSection > div > div[style*="grid-template-columns"] { grid-template-columns: 1fr !important; gap: 8px !important; }
+  #colleagueBorrowSection label { font-size: 11px !important; }
+  #colleagueBorrowSection input, #colleagueBorrowSection select { font-size: 12px !important; padding: 7px 10px !important; }
+  #memberBorrowSection > div { padding: 15px 10px !important; }
+  #selectedMember { font-size: 16px !important; gap: 6px !important; }
+  #selectedMember span:first-child, #selectedMember span:last-child { font-size: 22px !important; }
   #memberList, #keyRecord, .table-container { margin-left: 5px; margin-right: 5px; padding: 8px; }
   th, td { padding: 0.3em 0.1em; font-size: 0.75em; }
   .cell { min-height: 1.8em; font-size: 0.75em; padding: 0.15em; }
   #memberList ul { gap: 6px; }
-  #memberList li { font-size: 13px; padding: 5px 8px; }
+  #memberList li { font-size: 13px; padding: 5px 8px; max-width: calc(50% - 3px); overflow: hidden; text-overflow: ellipsis; }
   .keyControls { flex-direction: column; align-items: stretch; }
   .keyControls > * { margin: 3px 0; }
   #keyTable th, #keyTable td { padding: 5px 3px; font-size: 11px; }
@@ -397,12 +405,20 @@ td:hover{background:#f8f9fa;}
   .controls { grid-template-columns: 1fr !important; gap: 6px !important; padding: 8px !important; }
   .controls label span { font-size: 11px !important; }
   .controls select, .controls input { font-size: 12px !important; padding: 6px !important; }
+  .borrow-type-label { padding: 7px 10px !important; min-width: 80px !important; gap: 4px !important; }
+  .borrow-type-label span { font-size: 12px !important; }
+  #colleagueBorrowSection > div > div[style*="grid-template-columns"] { grid-template-columns: 1fr !important; gap: 8px !important; }
+  #colleagueBorrowSection label { font-size: 10px !important; }
+  #colleagueBorrowSection input, #colleagueBorrowSection select { font-size: 11px !important; padding: 6px 8px !important; }
+  #memberBorrowSection > div { padding: 12px 8px !important; }
+  #selectedMember { font-size: 14px !important; gap: 5px !important; }
+  #selectedMember span:first-child, #selectedMember span:last-child { font-size: 20px !important; }
   #keyRecord h3 { font-size: 15px !important; }
   #keyRecord h3 span { font-size: 17px !important; }
   :root { --base-font-size: 12px; --scale-factor: 0.8; --table-scale: 0.65; }
   th, td { padding: 0.25em 0.05em; font-size: 0.7em; border-width: 0.5px; }
   .cell { min-height: 1.6em; font-size: 0.7em; padding: 0.1em; }
-  #memberList li { font-size: 12px; padding: 4px 6px; }
+  #memberList li { font-size: 12px; padding: 4px 6px; max-width: calc(50% - 3px); overflow: hidden; text-overflow: ellipsis; }
   select, input, button { padding: 6px 8px; margin: 2px; font-size: 0.85em; }
   th:first-child { width: 45px; min-width: 35px; font-size: 0.65em; }
   h2 { font-size: 1.2em; padding: 8px 10px; }
@@ -442,6 +458,14 @@ td:hover{background:#f8f9fa;}
   .controls { grid-template-columns: 1fr !important; gap: 6px !important; padding: 6px !important; }
   .controls label span { font-size: 10px !important; }
   .controls select, .controls input { font-size: 11px !important; padding: 5px !important; }
+  .borrow-type-label { padding: 6px 8px !important; min-width: 70px !important; gap: 3px !important; }
+  .borrow-type-label span { font-size: 11px !important; }
+  #colleagueBorrowSection > div > div[style*="grid-template-columns"] { grid-template-columns: 1fr !important; gap: 6px !important; }
+  #colleagueBorrowSection label { font-size: 9px !important; }
+  #colleagueBorrowSection input, #colleagueBorrowSection select { font-size: 10px !important; padding: 5px 7px !important; }
+  #memberBorrowSection > div { padding: 10px 6px !important; }
+  #selectedMember { font-size: 12px !important; gap: 4px !important; }
+  #selectedMember span:first-child, #selectedMember span:last-child { font-size: 18px !important; }
   #keyRecord h3 { font-size: 13px !important; }
   #keyRecord h3 span { font-size: 15px !important; }
   :root { --base-font-size: 11px; --scale-factor: 0.75; --table-scale: 0.6; }
@@ -449,7 +473,7 @@ td:hover{background:#f8f9fa;}
   .controls, #memberList, #keyRecord, .table-container { margin-left: 3px; margin-right: 3px; padding: 6px; }
   th, td { padding: 0.2em 0.05em; font-size: 0.65em; border-width: 0.5px; }
   .cell { min-height: 1.5em; font-size: 0.65em; padding: 0.08em; }
-  #memberList li { font-size: 11px; padding: 3px 5px; }
+  #memberList li { font-size: 11px; padding: 3px 5px; max-width: calc(50% - 3px); overflow: hidden; text-overflow: ellipsis; }
   #keyTable th, #keyTable td { padding: 3px 2px; font-size: 9px; }
   #keyTable th { font-size: 8px; padding: 4px 2px; }
   #keyTable th:nth-child(1),#keyTable td:nth-child(1){width:15%;min-width:55px;} 
@@ -500,12 +524,21 @@ td:hover{background:#f8f9fa;}
   .controls { grid-template-columns: 1fr !important; gap: 5px !important; padding: 5px !important; }
   .controls label span { font-size: 9px !important; }
   .controls select, .controls input { font-size: 10px !important; padding: 4px !important; }
+  .borrow-type-label { padding: 5px 6px !important; min-width: 60px !important; gap: 2px !important; }
+  .borrow-type-label span { font-size: 10px !important; }
+  #colleagueBorrowSection > div > div[style*="grid-template-columns"] { grid-template-columns: 1fr !important; gap: 5px !important; }
+  #colleagueBorrowSection label { font-size: 8px !important; }
+  #colleagueBorrowSection input, #colleagueBorrowSection select { font-size: 9px !important; padding: 4px 6px !important; }
+  #memberBorrowSection > div { padding: 8px 5px !important; }
+  #selectedMember { font-size: 10px !important; gap: 3px !important; }
+  #selectedMember span:first-child, #selectedMember span:last-child { font-size: 16px !important; }
   #keyRecord h3 { font-size: 11px !important; }
   #keyRecord h3 span { font-size: 13px !important; }
   :root { --base-font-size: 10px; --scale-factor: 0.7; --table-scale: 0.55; }
   .controls, #memberList, #keyRecord, .table-container { margin-left: 2px; margin-right: 2px; padding: 4px; }
   th, td { padding: 0.15em 0.03em; font-size: 0.6em; }
   .cell { min-height: 1.4em; font-size: 0.6em; padding: 0.05em; }
+  #memberList li { max-width: calc(50% - 3px); overflow: hidden; text-overflow: ellipsis; }
   th:first-child { width: 35px; min-width: 25px; font-size: 0.55em; }
   h2 { font-size: 1em; padding: 6px 6px; }
   #keyTable th, #keyTable td { padding: 2px 1px; font-size: 8px; }
