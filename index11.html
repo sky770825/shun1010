@@ -739,7 +739,7 @@ let lastCheckedDate = new Date();
 let selectedKeyItems = new Set();
 
 // Google Sheets Web App URL（請在部署 Apps Script 後替換此 URL）
-const GOOGLE_SHEETS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwoasLe41HXKXSgTl9YHcXhWeCqyFR5FXXb7h3QTdK79h2kpQc1-v5NqJ6JipUi5hjaFg/exec';
+const GOOGLE_SHEETS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyXeKIOC1LNSQ3GOBEFOF0rzYPgO2Unvo8FXMZvAfgnsCxnS2bue-_o7733Ejs5xAxJNg/exec';
 
 // 聯絡電話資料
 const CONTACT_PHONES = {
@@ -1060,8 +1060,19 @@ function bindEvents(){
         const memberName = MEMBERS.find(m=>m.id===member)?.name || member;
         const currentMemberName = MEMBERS.find(m=>m.id===currentMember)?.name || currentMember;
         
+        // 獲取完整的日期和班別資訊
+        const dateStr = `${ym}-${String(day).padStart(2, '0')}`;
+        const shiftNames = {
+          'morning': isWeekend ? '早班 (09:30-13:30)' : '早班 (09:30-15:30)',
+          'noon': '中班 (13:30-17:30)',
+          'evening': isWeekend ? '晚班 (17:30-21:00)' : '晚班 (15:30-21:00)'
+        };
+        const shiftName = shiftNames[shift] || shift;
+        
         // 先驗證密碼
         showPasswordForShiftChange(
+          dateStr,
+          shiftName,
           currentMemberName,
           memberName,
           () => {
@@ -1971,7 +1982,87 @@ async function loadKeyRecordsFromGoogleSheets() {
   });
 }
 
-// 從 Sheets 同步當天的鑰匙記錄到本地
+// 自動載入今天的鑰匙記錄（靜默模式，不顯示錯誤提示）
+async function autoLoadTodayKeyRecords() {
+  try {
+    console.log('🔄 自動從 Google Sheets 載入今日鑰匙記錄...');
+    const sheetsRecords = await loadKeyRecordsFromGoogleSheets();
+    
+    if (!sheetsRecords || sheetsRecords.length === 0) {
+      console.log('📝 Google Sheets 中暫無鑰匙記錄');
+      return;
+    }
+    
+    // 轉換 Sheets 記錄格式為本地格式
+    const localRecords = [];
+    const today = getDateString(currentViewDate);
+    
+    sheetsRecords.forEach(sheetRecord => {
+      // 檢查是否為當天的記錄
+      const borrowDate = sheetRecord.borrowTime ? new Date(sheetRecord.borrowTime) : null;
+      
+      if (borrowDate && getDateString(borrowDate) === today) {
+        // 轉換為本地記錄格式
+        const localRecord = {
+          id: sheetRecord.id || Date.now(),
+          time: borrowDate ? `${borrowDate.getMonth()+1}/${borrowDate.getDate()} ${borrowDate.getHours().toString().padStart(2,'0')}:${borrowDate.getMinutes().toString().padStart(2,'0')}` : '',
+          borrowerType: sheetRecord.borrowerType === '同業' ? 'colleague' : 'member',
+          memberId: sheetRecord.borrowerId || null,
+          memberName: sheetRecord.borrowerType === '成員' ? sheetRecord.borrowerName : null,
+          colleagueName: sheetRecord.borrowerType === '同業' ? sheetRecord.borrowerName : null,
+          colleaguePhone: sheetRecord.borrowerPhone || null,
+          displayName: sheetRecord.borrowerType === '同業' 
+            ? (sheetRecord.borrowerPhone ? `${sheetRecord.borrowerName} (${sheetRecord.borrowerPhone})` : sheetRecord.borrowerName)
+            : `${sheetRecord.borrowerId} ${sheetRecord.borrowerName}`,
+          keyItem: sheetRecord.keyItem,
+          status: sheetRecord.status === '已歸還' ? 'returned' : 'borrowed',
+          borrowTime: borrowDate ? borrowDate.toISOString() : new Date().toISOString(),
+          dutyConfirmed: sheetRecord.dutyConfirmedBy ? true : false,
+          dutyConfirmedBy: sheetRecord.dutyConfirmedBy || null,
+          dutyConfirmedTime: null
+        };
+        
+        // 處理歸還時間
+        if (sheetRecord.returnTime) {
+          const returnDate = new Date(sheetRecord.returnTime);
+          localRecord.returnTime = returnDate.toISOString();
+          localRecord.returnTimeStr = `${returnDate.getMonth()+1}/${returnDate.getDate()} ${returnDate.getHours().toString().padStart(2,'0')}:${returnDate.getMinutes().toString().padStart(2,'0')}`;
+        }
+        
+        localRecords.push(localRecord);
+      }
+    });
+    
+    if (localRecords.length > 0) {
+      // 合併到本地記錄（避免重複）
+      const existingRecords = JSON.parse(localStorage.getItem(KEY_RECORD_KEY) || '[]');
+      const existingIds = new Set(existingRecords.map(r => r.id));
+      
+      let newCount = 0;
+      localRecords.forEach(newRecord => {
+        if (!existingIds.has(newRecord.id)) {
+          existingRecords.push(newRecord);
+          newCount++;
+        }
+      });
+      
+      if (newCount > 0) {
+        localStorage.setItem(KEY_RECORD_KEY, JSON.stringify(existingRecords));
+        renderKeyTable();
+        console.log(`✅ 已自動載入 ${newCount} 筆今日鑰匙記錄`);
+        showSyncNotification(`🔑 已載入 ${newCount} 筆鑰匙記錄`);
+      } else {
+        console.log('✓ 本地記錄已是最新');
+      }
+    } else {
+      console.log('📝 Google Sheets 中暫無今日鑰匙記錄');
+    }
+  } catch (error) {
+    console.error('❌ 自動載入鑰匙記錄失敗:', error);
+  }
+}
+
+// 從 Sheets 同步當天的鑰匙記錄到本地（手動同步，顯示提示）
 async function syncTodayKeyRecordsFromSheets() {
   const sheetsRecords = await loadKeyRecordsFromGoogleSheets();
   
@@ -2652,6 +2743,9 @@ function checkDateChange() {
       renderKeyTable();
       updateDutyMember();
       
+      // 自動從 Google Sheets 載入新一天的鑰匙記錄
+      autoLoadTodayKeyRecords();
+      
       // 顯示提示
       showCustomAlert('🌙 已自動切換到新的一天！', 'success');
     }
@@ -2671,12 +2765,19 @@ function startAutoDateCheck() {
     updateDutyMember();
   }, 180000); // 180000ms = 3分鐘
   
+  // 每5分鐘自動從 Google Sheets 同步鑰匙記錄
+  setInterval(() => {
+    console.log('⏰ 定期自動同步鑰匙記錄...');
+    autoLoadTodayKeyRecords();
+  }, 300000); // 300000ms = 5分鐘
+  
   // 當頁面重新獲得焦點時也檢查一次
   document.addEventListener('visibilitychange', function() {
     if (!document.hidden) {
       console.log('頁面重新獲得焦點，檢查日期是否變更');
       checkDateChange();
       updateDutyMember(); // 同時更新值班人員
+      autoLoadTodayKeyRecords(); // 重新載入鑰匙記錄
     }
   });
   
@@ -2685,10 +2786,12 @@ function startAutoDateCheck() {
     console.log('視窗重新獲得焦點，檢查日期是否變更');
     checkDateChange();
     updateDutyMember(); // 同時更新值班人員
+    autoLoadTodayKeyRecords(); // 重新載入鑰匙記錄
   });
   
   console.log('✅ 已啟動自動跨日檢測（每分鐘檢查 + 頁面/視窗焦點時檢查）');
   console.log('✅ 已啟動自動更新值班人員（每3分鐘檢查一次班別變更）');
+  console.log('✅ 已啟動自動同步鑰匙記錄（每5分鐘 + 頁面/視窗焦點時同步）');
 }
 
 // 鑰匙借出表簿功能
@@ -2705,6 +2808,9 @@ function initKeyRecord(){
   
   renderKeyTable();
   renderKeyItemHistory(); // 渲染鑰匙項目歷史記錄
+  
+  // 自動從 Google Sheets 載入今天的鑰匙記錄
+  autoLoadTodayKeyRecords();
   
   // 啟動自動跨日檢測
   startAutoDateCheck();
@@ -4377,7 +4483,7 @@ function showConfirmModal(title, message, detail, onConfirm) {
 }
 
 // 換班密碼驗證彈窗
-function showPasswordForShiftChange(fromMember, toMember, onSuccess) {
+function showPasswordForShiftChange(date, shift, fromMember, toMember, onSuccess) {
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
   overlay.style.cssText = `
@@ -4400,12 +4506,18 @@ function showPasswordForShiftChange(fromMember, toMember, onSuccess) {
     background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
     border-radius: 20px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-    max-width: 450px;
+    max-width: 500px;
     width: 100%;
     padding: 0;
     overflow: hidden;
     animation: slideIn 0.3s;
   `;
+  
+  // 格式化日期顯示
+  const dateObj = new Date(date);
+  const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+  const weekDay = weekDays[dateObj.getDay()];
+  const displayDate = `${dateObj.getFullYear()}年${dateObj.getMonth()+1}月${dateObj.getDate()}日 (${weekDay})`;
   
   modal.innerHTML = `
     <div style="background:#fff;padding:40px 30px;">
@@ -4414,13 +4526,31 @@ function showPasswordForShiftChange(fromMember, toMember, onSuccess) {
           <span style="font-size:40px;">🔄</span>
         </div>
         <h3 style="margin:0 0 10px;font-size:24px;color:#333;font-weight:bold;">換班驗證</h3>
-        <p style="margin:0 0 15px;color:#6c757d;font-size:14px;">請由秘書/主管輸入密碼</p>
-        <div style="background:#fff3cd;padding:12px;border-radius:8px;border-left:4px solid #ffc107;">
-          <div style="font-size:13px;color:#856404;text-align:left;">
-            <strong>換班內容：</strong><br>
-            <span style="color:#dc3545;">「${fromMember}」</span> 
-            <span style="margin:0 5px;">→</span> 
-            <span style="color:#28a745;">「${toMember}」</span>
+        <p style="margin:0 0 20px;color:#6c757d;font-size:14px;">請由秘書/主管輸入密碼</p>
+        
+        <div style="background:#e3f2fd;padding:15px;border-radius:10px;margin-bottom:15px;border-left:4px solid #2196f3;">
+          <div style="font-size:14px;color:#1565c0;text-align:left;">
+            <div style="margin-bottom:8px;">
+              <strong>📅 日期：</strong>
+              <span style="font-size:15px;font-weight:bold;">${displayDate}</span>
+            </div>
+            <div style="margin-bottom:8px;">
+              <strong>⏰ 班別：</strong>
+              <span style="font-size:15px;font-weight:bold;">${shift}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div style="background:#fff3cd;padding:15px;border-radius:10px;border-left:4px solid #ffc107;">
+          <div style="font-size:14px;color:#856404;text-align:left;">
+            <strong>👥 換班內容：</strong><br>
+            <div style="margin-top:10px;font-size:15px;text-align:center;">
+              <span style="color:#dc3545;font-weight:bold;">「${fromMember}」</span> 
+              <br>
+              <span style="font-size:20px;margin:5px 0;display:inline-block;">⬇️</span>
+              <br>
+              <span style="color:#28a745;font-weight:bold;">「${toMember}」</span>
+            </div>
           </div>
         </div>
       </div>
