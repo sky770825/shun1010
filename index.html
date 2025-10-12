@@ -327,20 +327,21 @@ td:hover{background:#f8f9fa;}
   h2 { font-size: 1.3em; padding: 10px 12px; }
   .controls { 
     grid-template-columns: repeat(3, 1fr) !important; 
-    gap: 6px !important;
-    margin-left: 5px !important; 
-    margin-right: 5px !important; 
-    padding: 8px !important; 
+    gap: 4px !important;
+    margin-left: 3px !important; 
+    margin-right: 3px !important; 
+    padding: 6px !important; 
   }
-  .controls label span { font-size: 11px !important; }
-  .controls select, .controls input { font-size: 12px !important; padding: 6px !important; }
+  .controls label { min-width: 0 !important; }
+  .controls label span { font-size: 10px !important; }
+  .controls select, .controls input { font-size: 16px !important; padding: 5px 4px !important; }
   .keyControls > div[style*="margin-bottom"] { text-align: center !important; width: 100% !important; }
   .keyControls > div[style*="margin-bottom"] > div { margin: 0 auto !important; }
   .borrow-type-label { padding: 8px 12px !important; min-width: 90px !important; }
   .borrow-type-label span { font-size: 13px !important; }
   #colleagueBorrowSection > div > div[style*="grid-template-columns"] { grid-template-columns: 1fr !important; gap: 8px !important; }
   #colleagueBorrowSection label { font-size: 11px !important; }
-  #colleagueBorrowSection input, #colleagueBorrowSection select { font-size: 12px !important; padding: 7px 10px !important; }
+  #colleagueBorrowSection input, #colleagueBorrowSection select { font-size: 16px !important; padding: 7px 8px !important; }
   #memberBorrowSection { width: 100% !important; box-sizing: border-box !important; }
   #memberBorrowSection > div { padding: 10px 8px !important; margin: 0 auto !important; width: 100% !important; box-sizing: border-box !important; }
   #selectedMember { font-size: 15px !important; gap: 5px !important; line-height: 1.3; }
@@ -372,10 +373,11 @@ td:hover{background:#f8f9fa;}
   #selectedKeysCount { font-size: 11px !important; padding: 2px 8px !important; }
   #clearSelectionBtn { font-size: 11px !important; padding: 3px 8px !important; }
   th:first-child { width: 50px; min-width: 40px; font-size: 0.7em; }
-  .keyDateNavigation { padding: 10px !important; gap: 5px !important; }
-  .keyDateNavigation button { padding: 6px 10px !important; font-size: 12px !important; }
-  #currentDateDisplay { font-size: 14px !important; }
-  #currentDateRecordCount { font-size: 11px !important; }
+  .keyDateNavigation { padding: 8px 6px !important; gap: 4px !important; }
+  .keyDateNavigation button { padding: 6px 8px !important; font-size: 11px !important; white-space: nowrap !important; }
+  .keyDateNavigation > div { min-width: 120px !important; }
+  #currentDateDisplay { font-size: 13px !important; }
+  #currentDateRecordCount { font-size: 10px !important; }
   #colleagueBorrowSection > div:first-child { grid-template-columns: 1fr !important; gap: 6px !important; }
   #colleagueBorrowSection input, #colleagueBorrowSection select { width: 100% !important; max-width: 100% !important; min-width: auto !important; }
   .dutyControls { margin-bottom: 20px !important; }
@@ -407,16 +409,17 @@ td:hover{background:#f8f9fa;}
 }
 
 @media (max-width: 576px) {
-  .controls { grid-template-columns: repeat(3, 1fr) !important; gap: 6px !important; padding: 8px !important; }
-  .controls label span { font-size: 11px !important; }
-  .controls select, .controls input { font-size: 12px !important; padding: 6px !important; }
+  .controls { grid-template-columns: repeat(3, 1fr) !important; gap: 3px !important; padding: 6px 3px !important; }
+  .controls label { min-width: 0 !important; }
+  .controls label span { font-size: 9px !important; }
+  .controls select, .controls input { font-size: 16px !important; padding: 4px 3px !important; }
   .keyControls > div[style*="margin-bottom"] { text-align: center !important; width: 100% !important; }
   .keyControls > div[style*="margin-bottom"] > div { margin: 0 auto !important; }
   .borrow-type-label { padding: 7px 10px !important; min-width: 80px !important; gap: 4px !important; }
   .borrow-type-label span { font-size: 12px !important; }
   #colleagueBorrowSection > div > div[style*="grid-template-columns"] { grid-template-columns: 1fr !important; gap: 8px !important; }
   #colleagueBorrowSection label { font-size: 10px !important; }
-  #colleagueBorrowSection input, #colleagueBorrowSection select { font-size: 11px !important; padding: 6px 8px !important; }
+  #colleagueBorrowSection input, #colleagueBorrowSection select { font-size: 16px !important; padding: 6px 8px !important; }
   #memberBorrowSection { width: 100% !important; box-sizing: border-box !important; }
   #memberBorrowSection > div { padding: 8px 6px !important; margin: 0 auto !important; width: 100% !important; box-sizing: border-box !important; }
   #selectedMember { font-size: 13px !important; gap: 4px !important; line-height: 1.3; }
@@ -467,16 +470,17 @@ td:hover{background:#f8f9fa;}
 }
 
 @media (max-width: 480px) {
-  .controls { grid-template-columns: repeat(3, 1fr) !important; gap: 5px !important; padding: 6px !important; }
-  .controls label span { font-size: 10px !important; }
-  .controls select, .controls input { font-size: 11px !important; padding: 5px !important; }
+  .controls { grid-template-columns: repeat(3, 1fr) !important; gap: 2px !important; padding: 5px 2px !important; }
+  .controls label { min-width: 0 !important; }
+  .controls label span { font-size: 8px !important; }
+  .controls select, .controls input { font-size: 16px !important; padding: 4px 2px !important; }
   .keyControls > div[style*="margin-bottom"] { text-align: center !important; width: 100% !important; }
   .keyControls > div[style*="margin-bottom"] > div { margin: 0 auto !important; }
   .borrow-type-label { padding: 6px 8px !important; min-width: 70px !important; gap: 3px !important; }
   .borrow-type-label span { font-size: 11px !important; }
   #colleagueBorrowSection > div > div[style*="grid-template-columns"] { grid-template-columns: 1fr !important; gap: 6px !important; }
   #colleagueBorrowSection label { font-size: 9px !important; }
-  #colleagueBorrowSection input, #colleagueBorrowSection select { font-size: 10px !important; padding: 5px 7px !important; }
+  #colleagueBorrowSection input, #colleagueBorrowSection select { font-size: 16px !important; padding: 5px 6px !important; }
   #memberBorrowSection { width: 100% !important; box-sizing: border-box !important; }
   #memberBorrowSection > div { padding: 6px 5px !important; margin: 0 auto !important; width: 100% !important; box-sizing: border-box !important; }
   #selectedMember { font-size: 11px !important; gap: 3px !important; line-height: 1.3; }
@@ -513,10 +517,11 @@ td:hover{background:#f8f9fa;}
   #keyItemHistoryList { gap: 4px; justify-content: center; }
   .key-history-badge { font-size: 10px !important; padding: 4px 8px !important; }
   th:first-child { width: 40px; min-width: 30px; font-size: 0.6em; }
-  .keyDateNavigation { padding: 8px !important; gap: 4px !important; }
-  .keyDateNavigation button { padding: 5px 8px !important; font-size: 11px !important; }
-  #currentDateDisplay { font-size: 12px !important; }
-  #currentDateRecordCount { font-size: 10px !important; }
+  .keyDateNavigation { padding: 6px 4px !important; gap: 3px !important; }
+  .keyDateNavigation button { padding: 5px 6px !important; font-size: 10px !important; white-space: nowrap !important; }
+  .keyDateNavigation > div { min-width: 100px !important; }
+  #currentDateDisplay { font-size: 11px !important; }
+  #currentDateRecordCount { font-size: 9px !important; }
   #keyRecord details { font-size: 10px !important; padding: 6px !important; }
   #keyRecord details ul { margin: 5px 0 0 12px !important; font-size: 10px !important; }
   .dutyControls { margin-bottom: 16px !important; }
@@ -540,16 +545,17 @@ td:hover{background:#f8f9fa;}
 }
 
 @media (max-width: 360px) {
-  .controls { grid-template-columns: repeat(3, 1fr) !important; gap: 4px !important; padding: 5px !important; }
-  .controls label span { font-size: 9px !important; }
-  .controls select, .controls input { font-size: 10px !important; padding: 4px !important; }
+  .controls { grid-template-columns: repeat(3, 1fr) !important; gap: 2px !important; padding: 4px 2px !important; }
+  .controls label { min-width: 0 !important; }
+  .controls label span { font-size: 7px !important; }
+  .controls select, .controls input { font-size: 16px !important; padding: 3px 2px !important; }
   .keyControls > div[style*="margin-bottom"] { text-align: center !important; width: 100% !important; }
   .keyControls > div[style*="margin-bottom"] > div { margin: 0 auto !important; }
   .borrow-type-label { padding: 5px 6px !important; min-width: 60px !important; gap: 2px !important; }
   .borrow-type-label span { font-size: 10px !important; }
   #colleagueBorrowSection > div > div[style*="grid-template-columns"] { grid-template-columns: 1fr !important; gap: 5px !important; }
   #colleagueBorrowSection label { font-size: 8px !important; }
-  #colleagueBorrowSection input, #colleagueBorrowSection select { font-size: 9px !important; padding: 4px 6px !important; }
+  #colleagueBorrowSection input, #colleagueBorrowSection select { font-size: 16px !important; padding: 4px 5px !important; }
   #memberBorrowSection { width: 100% !important; box-sizing: border-box !important; }
   #memberBorrowSection > div { padding: 5px 4px !important; margin: 0 auto !important; width: 100% !important; box-sizing: border-box !important; }
   #selectedMember { font-size: 9px !important; gap: 2px !important; line-height: 1.3; }
@@ -600,9 +606,10 @@ td:hover{background:#f8f9fa;}
 /* 极小屏幕优化 (320px以下) */
 @media (max-width: 320px) {
   h2 { font-size: 0.9em; padding: 5px; }
-  .controls { grid-template-columns: repeat(3, 1fr) !important; padding: 4px !important; gap: 3px !important; }
-  .controls label span { font-size: 8px !important; }
-  .controls select, .controls input { font-size: 9px !important; padding: 3px !important; }
+  .controls { grid-template-columns: repeat(3, 1fr) !important; padding: 3px 2px !important; gap: 2px !important; }
+  .controls label { min-width: 0 !important; }
+  .controls label span { font-size: 7px !important; }
+  .controls select, .controls input { font-size: 16px !important; padding: 3px 1px !important; }
   #keyRecord > div[style*="text-align:center"] > div[style*="display:inline-block"] { padding: 4px 10px !important; }
   #keyRecord h3 { font-size: 10px !important; }
   #keyRecord h3 span { font-size: 12px !important; }
@@ -779,6 +786,15 @@ td:hover{background:#f8f9fa;}
       </h3>
     </div>
   </div>
+  
+  <!-- 新增鑰匙名稱按鈕 -->
+  <div style="text-align:center;margin-bottom:15px;">
+    <button id="addKeyNameBtn" onclick="showAddKeyNameModal()" style="background:linear-gradient(135deg,#28a745 0%,#20c997 100%);color:#fff;border:none;padding:12px 30px;border-radius:25px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(40,167,69,0.3);transition:all 0.3s;display:inline-flex;align-items:center;gap:8px;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(40,167,69,0.4)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 12px rgba(40,167,69,0.3)'">
+      <span style="font-size:18px;">➕</span>
+      <span>新增鑰匙名稱</span>
+    </button>
+  </div>
+  
   <div class="keyControls">
     <div style="margin-bottom:15px;text-align:center;">
       <div style="display:inline-block;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);padding:3px;border-radius:25px;box-shadow:0 4px 12px rgba(102,126,234,0.3);">
@@ -934,7 +950,7 @@ let selectedKeyItems = new Set();
 let keyNameList = [];
 
 // Google Sheets Web App URL（請在部署 Apps Script 後替換此 URL）
-const GOOGLE_SHEETS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyW0u1Rpjf2RMhR0kZ4WBZYJrpm2HJSyOgq6U-M5wxNDlRP29WOzibwiQuW4hB98Q-cZQ/exec';
+const GOOGLE_SHEETS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxyxOZ_98D0LH4Rwn_JR9PDHBeHYD8eR22zOzy2l0u8qc4IPIiiRLYNOFyFeeVz1GHCTg/exec';
 
 // 聯絡電話資料
 const CONTACT_PHONES = {
@@ -4922,6 +4938,191 @@ function closeModal(element) {
   const overlay = element.closest ? element.closest('.modal-overlay') : element;
   if(overlay && overlay.parentNode) {
     overlay.parentNode.removeChild(overlay);
+  }
+}
+
+// 顯示新增鑰匙名稱彈窗
+function showAddKeyNameModal() {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.75);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: fadeIn 0.3s;
+  `;
+  
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    max-width: 500px;
+    width: 90%;
+    padding: 0;
+    position: relative;
+    animation: slideIn 0.3s;
+  `;
+  
+  // 成員名單（開發業務下拉選單）
+  const memberOptions = members
+    .filter(m => !m.disabled)
+    .map(m => `<option value="${m.name}">${m.name}</option>`)
+    .join('');
+  
+  modal.innerHTML = `
+    <div style="background:rgba(255,255,255,0.95);padding:30px;border-radius:20px;">
+      <h3 style="margin:0 0 20px;font-size:24px;color:#667eea;font-weight:bold;text-align:center;display:flex;align-items:center;justify-content:center;gap:10px;">
+        <span style="font-size:28px;">🔑</span>
+        <span>新增鑰匙名稱</span>
+      </h3>
+      
+      <div style="margin-bottom:20px;">
+        <label style="display:block;margin-bottom:8px;font-size:14px;font-weight:bold;color:#495057;">
+          <span style="color:#dc3545;">*</span> 鑰匙案件名稱
+        </label>
+        <input type="text" id="newKeyName" placeholder="請輸入鑰匙案件名稱" 
+          style="width:100%;padding:12px 15px;border:2px solid #dee2e6;border-radius:8px;font-size:16px;transition:all 0.3s;box-sizing:border-box;"
+          onfocus="this.style.borderColor='#667eea';this.style.boxShadow='0 0 0 3px rgba(102,126,234,0.1)'"
+          onblur="this.style.borderColor='#dee2e6';this.style.boxShadow='none'">
+      </div>
+      
+      <div style="margin-bottom:20px;">
+        <label style="display:block;margin-bottom:8px;font-size:14px;font-weight:bold;color:#495057;">
+          <span style="color:#dc3545;">*</span> 開發業務
+        </label>
+        <select id="newKeyDeveloper" 
+          style="width:100%;padding:12px 15px;border:2px solid #dee2e6;border-radius:8px;font-size:16px;transition:all 0.3s;box-sizing:border-box;background:#fff;"
+          onfocus="this.style.borderColor='#667eea';this.style.boxShadow='0 0 0 3px rgba(102,126,234,0.1)'"
+          onblur="this.style.borderColor='#dee2e6';this.style.boxShadow='none'">
+          <option value="">-- 請選擇開發業務 --</option>
+          ${memberOptions}
+        </select>
+      </div>
+      
+      <div style="margin-bottom:25px;">
+        <label style="display:block;margin-bottom:8px;font-size:14px;font-weight:bold;color:#495057;">
+          備註
+        </label>
+        <textarea id="newKeyNote" placeholder="選填：其他備註資訊" rows="3"
+          style="width:100%;padding:12px 15px;border:2px solid #dee2e6;border-radius:8px;font-size:16px;transition:all 0.3s;box-sizing:border-box;resize:vertical;"
+          onfocus="this.style.borderColor='#667eea';this.style.boxShadow='0 0 0 3px rgba(102,126,234,0.1)'"
+          onblur="this.style.borderColor='#dee2e6';this.style.boxShadow='none'"></textarea>
+      </div>
+      
+      <div style="display:flex;gap:10px;justify-content:center;">
+        <button onclick="submitAddKeyName()" 
+          style="padding:12px 30px;background:linear-gradient(135deg,#28a745 0%,#20c997 100%);color:#fff;border:none;border-radius:25px;cursor:pointer;font-size:16px;font-weight:bold;box-shadow:0 4px 12px rgba(40,167,69,0.3);transition:all 0.3s;flex:1;max-width:200px;"
+          onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(40,167,69,0.4)'"
+          onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 12px rgba(40,167,69,0.3)'">
+          ✅ 確認新增
+        </button>
+        <button onclick="closeModal(this.closest('.modal-overlay'))" 
+          style="padding:12px 30px;background:#6c757d;color:#fff;border:none;border-radius:25px;cursor:pointer;font-size:16px;font-weight:bold;box-shadow:0 4px 12px rgba(108,117,125,0.3);transition:all 0.3s;flex:1;max-width:200px;"
+          onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(108,117,125,0.4)'"
+          onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 12px rgba(108,117,125,0.3)'">
+          取消
+        </button>
+      </div>
+      
+      <p style="margin:15px 0 0;font-size:12px;color:#6c757d;text-align:center;">
+        <span style="color:#dc3545;">*</span> 為必填欄位
+      </p>
+    </div>
+  `;
+  
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+  
+  // 自動聚焦到第一個輸入框
+  setTimeout(() => {
+    document.getElementById('newKeyName')?.focus();
+  }, 100);
+  
+  // ESC 鍵關閉
+  const escHandler = (e) => {
+    if (e.key === 'Escape') {
+      closeModal(overlay);
+      document.removeEventListener('keydown', escHandler);
+    }
+  };
+  document.addEventListener('keydown', escHandler);
+}
+
+// 提交新增鑰匙名稱
+async function submitAddKeyName() {
+  const keyName = document.getElementById('newKeyName')?.value.trim();
+  const developer = document.getElementById('newKeyDeveloper')?.value;
+  const note = document.getElementById('newKeyNote')?.value.trim();
+  
+  // 驗證必填欄位
+  if (!keyName) {
+    alert('❌ 請輸入鑰匙案件名稱');
+    document.getElementById('newKeyName')?.focus();
+    return;
+  }
+  
+  if (!developer) {
+    alert('❌ 請選擇開發業務');
+    document.getElementById('newKeyDeveloper')?.focus();
+    return;
+  }
+  
+  // 準備數據
+  const data = {
+    dataType: 'addKeyName',
+    keyName: keyName,
+    developer: developer,
+    note: note
+  };
+  
+  try {
+    // 顯示載入中
+    const submitBtn = event.target;
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '⏳ 提交中...';
+    submitBtn.disabled = true;
+    
+    // 發送到 Google Sheets
+    const response = await fetch(GOOGLE_SHEETS_WEB_APP_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data)
+    });
+    
+    // no-cors 模式下無法讀取響應，假設成功
+    console.log('✅ 鑰匙名稱已提交到 Google Sheets');
+    
+    // 關閉彈窗
+    const overlay = submitBtn.closest('.modal-overlay');
+    closeModal(overlay);
+    
+    // 顯示成功訊息
+    alert(`✅ 新增成功！\n\n鑰匙案件名稱：${keyName}\n開發業務：${developer}\n備註：${note || '無'}`);
+    
+    // 重新載入鑰匙名稱清單
+    setTimeout(() => {
+      loadAndCacheKeyList();
+    }, 1000);
+    
+  } catch (error) {
+    console.error('提交失敗:', error);
+    alert('❌ 提交失敗，請檢查網路連線或稍後再試');
+    
+    // 恢復按鈕
+    submitBtn.innerHTML = originalText;
+    submitBtn.disabled = false;
   }
 }
 
