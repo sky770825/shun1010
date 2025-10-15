@@ -1714,10 +1714,10 @@ function executeAdminAction(action) {
       requirePassword('showStatistics');
       break;
     case 'syncFromSheets':
-      syncScheduleFromSheets();
+      requirePassword('syncFromSheets');
       break;
     case 'openSheets':
-      openGoogleSheets();
+      requirePassword('openSheets');
       break;
   }
 }
@@ -4061,11 +4061,25 @@ function showAddKeyNameModal() {
     animation: slideIn 0.3s;
   `;
   
-  // 成員名單（開發業務下拉選單）
-  const memberOptions = MEMBERS
-    .filter(m => !m.disabled)
-    .map(m => `<option value="${m.name}">${m.name}</option>`)
+  // 成員名單（開發業務下拉選單）- 包含所有成員和主管
+  const regularMembers = MEMBERS
+    .filter(m => !m.id.startsWith('9')) // 一般成員（01-26）
+    .map(m => `<option value="${m.name}">${m.id} ${m.name}</option>`)
     .join('');
+  
+  const managers = MEMBERS
+    .filter(m => m.id.startsWith('9')) // 主管（90-94）
+    .map(m => `<option value="${m.name}">${m.id} ${m.name}</option>`)
+    .join('');
+  
+  const memberOptions = `
+    <optgroup label="一般成員">
+      ${regularMembers}
+    </optgroup>
+    <optgroup label="主管">
+      ${managers}
+    </optgroup>
+  `;
   
   modal.innerHTML = `
     <div style="background:rgba(255,255,255,0.95);padding:30px;border-radius:20px;">
@@ -4463,7 +4477,9 @@ function requirePassword(functionName) {
     'clearData': '清除本月資料',
     'exportCsv': '匯出 CSV',
     'quickFill': '快速填班',
-    'showStatistics': '排班統計'
+    'showStatistics': '排班統計',
+    'syncFromSheets': '從 Sheets 同步',
+    'openSheets': '開啟 Sheets'
   };
   
   modal.innerHTML = `
@@ -4553,6 +4569,12 @@ function verifyPassword(functionName, overlay) {
         break;
       case 'showStatistics':
         showStatistics();
+        break;
+      case 'syncFromSheets':
+        syncScheduleFromSheets();
+        break;
+      case 'openSheets':
+        openGoogleSheets();
         break;
     }
   } else {
