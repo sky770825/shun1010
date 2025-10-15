@@ -31,7 +31,7 @@ let selectedKeyItems = new Set();
 let keyNameList = [];
 
 // Google Sheets Web App URL（請在部署 Apps Script 後替換此 URL）
-const GOOGLE_SHEETS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwYf5_7BwIcBxw-x4PpY1non0dXVpTkp0HgmT0YWiZiswCTllkgq7Uo2fbXN8RQw5U6ZA/exec';
+const GOOGLE_SHEETS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxyxOZ_98D0LH4Rwn_JR9PDHBeHYD8eR22zOzy2l0u8qc4IPIiiRLYNOFyFeeVz1GHCTg/exec';
 
 // 聯絡電話資料
 const CONTACT_PHONES = {
@@ -1366,9 +1366,9 @@ async function autoLoadTodayKeyRecords() {
           memberId: sheetRecord.borrowerId || null,
           memberName: sheetRecord.borrowerType === '成員' ? sheetRecord.borrowerName : null,
           colleagueName: sheetRecord.borrowerType === '同業' ? sheetRecord.borrowerName : null,
-          colleaguePhone: sheetRecord.borrowerPhone ? cleanPhoneNumber(sheetRecord.borrowerPhone) : null,
+          colleaguePhone: sheetRecord.borrowerPhone || null,
           displayName: sheetRecord.borrowerType === '同業' 
-            ? (sheetRecord.borrowerPhone ? `${sheetRecord.borrowerName} (${cleanPhoneNumber(sheetRecord.borrowerPhone)})` : sheetRecord.borrowerName)
+            ? (sheetRecord.borrowerPhone ? `${sheetRecord.borrowerName} (${sheetRecord.borrowerPhone})` : sheetRecord.borrowerName)
             : `${sheetRecord.borrowerId} ${sheetRecord.borrowerName}`,
           keyItem: sheetRecord.keyItem,
           status: sheetRecord.status === '已歸還' ? 'returned' : 'borrowed',
@@ -1444,9 +1444,9 @@ async function syncTodayKeyRecordsFromSheets() {
         memberId: sheetRecord.borrowerId || null,
         memberName: sheetRecord.borrowerType === '成員' ? sheetRecord.borrowerName : null,
         colleagueName: sheetRecord.borrowerType === '同業' ? sheetRecord.borrowerName : null,
-        colleaguePhone: sheetRecord.borrowerPhone ? cleanPhoneNumber(sheetRecord.borrowerPhone) : null,
+        colleaguePhone: sheetRecord.borrowerPhone || null,
         displayName: sheetRecord.borrowerType === '同業' 
-          ? (sheetRecord.borrowerPhone ? `${sheetRecord.borrowerName} (${cleanPhoneNumber(sheetRecord.borrowerPhone)})` : sheetRecord.borrowerName)
+          ? (sheetRecord.borrowerPhone ? `${sheetRecord.borrowerName} (${sheetRecord.borrowerPhone})` : sheetRecord.borrowerName)
           : `${sheetRecord.borrowerId} ${sheetRecord.borrowerName}`,
         keyItem: sheetRecord.keyItem,
         status: sheetRecord.status === '已歸還' ? 'returned' : 'borrowed',
@@ -1752,18 +1752,6 @@ async function loadScheduleFromGoogleSheets(yearMonth) {
         
         if (result.status === 'success') {
           console.log(`✅ 成功讀取 ${result.recordCount} 筆排班記錄`);
-          
-          // 顯示調試信息
-          if (result.debug) {
-            console.log('📊 調試信息:', result.debug);
-          }
-          
-          // 顯示部分數據樣本
-          if (result.data && Object.keys(result.data).length > 0) {
-            const sampleKeys = Object.keys(result.data).slice(0, 5);
-            console.log('📝 數據樣本:', sampleKeys.map(k => `${k} => ${result.data[k]}`).join(', '));
-          }
-          
           resolve(result.data);
         } else {
           console.error('❌ 讀取失敗:', result.message);
@@ -1917,42 +1905,14 @@ async function autoRefreshFromSheets(showLoadingHint = false) {
       updateDutyMember();
       
       if (isFirstAutoLoad) {
-        const recordCount = Object.keys(scheduleData).length;
-        if (recordCount > 0) {
-          showSyncNotification(`✅ 已自動載入最新班表（${recordCount} 筆記錄）`);
-        } else {
-          showSyncNotification('✅ 已連線 Google Sheets（目前無排班記錄）');
-        }
+        showSyncNotification('✅ 已自動載入最新班表');
       } else {
         showSyncNotification('📥 已從 Google Sheets 同步最新排班');
       }
     } else {
       console.log('✅ 排班資料已是最新，無需更新');
       if (isFirstAutoLoad) {
-        const recordCount = Object.keys(scheduleData).length;
-        
-        // ⭐ 首次載入時，即使資料一致也要重新渲染（確保顯示最新數據）
-        if (recordCount > 0) {
-          // 確保本地有最新資料
-          Object.keys(allData).forEach(key => {
-            if (key.startsWith(ym + ':')) {
-              delete allData[key];
-            }
-          });
-          Object.assign(allData, scheduleData);
-          localStorage.setItem(STORE_KEY, JSON.stringify(allData));
-          
-          // 重新渲染
-          buildGrid();
-          renderMemberList();
-          updateDutyMember();
-          
-          console.log(`📋 班表已載入完成（${recordCount} 筆記錄）`);
-          showSyncNotification(`✅ 班表已同步（${recordCount} 筆記錄）`);
-        } else {
-          console.log('📋 Google Sheets 連線成功，目前無排班記錄');
-          showSyncNotification('✅ 已連線 Google Sheets（目前無排班記錄）');
-        }
+        console.log('📋 班表已載入完成');
       }
     }
     
@@ -3434,22 +3394,6 @@ function getDateString(date) {
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
-}
-
-// 清理電話號碼格式（去除可能的單引號前綴，確保完整十碼）
-function cleanPhoneNumber(phone) {
-  if (!phone) return phone;
-  
-  // 轉換為字符串
-  let cleaned = String(phone).trim();
-  
-  // 去除前面的單引號（如果有的話）
-  if (cleaned.startsWith("'")) {
-    cleaned = cleaned.substring(1);
-  }
-  
-  // 確保電話號碼保持完整格式
-  return cleaned;
 }
 
 // 檢查兩個日期是否是同一天
