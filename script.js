@@ -1391,28 +1391,23 @@ async function autoLoadTodayKeyRecords() {
     });
     
     if (localRecords.length > 0) {
-      // 合併到本地記錄（避免重複）
-      const existingRecords = JSON.parse(localStorage.getItem(KEY_RECORD_KEY) || '[]');
-      const existingIds = new Set(existingRecords.map(r => r.id));
+      // ⭐ 完全同步模式：先清空舊記錄，再載入 Sheets 的最新記錄
+      // 這樣可以確保本地和 Sheets 完全一致（包括刪除和狀態變更）
       
-      let newCount = 0;
-      localRecords.forEach(newRecord => {
-        if (!existingIds.has(newRecord.id)) {
-          existingRecords.push(newRecord);
-          newCount++;
-        }
-      });
+      console.log(`🔄 完全同步模式：清空本地記錄，重新載入 ${localRecords.length} 筆最新記錄`);
       
-      if (newCount > 0) {
-        localStorage.setItem(KEY_RECORD_KEY, JSON.stringify(existingRecords));
-        renderKeyTable();
-        console.log(`✅ 已自動載入 ${newCount} 筆鑰匙記錄（共 ${sheetsRecords.length} 筆，保留最近30天）`);
-        showSyncNotification(`🔑 已載入 ${newCount} 筆鑰匙記錄`);
-      } else {
-        console.log(`✓ 本地記錄已是最新（Sheets 共 ${sheetsRecords.length} 筆，保留最近30天）`);
-      }
+      // 直接使用從 Sheets 讀取的記錄替換本地記錄
+      localStorage.setItem(KEY_RECORD_KEY, JSON.stringify(localRecords));
+      renderKeyTable();
+      
+      console.log(`✅ 已完全同步 ${localRecords.length} 筆鑰匙記錄（共 ${sheetsRecords.length} 筆，保留最近30天）`);
+      showSyncNotification(`🔑 已完全同步 ${localRecords.length} 筆鑰匙記錄`);
     } else {
       console.log(`📝 Google Sheets 中無最近30天的鑰匙記錄（共 ${sheetsRecords.length} 筆，但都超過30天）`);
+      
+      // 如果 Sheets 中沒有最近30天的記錄，也清空本地記錄
+      localStorage.setItem(KEY_RECORD_KEY, JSON.stringify([]));
+      renderKeyTable();
     }
   } catch (error) {
     console.error('❌ 自動載入鑰匙記錄失敗:', error);
@@ -1471,26 +1466,19 @@ async function syncTodayKeyRecordsFromSheets() {
   
   if (localRecords.length === 0) {
     showCustomAlert(`Google Sheets 中沒有最近30天的鑰匙記錄（共 ${sheetsRecords.length} 筆，但都超過30天）`, 'error');
+    
+    // 如果 Sheets 中沒有最近30天的記錄，也清空本地記錄
+    localStorage.setItem(KEY_RECORD_KEY, JSON.stringify([]));
+    renderKeyTable();
     return;
   }
   
-  // 合併到本地記錄（避免重複）
-  const existingRecords = JSON.parse(localStorage.getItem(KEY_RECORD_KEY) || '[]');
-  const existingIds = new Set(existingRecords.map(r => r.id));
-  
-  let newCount = 0;
-  localRecords.forEach(newRecord => {
-    if (!existingIds.has(newRecord.id)) {
-      existingRecords.push(newRecord);
-      newCount++;
-    }
-  });
-  
-  localStorage.setItem(KEY_RECORD_KEY, JSON.stringify(existingRecords));
+  // ⭐ 完全同步模式：直接用 Sheets 的記錄替換本地記錄
+  localStorage.setItem(KEY_RECORD_KEY, JSON.stringify(localRecords));
   renderKeyTable();
   
-  showCustomAlert(`✅ 已從 Google Sheets 同步 ${localRecords.length} 筆鑰匙記錄（新增 ${newCount} 筆）`, 'success');
-  showSyncNotification('🔑 鑰匙記錄已從 Sheets 同步');
+  showCustomAlert(`✅ 已從 Google Sheets 完全同步 ${localRecords.length} 筆鑰匙記錄`, 'success');
+  showSyncNotification('🔑 鑰匙記錄已完全同步');
 }
 
 // 從 Google Sheets 讀取鑰匙名稱清單（使用 JSONP）
