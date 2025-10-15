@@ -1905,14 +1905,26 @@ async function autoRefreshFromSheets(showLoadingHint = false) {
       updateDutyMember();
       
       if (isFirstAutoLoad) {
-        showSyncNotification('✅ 已自動載入最新班表');
+        const recordCount = Object.keys(scheduleData).length;
+        if (recordCount > 0) {
+          showSyncNotification(`✅ 已自動載入最新班表（${recordCount} 筆記錄）`);
+        } else {
+          showSyncNotification('✅ 已連線 Google Sheets（目前無排班記錄）');
+        }
       } else {
         showSyncNotification('📥 已從 Google Sheets 同步最新排班');
       }
     } else {
       console.log('✅ 排班資料已是最新，無需更新');
       if (isFirstAutoLoad) {
-        console.log('📋 班表已載入完成');
+        const recordCount = Object.keys(scheduleData).length;
+        if (recordCount > 0) {
+          console.log(`📋 班表已載入完成（${recordCount} 筆記錄）`);
+          showSyncNotification(`✅ 班表已同步（${recordCount} 筆記錄）`);
+        } else {
+          console.log('📋 Google Sheets 連線成功，目前無排班記錄');
+          showSyncNotification('✅ 已連線 Google Sheets（目前無排班記錄）');
+        }
       }
     }
     
