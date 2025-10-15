@@ -1,0 +1,53 @@
+🚀 快速更新 Google Apps Script 后端代码
+
+==================== 步骤 ====================
+
+1. 打开 Google Sheets
+   - 访问您的常順地產排班表
+
+2. 打开 Apps Script 编辑器
+   - 点击上方菜单：擴充功能 → Apps Script
+
+3. 复制新代码
+   - 打开本地文件：GoogleAppsScript示例.js
+   - 全选复制（Ctrl + A，然后 Ctrl + C）
+
+4. 粘贴到编辑器
+   - 在 Apps Script 编辑器中
+   - 全选现有代码（Ctrl + A）
+   - 粘贴新代码（Ctrl + V）
+
+5. 保存
+   - 点击磁盘图标 💾 或按 Ctrl + S
+
+6. 重新部署
+   - 点击右上角「部署」→「管理部署」
+   - 点击现有部署旁的 ✏️ 编辑图标
+   - 版本：选择「新版本」
+   - 点击「部署」
+
+7. 测试
+   - URL 应该保持不变（AKfycbwiWzN8...）
+   - 在浏览器访问测试链接（见下方）
+
+==================== 测试链接 ====================
+
+复制到浏览器访问：
+
+https://script.google.com/macros/s/AKfycbwiWzN8_pnxbqgCyX34qwjk_wB-G8Mse6PreOVVwQYF98NQ6qAOs8CMMallKtqfm62m_Q/exec?action=getKeys&callback=test
+
+✅ 正确返回：
+test({"status":"success","recordCount":0,"data":[]})
+
+❌ 错误返回：
+test({"status":"error","message":"未知的操作"})
+
+==================== 完成后 ====================
+
+1. 回到网站，按 Ctrl + F5 强制刷新
+2. 按 F12 打开控制台
+3. 查看是否显示：
+   ✅ 成功讀取 X 筆鑰匙記錄
+
+如果还有问题，请截图控制台的错误信息。
+

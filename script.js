@@ -31,7 +31,7 @@ let selectedKeyItems = new Set();
 let keyNameList = [];
 
 // Google Sheets Web App URL（請在部署 Apps Script 後替換此 URL）
-const GOOGLE_SHEETS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzmz2hiv-8oLhSctsWE-XYK9Xnrbe8l6v2Jw1uenq1vStVQNydWdDoJaXBGXByK3GyKZA/exec';
+const GOOGLE_SHEETS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw5DeUBxeFev7lSpHhSDUqbMb6ATTlPM2wvg5HIA1OqVJfFQ9_ovKPMICXeWmdWnokusg/exec';
 
 // 聯絡電話資料
 const CONTACT_PHONES = {
