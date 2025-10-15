@@ -1366,9 +1366,9 @@ async function autoLoadTodayKeyRecords() {
           memberId: sheetRecord.borrowerId || null,
           memberName: sheetRecord.borrowerType === '成員' ? sheetRecord.borrowerName : null,
           colleagueName: sheetRecord.borrowerType === '同業' ? sheetRecord.borrowerName : null,
-          colleaguePhone: sheetRecord.borrowerPhone || null,
+          colleaguePhone: sheetRecord.borrowerPhone ? cleanPhoneNumber(sheetRecord.borrowerPhone) : null,
           displayName: sheetRecord.borrowerType === '同業' 
-            ? (sheetRecord.borrowerPhone ? `${sheetRecord.borrowerName} (${sheetRecord.borrowerPhone})` : sheetRecord.borrowerName)
+            ? (sheetRecord.borrowerPhone ? `${sheetRecord.borrowerName} (${cleanPhoneNumber(sheetRecord.borrowerPhone)})` : sheetRecord.borrowerName)
             : `${sheetRecord.borrowerId} ${sheetRecord.borrowerName}`,
           keyItem: sheetRecord.keyItem,
           status: sheetRecord.status === '已歸還' ? 'returned' : 'borrowed',
@@ -1444,9 +1444,9 @@ async function syncTodayKeyRecordsFromSheets() {
         memberId: sheetRecord.borrowerId || null,
         memberName: sheetRecord.borrowerType === '成員' ? sheetRecord.borrowerName : null,
         colleagueName: sheetRecord.borrowerType === '同業' ? sheetRecord.borrowerName : null,
-        colleaguePhone: sheetRecord.borrowerPhone || null,
+        colleaguePhone: sheetRecord.borrowerPhone ? cleanPhoneNumber(sheetRecord.borrowerPhone) : null,
         displayName: sheetRecord.borrowerType === '同業' 
-          ? (sheetRecord.borrowerPhone ? `${sheetRecord.borrowerName} (${sheetRecord.borrowerPhone})` : sheetRecord.borrowerName)
+          ? (sheetRecord.borrowerPhone ? `${sheetRecord.borrowerName} (${cleanPhoneNumber(sheetRecord.borrowerPhone)})` : sheetRecord.borrowerName)
           : `${sheetRecord.borrowerId} ${sheetRecord.borrowerName}`,
         keyItem: sheetRecord.keyItem,
         status: sheetRecord.status === '已歸還' ? 'returned' : 'borrowed',
@@ -3394,6 +3394,22 @@ function getDateString(date) {
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
+}
+
+// 清理電話號碼格式（去除可能的單引號前綴，確保完整十碼）
+function cleanPhoneNumber(phone) {
+  if (!phone) return phone;
+  
+  // 轉換為字符串
+  let cleaned = String(phone).trim();
+  
+  // 去除前面的單引號（如果有的話）
+  if (cleaned.startsWith("'")) {
+    cleaned = cleaned.substring(1);
+  }
+  
+  // 確保電話號碼保持完整格式
+  return cleaned;
 }
 
 // 檢查兩個日期是否是同一天

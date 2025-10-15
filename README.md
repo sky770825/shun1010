@@ -12,6 +12,33 @@
 
 ## 🔧 最近更新
 
+### 2025/10/15 - v2.1
+
+#### ✅ 电话号码完整保留
+**改进**：确保同业电话号码完整保留十码（包括前导0）
+
+**前端优化**：
+- 新增 `cleanPhoneNumber()` 函数，处理从 Google Sheets 读取的电话号码
+- 自动去除可能的单引号前缀
+- 确保显示时保持完整的十码格式
+
+**发送到 Google Sheets**：
+- 系统自动在电话号码前加上单引号（`colleaguePhoneForSheets` 字段）
+- 例如：`0912-345-678` → `'0912-345-678`
+
+#### ✅ 新增 key 名稱功能改进
+**改进**：开发业务选项包含所有成员
+- ✅ 一般成員（01-26）全部可选
+- ✅ 主管（90-94）全部可选
+- ✅ 分组显示，清晰易选
+- ✅ 显示格式：编号 + 姓名（例如：01 以蓁、90 徐店東）
+
+#### ✅ Google Sheets 功能加密
+**新增**：Sheets 相关功能密码保护
+- 🔐 從 Sheets 同步 - 需要密码
+- 🔐 開啟 Sheets - 需要密码
+- 提升数据安全性
+
 ### 2025/10/14 - v2.0
 
 #### ✅ 代码分离
@@ -34,8 +61,9 @@
 - 在 `script.js` 中添加 `colleaguePhoneForSheets` 字段
 - 电话号码前自动加上单引号 `'`，强制 Google Sheets 视为文本
 
-**Google Apps Script 端修改**：
-在您的 Apps Script 代码中，使用 `colleaguePhoneForSheets` 字段：
+**Google Apps Script 端设置**：
+
+⚠️ **重要**：在您的 Google Apps Script 代码中，必须使用 `colleaguePhoneForSheets` 字段来保存电话号码！
 
 ```javascript
 // Apps Script 中处理鑰匙记录
@@ -45,19 +73,34 @@ function doPost(e) {
   if (data.dataType === 'key') {
     const record = data.record;
     
-    // 使用 colleaguePhoneForSheets 字段（已包含单引号）
+    // ✅ 正确：使用 colleaguePhoneForSheets 字段（已包含单引号前缀）
     const phone = record.colleaguePhoneForSheets || record.colleaguePhone || '';
     
-    // 写入到 Sheet
+    // 写入到 Sheet（电话号码列）
     sheet.appendRow([
       record.time,
       record.displayName,
       record.keyItem,
-      phone,  // 这里使用带单引号的版本
+      phone,  // ✅ 使用带单引号的版本，保留前导0
       record.status
     ]);
   }
 }
+```
+
+**电话号码列设置**：
+1. 在 Google Sheets 中，将电话号码列的格式设为「纯文本」
+2. 或者保持默认，系统会自动处理单引号前缀
+
+**数据流程**：
+```
+前端输入: 0912-345-678
+    ↓
+发送到 Sheets: '0912-345-678 (带单引号)
+    ↓
+Sheets 保存: 0912-345-678 (保留前导0)
+    ↓
+读取回前端: 0912-345-678 (完整显示)
 ```
 
 ## 📌 系统功能
@@ -137,8 +180,8 @@ const ADMIN_PASSWORD = '10108888'; // 管理員密碼
 
 ---
 
-**版本**: v2.0  
-**更新日期**: 2025/10/14  
+**版本**: v2.1  
+**更新日期**: 2025/10/15  
 **维护**: 常順地產
 
 
