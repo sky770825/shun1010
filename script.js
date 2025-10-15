@@ -1338,10 +1338,10 @@ async function loadKeyRecordsFromGoogleSheets() {
   });
 }
 
-// 自動載入今天的鑰匙記錄（靜默模式，不顯示錯誤提示）
+// 自動載入鑰匙記錄（載入所有記錄，保留最近30天）
 async function autoLoadTodayKeyRecords() {
   try {
-    console.log('🔄 自動從 Google Sheets 載入今日鑰匙記錄...');
+    console.log('🔄 自動從 Google Sheets 載入鑰匙記錄...');
     const sheetsRecords = await loadKeyRecordsFromGoogleSheets();
     
     if (!sheetsRecords || sheetsRecords.length === 0) {
@@ -1351,13 +1351,14 @@ async function autoLoadTodayKeyRecords() {
     
     // 轉換 Sheets 記錄格式為本地格式
     const localRecords = [];
-    const today = getDateString(currentViewDate);
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     
     sheetsRecords.forEach(sheetRecord => {
-      // 檢查是否為當天的記錄
+      // 載入最近30天的記錄
       const borrowDate = sheetRecord.borrowTime ? new Date(sheetRecord.borrowTime) : null;
       
-      if (borrowDate && getDateString(borrowDate) === today) {
+      if (borrowDate && borrowDate >= thirtyDaysAgo) {
         // 轉換為本地記錄格式
         const localRecord = {
           id: sheetRecord.id || Date.now(),
@@ -1405,20 +1406,20 @@ async function autoLoadTodayKeyRecords() {
       if (newCount > 0) {
         localStorage.setItem(KEY_RECORD_KEY, JSON.stringify(existingRecords));
         renderKeyTable();
-        console.log(`✅ 已自動載入 ${newCount} 筆今日鑰匙記錄`);
+        console.log(`✅ 已自動載入 ${newCount} 筆鑰匙記錄（共 ${sheetsRecords.length} 筆，保留最近30天）`);
         showSyncNotification(`🔑 已載入 ${newCount} 筆鑰匙記錄`);
       } else {
-        console.log('✓ 本地記錄已是最新');
+        console.log(`✓ 本地記錄已是最新（Sheets 共 ${sheetsRecords.length} 筆，保留最近30天）`);
       }
     } else {
-      console.log('📝 Google Sheets 中暫無今日鑰匙記錄');
+      console.log(`📝 Google Sheets 中無最近30天的鑰匙記錄（共 ${sheetsRecords.length} 筆，但都超過30天）`);
     }
   } catch (error) {
     console.error('❌ 自動載入鑰匙記錄失敗:', error);
   }
 }
 
-// 從 Sheets 同步當天的鑰匙記錄到本地（手動同步，顯示提示）
+// 從 Sheets 同步鑰匙記錄到本地（手動同步，載入最近30天）
 async function syncTodayKeyRecordsFromSheets() {
   const sheetsRecords = await loadKeyRecordsFromGoogleSheets();
   
@@ -1429,13 +1430,14 @@ async function syncTodayKeyRecordsFromSheets() {
   
   // 轉換 Sheets 記錄格式為本地格式
   const localRecords = [];
-  const today = getDateString(currentViewDate);
+  const now = new Date();
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
   
   sheetsRecords.forEach(sheetRecord => {
-    // 檢查是否為當天的記錄
+    // 載入最近30天的記錄
     const borrowDate = sheetRecord.borrowTime ? new Date(sheetRecord.borrowTime) : null;
     
-    if (borrowDate && getDateString(borrowDate) === today) {
+    if (borrowDate && borrowDate >= thirtyDaysAgo) {
       // 轉換為本地記錄格式
       const localRecord = {
         id: sheetRecord.id || Date.now(),
@@ -1468,7 +1470,7 @@ async function syncTodayKeyRecordsFromSheets() {
   });
   
   if (localRecords.length === 0) {
-    showCustomAlert('Google Sheets 中沒有今天的鑰匙記錄', 'error');
+    showCustomAlert(`Google Sheets 中沒有最近30天的鑰匙記錄（共 ${sheetsRecords.length} 筆，但都超過30天）`, 'error');
     return;
   }
   
@@ -1476,16 +1478,18 @@ async function syncTodayKeyRecordsFromSheets() {
   const existingRecords = JSON.parse(localStorage.getItem(KEY_RECORD_KEY) || '[]');
   const existingIds = new Set(existingRecords.map(r => r.id));
   
+  let newCount = 0;
   localRecords.forEach(newRecord => {
     if (!existingIds.has(newRecord.id)) {
       existingRecords.push(newRecord);
+      newCount++;
     }
   });
   
   localStorage.setItem(KEY_RECORD_KEY, JSON.stringify(existingRecords));
   renderKeyTable();
   
-  showCustomAlert(`✅ 已從 Google Sheets 同步 ${localRecords.length} 筆今日鑰匙記錄`, 'success');
+  showCustomAlert(`✅ 已從 Google Sheets 同步 ${localRecords.length} 筆鑰匙記錄（新增 ${newCount} 筆）`, 'success');
   showSyncNotification('🔑 鑰匙記錄已從 Sheets 同步');
 }
 
@@ -3448,7 +3452,27 @@ function cleanPhoneNumber(phone) {
     cleaned = cleaned.substring(1);
   }
   
-  // 確保電話號碼保持完整格式
+  // 去除所有非數字和破折號的字符（保留格式）
+  const digitsOnly = cleaned.replace(/[^\d-]/g, '');
+  
+  // 計算純數字的數量（不含破折號）
+  const digits = digitsOnly.replace(/-/g, '');
+  
+  // ⭐ 如果只有9碼數字，自動補0
+  if (digits.length === 9 && /^\d+$/.test(digits)) {
+    // 檢查是否有破折號格式
+    if (digitsOnly.includes('-')) {
+      // 有破折號：在第一個數字前補0
+      // 例如：912-345-678 -> 0912-345-678
+      cleaned = '0' + digitsOnly;
+    } else {
+      // 沒有破折號：直接在前面補0
+      // 例如：912345678 -> 0912345678
+      cleaned = '0' + digits;
+    }
+    console.log(`📱 自動補0：${digitsOnly} → ${cleaned}`);
+  }
+  
   return cleaned;
 }
 
