@@ -748,8 +748,19 @@ function executeAutoAssign(){
     }
   });
 
-  // 智能間隔檢查函數
+  // 智能間隔檢查函數（整合排班條件）
   function canWorkOnDay(memberId, targetDay) {
+    // 首先檢查特殊排班條件
+    const dateStr = `${ym}-${String(targetDay).padStart(2,'0')}`;
+    const dayOfWeek = new Date(dateStr).getDay();
+    const shiftKey = shifts[i].key;
+    
+    const conditionCheck = canMemberWorkOnDay(memberId, dayOfWeek, shiftKey);
+    if (!conditionCheck.canWork) {
+      console.log(`❌ ${memberId} 不能排 ${targetDay}日: ${conditionCheck.reason}`);
+      return false;
+    }
+    
     // 單人成員：較寬鬆的間隔控制（2天）
     if (singleMembers.has(memberId)) {
       const workDays = memberWorkHistory[memberId] || [];
@@ -1006,7 +1017,14 @@ function executeAutoAssign(){
         
         // 先嘗試選擇單人成員
         if (singleMembersInPool.length > 0) {
-          const availableSingles = singleMembersInPool.filter(m => canWorkOnDay(m, d));
+          const availableSingles = singleMembersInPool.filter(m => {
+            if (!canWorkOnDay(m, d)) return false;
+            
+            // 檢查當天已排班成員的條件限制
+            const dayCheck = checkDayScheduleConditions(Array.from(dayMembers), m);
+            return dayCheck.canAdd;
+          });
+          
           if (availableSingles.length > 0) {
             selectedMember = availableSingles[Math.floor(Math.random() * availableSingles.length)];
           }
@@ -1014,7 +1032,14 @@ function executeAutoAssign(){
         
         // 如果沒有合適的單人成員，再考慮組隊成員
         if (!selectedMember && groupMembersInPool.length > 0) {
-          const availableGroups = groupMembersInPool.filter(m => canWorkOnDay(m, d) && canGroupWorkOnDay(m, d));
+          const availableGroups = groupMembersInPool.filter(m => {
+            if (!canWorkOnDay(m, d) || !canGroupWorkOnDay(m, d)) return false;
+            
+            // 檢查當天已排班成員的條件限制
+            const dayCheck = checkDayScheduleConditions(Array.from(dayMembers), m);
+            return dayCheck.canAdd;
+          });
+          
           if (availableGroups.length > 0) {
             selectedMember = availableGroups[Math.floor(Math.random() * availableGroups.length)];
           }
@@ -1711,7 +1736,16 @@ function executeAdminAction(action) {
     case 'openSheets':
       requirePassword('openSheets');
       break;
+    case 'showScheduleConditions':
+      showScheduleConditions();
+      break;
   }
+}
+
+// 顯示排班條件設定
+function showScheduleConditions() {
+  const summary = getScheduleConditionsSummary();
+  showCustomAlert(summary, 'info');
 }
 
 // 從 Google Sheets 讀取排班資料（使用 JSONP 避免 CORS 問題）
