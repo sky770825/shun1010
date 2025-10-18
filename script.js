@@ -2679,6 +2679,107 @@ function clearKeySelection() {
 }
 
 // 執行批量借出
+// 批量借出（從輸入框直接輸入多個項目）
+function executeBatchBorrowWithItems(keyItems) {
+  // 檢查借用人
+  let borrowerInfo = {};
+  
+  if(currentBorrowType === 'member') {
+    if(!selectedMember){
+      showCustomAlert('請先點擊上方成員選擇借用人', 'error');
+      return;
+    }
+    borrowerInfo = {
+      type: 'member',
+      memberId: selectedMember.id,
+      memberName: selectedMember.name,
+      displayName: `${selectedMember.id} ${selectedMember.name}`
+    };
+  } else {
+    const companySelect = document.getElementById('colleagueCompany');
+    const colleagueName = document.getElementById('colleagueName').value.trim();
+    const colleaguePhone = document.getElementById('colleaguePhone').value.trim();
+    const customCompany = document.getElementById('colleagueCustomCompany').value.trim();
+    
+    let companyName = companySelect.value;
+    
+    if (companyName === '其它') {
+      if (!customCompany) {
+        showCustomAlert('請輸入其它公司名稱', 'error');
+        return;
+      }
+      companyName = customCompany;
+    }
+    
+    if (!companyName) {
+      showCustomAlert('請選擇公司', 'error');
+      return;
+    }
+    
+    if (!colleagueName) {
+      showCustomAlert('請輸入姓名/分店', 'error');
+      return;
+    }
+    
+    const fullName = `${companyName} ${colleagueName}`;
+    const displayWithPhone = colleaguePhone ? `${fullName} (${colleaguePhone})` : fullName;
+    
+    borrowerInfo = {
+      type: 'colleague',
+      colleagueName: fullName,
+      colleaguePhone: colleaguePhone || '',
+      displayName: displayWithPhone
+    };
+  }
+  
+  const now = new Date();
+  const timeStr = `${now.getMonth()+1}/${now.getDate()} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+  const records = JSON.parse(localStorage.getItem(KEY_RECORD_KEY) || '[]');
+  
+  // 將所有項目合併成一筆記錄
+  const allKeyItems = keyItems.join('、');
+  const itemCount = keyItems.length;
+  
+  // 電話號碼加上單引號前綴，防止 Google Sheets 刪除前導零
+  const phoneForSheets = borrowerInfo.colleaguePhone ? `'${borrowerInfo.colleaguePhone}` : null;
+  
+  const keyRecord = {
+    id: Date.now(),
+    time: timeStr,
+    borrowerType: borrowerInfo.type,
+    memberId: borrowerInfo.memberId || null,
+    memberName: borrowerInfo.memberName || null,
+    colleagueName: borrowerInfo.colleagueName || null,
+    colleaguePhone: borrowerInfo.colleaguePhone || null,
+    colleaguePhoneForSheets: phoneForSheets,
+    displayName: borrowerInfo.displayName,
+    keyItem: allKeyItems,
+    itemCount: itemCount,
+    status: 'borrowed',
+    borrowTime: now.toISOString(),
+    dutyConfirmed: false,
+    dutyConfirmedBy: null,
+    dutyConfirmedTime: null
+  };
+  
+  records.push(keyRecord);
+  localStorage.setItem(KEY_RECORD_KEY, JSON.stringify(records));
+  
+  // 發送記錄到 Google Sheets
+  sendKeyRecordToGoogleSheets(keyRecord, 'borrow');
+  
+  // 保存所有項目到歷史記錄
+  keyItems.forEach(item => saveKeyItemToHistory(item));
+  
+  // 更新顯示
+  renderKeyTable();
+  
+  // 清空輸入
+  document.getElementById('keyItem').value = '';
+  
+  showCustomAlert(`成功登記 ${itemCount} 個鑰匙項目的借出！`, 'success');
+}
+
 function executeBatchBorrow() {
   if (selectedKeyItems.size === 0) {
     showCustomAlert('請先選擇要借出的鑰匙項目', 'error');
@@ -3529,13 +3630,28 @@ function borrowKey(){
     return;
   }
   
-  // 單個登記模式
-  const keyItem = document.getElementById('keyItem').value.trim();
+  // 獲取輸入的鑰匙項目
+  const keyItemInput = document.getElementById('keyItem').value.trim();
   
-  if(!keyItem){
+  if(!keyItemInput){
     showCustomAlert('請輸入鑰匙項目或勾選常用項目', 'error');
     return;
   }
+  
+  // 檢測是否有多個項目（用逗號、分號、換行符或頓號分隔）
+  const separators = /[,，;；\n、]/;
+  const keyItems = keyItemInput.split(separators)
+    .map(item => item.trim())
+    .filter(item => item.length > 0);
+  
+  // 如果有多個項目，使用批量借出邏輯
+  if(keyItems.length > 1) {
+    executeBatchBorrowWithItems(keyItems);
+    return;
+  }
+  
+  // 單個項目邏輯
+  const keyItem = keyItems[0] || keyItemInput;
   
   let borrowerInfo = {};
   
@@ -3765,8 +3881,32 @@ function renderKeyTable(){
     const keyCell = document.createElement('td');
     keyCell.className = 'auto-size';
     const itemCount = record.itemCount || 0;
-    const itemCountBadge = itemCount > 1 ? `<span style="background:#17a2b8;color:#fff;padding:2px 6px;border-radius:10px;font-size:10px;font-weight:bold;margin-left:4px;white-space:nowrap;">×${itemCount}</span>` : '';
-    keyCell.innerHTML = `<div style="word-break:break-word;line-height:1.5;">${record.keyItem}${itemCountBadge}</div>`;
+    
+    // 檢查鑰匙項目是否過長（超過50個字符）
+    const keyItemText = record.keyItem || '';
+    const isLongText = keyItemText.length > 50;
+    const displayText = isLongText ? keyItemText.substring(0, 50) + '...' : keyItemText;
+    
+    // 創建鑰匙項目顯示區域
+    const keyDiv = document.createElement('div');
+    keyDiv.style.cssText = 'word-break:break-word;line-height:1.5;cursor:pointer;color:#007bff;text-decoration:' + (isLongText ? 'underline' : 'none') + ';';
+    keyDiv.title = '點擊查看完整內容';
+    keyDiv.textContent = displayText;
+    
+    // 添加數量標籤
+    if(itemCount > 1) {
+      const badge = document.createElement('span');
+      badge.style.cssText = 'background:#17a2b8;color:#fff;padding:2px 6px;border-radius:10px;font-size:10px;font-weight:bold;margin-left:4px;white-space:nowrap;';
+      badge.textContent = '×' + itemCount;
+      keyDiv.appendChild(badge);
+    }
+    
+    // 添加點擊事件
+    keyDiv.addEventListener('click', function() {
+      showFullKeyItem(keyItemText, itemCount);
+    });
+    
+    keyCell.appendChild(keyDiv);
     
     const statusCell = document.createElement('td');
     statusCell.className = 'auto-size';
@@ -4811,6 +4951,85 @@ function verifyGeneralPassword(overlay) {
 }
 
 // 自定義提示彈窗
+// HTML 特殊字符轉義函數
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// 顯示完整鑰匙項目內容的彈窗
+function showFullKeyItem(keyItem, itemCount) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  
+  const modal = document.createElement('div');
+  modal.className = 'modal-content';
+  modal.style.maxWidth = '600px';
+  
+  // 創建關閉按鈕
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'modal-close';
+  closeBtn.innerHTML = '&times;';
+  closeBtn.onclick = function() { closeModal(overlay); };
+  modal.appendChild(closeBtn);
+  
+  // 創建標題
+  const titleDiv = document.createElement('div');
+  titleDiv.className = 'modal-title';
+  titleDiv.style.cssText = 'display:flex;align-items:center;gap:8px;';
+  titleDiv.textContent = '🔑 鑰匙項目詳情';
+  
+  // 添加數量標籤
+  if(itemCount > 1) {
+    const badge = document.createElement('span');
+    badge.style.cssText = 'background:#17a2b8;color:#fff;padding:4px 10px;border-radius:12px;font-size:12px;font-weight:bold;margin-left:8px;white-space:nowrap;';
+    badge.textContent = '×' + itemCount + ' 項目';
+    titleDiv.appendChild(badge);
+  }
+  modal.appendChild(titleDiv);
+  
+  // 創建內容區域
+  const contentWrapper = document.createElement('div');
+  contentWrapper.style.cssText = 'padding:20px;background:#f8f9fa;border-radius:8px;margin:15px 0;max-height:400px;overflow-y:auto;';
+  
+  const contentDiv = document.createElement('div');
+  contentDiv.style.cssText = 'font-size:16px;line-height:1.8;color:#212529;word-break:break-word;white-space:pre-wrap;';
+  contentDiv.textContent = keyItem;
+  contentWrapper.appendChild(contentDiv);
+  modal.appendChild(contentWrapper);
+  
+  // 創建按鈕區域
+  const buttonsDiv = document.createElement('div');
+  buttonsDiv.className = 'modal-buttons';
+  
+  const confirmBtn = document.createElement('button');
+  confirmBtn.className = 'modal-btn confirm';
+  confirmBtn.textContent = '關閉';
+  confirmBtn.onclick = function() { closeModal(overlay); };
+  buttonsDiv.appendChild(confirmBtn);
+  modal.appendChild(buttonsDiv);
+  
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+  
+  // 點擊遮罩關閉彈窗
+  overlay.addEventListener('click', function(e) {
+    if(e.target === overlay) {
+      closeModal(overlay);
+    }
+  });
+  
+  // ESC鍵關閉彈窗
+  const escHandler = function(e) {
+    if(e.key === 'Escape') {
+      closeModal(overlay);
+      document.removeEventListener('keydown', escHandler);
+    }
+  };
+  document.addEventListener('keydown', escHandler);
+}
+
 function showCustomAlert(message, type = 'info') {
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
