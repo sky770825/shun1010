@@ -20,6 +20,64 @@ const ADMIN_PASSWORD = '10108888'; // 管理員密碼
 
 
 
+// 安全的 localStorage 包裝函數（處理配額超限）
+
+function safeLocalStorageSet(key, value) {
+
+  try {
+
+    localStorage.setItem(key, value);
+
+    return true;
+
+  } catch (error) {
+
+    console.error('❌ localStorage 寫入失敗:', error);
+
+    
+
+    if (error.name === 'QuotaExceededError') {
+
+      showSyncNotification('⚠️ 本地儲存空間不足，請清理瀏覽器資料', 'warning');
+
+      
+
+      // 嘗試清理30天前的鑰匙記錄
+
+      cleanOldRecords();
+
+      
+
+      // 重試一次
+
+      try {
+
+        localStorage.setItem(key, value);
+
+        return true;
+
+      } catch (retryError) {
+
+        console.error('❌ 重試後仍無法寫入 localStorage:', retryError);
+
+        showSyncNotification('❌ 儲存失敗，請聯繫管理員', 'error');
+
+        return false;
+
+      }
+
+    }
+
+    
+
+    return false;
+
+  }
+
+}
+
+
+
 // 當前選擇的成員（用於鑰匙借出）
 
 let selectedMember = null;
@@ -3870,9 +3928,41 @@ function selectKeyFromSearch(keyName) {
 
 // 顯示同步成功通知
 
-function showSyncNotification(message) {
+function showSyncNotification(message, type = 'success') {
 
   const notification = document.createElement('div');
+
+  
+
+  // 根據類型設定不同顏色
+
+  const colors = {
+
+    success: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
+
+    info: 'linear-gradient(135deg, #17a2b8 0%, #138496 100%)',
+
+    warning: 'linear-gradient(135deg, #ffc107 0%, #ff9800 100%)',
+
+    error: 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)'
+
+  };
+
+  
+
+  const shadows = {
+
+    success: '0 4px 15px rgba(40, 167, 69, 0.4)',
+
+    info: '0 4px 15px rgba(23, 162, 184, 0.4)',
+
+    warning: '0 4px 15px rgba(255, 152, 0, 0.4)',
+
+    error: '0 4px 15px rgba(220, 53, 69, 0.4)'
+
+  };
+
+  
 
   notification.style.cssText = `
 
@@ -3882,7 +3972,7 @@ function showSyncNotification(message) {
 
     right: 20px;
 
-    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    background: ${colors[type] || colors.success};
 
     color: white;
 
@@ -3896,7 +3986,7 @@ function showSyncNotification(message) {
 
     font-weight: bold;
 
-    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+    box-shadow: ${shadows[type] || shadows.success};
 
     animation: slideInRight 0.5s ease-out;
 
@@ -4397,23 +4487,25 @@ let isFirstAutoLoad = true;
 
 async function autoRefreshFromSheets(showLoadingHint = false) {
 
-  const ym = document.getElementById('monthPicker').value;
+  try {
 
-  
+    const ym = document.getElementById('monthPicker').value;
 
-  if (showLoadingHint || isFirstAutoLoad) {
+    
 
-    console.log('🔄 正在從 Google Sheets 載入最新班表...');
+    if (showLoadingHint || isFirstAutoLoad) {
 
-  } else {
+      console.log('🔄 正在從 Google Sheets 載入最新班表...');
 
-    console.log('🔄 自動刷新：檢查 Google Sheets 是否有更新...');
+    } else {
 
-  }
+      console.log('🔄 自動刷新：檢查 Google Sheets 是否有更新...');
 
-  
+    }
 
-  const scheduleData = await loadScheduleFromGoogleSheets(ym);
+    
+
+    const scheduleData = await loadScheduleFromGoogleSheets(ym);
 
   
 
@@ -4598,6 +4690,30 @@ async function autoRefreshFromSheets(showLoadingHint = false) {
       isFirstAutoLoad = false;
 
     }
+
+  }
+
+  
+
+  } catch (error) {
+
+    console.error('❌ 自動刷新失敗:', error);
+
+    
+
+    // 如果是首次載入失敗，仍然重置標記，避免影響後續刷新
+
+    if (isFirstAutoLoad) {
+
+      isFirstAutoLoad = false;
+
+      showSyncNotification('⚠️ 無法連線 Google Sheets，使用本地資料', 'warning');
+
+    }
+
+    
+
+    // 非首次載入的錯誤可以靜默處理（不影響用戶體驗）
 
   }
 
@@ -12626,11 +12742,39 @@ window.addEventListener('storage', function(e) {
 
 
 
+// 月份切換防抖標記
+
+let isMonthChanging = false;
+
+
+
 // 月份選擇器變更時自動從 Sheets 同步
 
 document.getElementById('monthPicker').addEventListener('change', function() {
 
+  // 防止重複切換
+
+  if (isMonthChanging) {
+
+    console.log('⏳ 月份切換中，請稍候...');
+
+    return;
+
+  }
+
+  
+
+  isMonthChanging = true;
+
   console.log('📅 月份已切換，重建表格並同步最新排班...');
+
+  
+
+  // 顯示載入提示
+
+  showSyncNotification('🔄 正在切換月份...', 'info');
+
+  
 
   // 先重建表格結構（會自動調用 hydrate）
 
@@ -12640,9 +12784,15 @@ document.getElementById('monthPicker').addEventListener('change', function() {
 
   // 延遲後從 Google Sheets 同步最新資料
 
-  setTimeout(() => {
+  setTimeout(async () => {
 
-    autoRefreshFromSheets();
+    await autoRefreshFromSheets();
+
+    
+
+    // 同步完成後解除鎖定
+
+    isMonthChanging = false;
 
   }, 500);
 
