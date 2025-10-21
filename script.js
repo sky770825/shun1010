@@ -12630,7 +12630,15 @@ window.addEventListener('storage', function(e) {
 
 document.getElementById('monthPicker').addEventListener('change', function() {
 
-  console.log('📅 月份已切換，自動從 Google Sheets 同步最新排班...');
+  console.log('📅 月份已切換，重建表格並同步最新排班...');
+
+  // 先重建表格結構（會自動調用 hydrate）
+
+  buildGrid();
+
+  
+
+  // 延遲後從 Google Sheets 同步最新資料
 
   setTimeout(() => {
 
