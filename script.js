@@ -1121,15 +1121,1434 @@ function executeAutoAssign(){
   
   showCustomAlert(statsMessage, 'success');
   
-  // 發送數據到 Google Sheets（使用覆蓋模式，從第2行開始重寫）
+  // ⭐ 發送數據到「次月排班表」（獨立功能，不影響「排班記錄」）
   // 異步執行，不阻塞用戶界面
   (async () => {
-    const success = await sendScheduleToGoogleSheets(ym, data, 'update', '隨機平均排班');
+    const success = await sendScheduleToNextMonthSheet(ym, data);
     if (success) {
-      // 顯示同步成功的通知
-      showSyncNotification('📊 排班已同步到 Google Sheets');
+      showSyncNotification('📊 隨機排班已同步到「次月排班表」');
     }
   })();
+}
+
+// ==================== 次月排班表功能（獨立，不影響原有功能）====================
+
+// 指定月份排班表（可選擇任意月份，並設定排班條件）
+function autoAssignNextMonth(){
+  console.log('開始執行指定月份排班表');
+  
+  // ⭐ 先讓用戶選擇要生成哪個月份的排班，並設定條件
+  showMonthSelector((selectedYm, scheduleOptions) => {
+    executeAutoAssignForMonth(selectedYm, scheduleOptions);
+  });
+}
+
+// 顯示月份選擇器
+function showMonthSelector(onConfirm) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.75);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: fadeIn 0.3s;
+  `;
+  
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+    background: linear-gradient(135deg, #e91e63 0%, #f06292 100%);
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    max-width: 450px;
+    width: 100%;
+    padding: 0;
+    overflow: hidden;
+    animation: slideIn 0.3s;
+  `;
+  
+  // 獲取當前年月和下個月
+  const today = new Date();
+  const currentYm = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+  
+  const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+  const nextYm = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}`;
+  
+  modal.innerHTML = `
+    <div style="background:#fff;padding:40px 30px;max-height:85vh;overflow-y:auto;">
+      <div style="text-align:center;margin-bottom:25px;">
+        <div style="width:80px;height:80px;margin:0 auto 20px;background:linear-gradient(135deg,#e91e63 0%,#f06292 100%);border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 30px rgba(233,30,99,0.3);">
+          <span style="font-size:40px;">📅</span>
+        </div>
+        <h3 style="margin:0 0 10px;font-size:24px;color:#333;font-weight:bold;">指定月份排班表設定</h3>
+        <p style="margin:0;color:#6c757d;font-size:14px;">選擇月份並設定排班條件</p>
+      </div>
+      
+      <!-- 月份選擇 -->
+      <div style="margin-bottom:20px;">
+        <label style="display:block;margin-bottom:8px;font-size:14px;font-weight:bold;color:#495057;">
+          📅 選擇月份
+        </label>
+        <input type="month" id="nextMonthPicker" value="${nextYm}"
+          style="width:100%;padding:15px 20px;border:2px solid #e9ecef;border-radius:12px;font-size:18px;text-align:center;transition:all 0.3s;box-sizing:border-box;"
+          onfocus="this.style.borderColor='#e91e63';this.style.boxShadow='0 0 0 4px rgba(233,30,99,0.1)';"
+          onblur="this.style.borderColor='#e9ecef';this.style.boxShadow='none';">
+        <div style="margin-top:8px;padding:8px;background:#e3f2fd;border-radius:6px;font-size:11px;color:#1565c0;">
+          💡 預設為下個月（${nextYm}），可選擇任意月份
+        </div>
+      </div>
+      
+      <!-- 排班條件快速設定 -->
+      <details open style="margin-bottom:20px;background:#f8f9fa;padding:15px;border-radius:10px;border:1px solid #dee2e6;">
+        <summary style="cursor:pointer;font-weight:bold;color:#495057;font-size:14px;list-style:none;user-select:none;display:flex;align-items:center;gap:8px;margin-bottom:15px;">
+          <span style="font-size:16px;">⚙️</span>
+          <span>排班條件設定</span>
+          <span style="font-size:11px;color:#6c757d;margin-left:auto;">(點擊收起)</span>
+        </summary>
+        
+        <div style="display:grid;gap:15px;">
+          <!-- 全部啟用/停用開關 -->
+          <div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);padding:12px;border-radius:8px;color:#fff;">
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+              <input type="checkbox" id="enableAllConditions" checked onchange="toggleAllConditions(this.checked)"
+                style="width:20px;height:20px;cursor:pointer;">
+              <div style="font-weight:700;font-size:14px;">🎯 啟用所有排班條件（與「排班條件設定.js」同步）</div>
+            </label>
+          </div>
+          
+          <!-- 條件詳細設定說明（動態生成）-->
+          <div style="background:#fff;padding:15px;border-radius:8px;border:1px solid #e9ecef;" id="conditionsSummaryDisplay">
+            ${generateConditionsSummaryHTML()}
+          </div>
+          
+          <!-- 編輯條件按鈕 -->
+          <div style="text-align:center;margin-top:10px;">
+            <button onclick="openConditionsEditor()" 
+              style="padding:10px 20px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.3s;box-shadow:0 2px 8px rgba(102,126,234,0.3);"
+              onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(102,126,234,0.4)';"
+              onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 2px 8px rgba(102,126,234,0.3)';">
+              ✏️ 編輯排班條件
+            </button>
+          </div>
+          
+          <!-- 快速切換開關 -->
+          <div style="background:#fff;padding:12px;border-radius:8px;border:1px solid #e9ecef;">
+            <div style="font-weight:600;color:#333;font-size:13px;margin-bottom:10px;">⚡ 快速切換：</div>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:6px;">
+              <input type="checkbox" id="ignoreAllRestrictions"
+                style="width:18px;height:18px;cursor:pointer;accent-color:#ff9800;">
+              <span style="font-size:12px;color:#666;">
+                🔓 <strong style="color:#ff9800;">忽略所有限制條件</strong>（最快速排班，不考慮任何限制）
+              </span>
+            </label>
+          </div>
+        </div>
+      </details>
+      
+      <div style="display:flex;gap:12px;">
+        <button onclick="confirmMonthSelection(this.closest('.modal-overlay'))" 
+          style="flex:1;padding:14px;background:linear-gradient(135deg,#e91e63 0%,#f06292 100%);color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:bold;cursor:pointer;transition:all 0.3s;box-shadow:0 4px 15px rgba(233,30,99,0.4);"
+          onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(233,30,99,0.5)';"
+          onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 15px rgba(233,30,99,0.4)';">
+          ✓ 開始排班
+        </button>
+        <button onclick="closeModal(this.closest('.modal-overlay'))" 
+          style="flex:1;padding:14px;background:#f8f9fa;color:#495057;border:none;border-radius:12px;font-size:16px;font-weight:bold;cursor:pointer;transition:all 0.3s;"
+          onmouseover="this.style.background='#e9ecef';"
+          onmouseout="this.style.background='#f8f9fa';">
+          ✕ 取消
+        </button>
+      </div>
+    </div>
+  `;
+  
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+  
+  // 保存回调函数
+  window._monthSelectorCallback = onConfirm;
+  
+  // 自动聚焦到月份选择器
+  setTimeout(() => {
+    const input = document.getElementById('nextMonthPicker');
+    if (input) input.focus();
+  }, 100);
+  
+  // 点击遮罩关闭
+  overlay.addEventListener('click', function(e) {
+    if(e.target === overlay) {
+      closeModal(overlay);
+      window._monthSelectorCallback = null;
+    }
+  });
+  
+  // ESC键关闭
+  const escHandler = function(e) {
+    if(e.key === 'Escape') {
+      closeModal(overlay);
+      window._monthSelectorCallback = null;
+      document.removeEventListener('keydown', escHandler);
+    }
+  };
+  document.addEventListener('keydown', escHandler);
+}
+
+// 動態生成排班條件摘要 HTML
+function generateConditionsSummaryHTML() {
+  const getMemberName = (id) => {
+    const member = MEMBERS.find(m => m.id === id);
+    return member ? `${id}${member.name}` : id;
+  };
+  
+  const getDayNameChinese = (dayName) => {
+    const map = {
+      'sunday': '週日', 'monday': '週一', 'tuesday': '週二', 
+      'wednesday': '週三', 'thursday': '週四', 'friday': '週五', 'saturday': '週六'
+    };
+    return map[dayName] || dayName;
+  };
+  
+  let html = '<div style="font-weight:600;color:#333;font-size:13px;margin-bottom:10px;">📋 目前套用的排班條件：</div>';
+  html += '<div style="font-size:12px;color:#666;line-height:1.8;">';
+  
+  // 1. 必須配對
+  if (SCHEDULE_CONDITIONS.REQUIRED_PAIRS && Object.keys(SCHEDULE_CONDITIONS.REQUIRED_PAIRS).length > 0) {
+    html += '<div style="margin-bottom:8px;"><strong style="color:#e91e63;">👥 必須配對：</strong><br>';
+    Object.keys(SCHEDULE_CONDITIONS.REQUIRED_PAIRS).forEach(pair => {
+      const [id1, id2] = pair.split('-');
+      html += `• ${getMemberName(id1)} & ${getMemberName(id2)}<br>`;
+    });
+    html += '</div>';
+  }
+  
+  // 2. 禁止配對
+  if (SCHEDULE_CONDITIONS.FORBIDDEN_PAIRS && Object.keys(SCHEDULE_CONDITIONS.FORBIDDEN_PAIRS).length > 0) {
+    html += '<div style="margin-bottom:8px;"><strong style="color:#e91e63;">🚫 禁止配對：</strong><br>';
+    Object.keys(SCHEDULE_CONDITIONS.FORBIDDEN_PAIRS).forEach(pair => {
+      const [id1, id2] = pair.split('-');
+      html += `• ${getMemberName(id1)} & ${getMemberName(id2)}<br>`;
+    });
+    html += '</div>';
+  }
+  
+  // 3. 特定日期限制（只能排特定日期）
+  if (SCHEDULE_CONDITIONS.SPECIFIC_DAY_ONLY && Object.keys(SCHEDULE_CONDITIONS.SPECIFIC_DAY_ONLY).length > 0) {
+    html += '<div style="margin-bottom:8px;"><strong style="color:#e91e63;">📅 只能排特定日期：</strong><br>';
+    Object.entries(SCHEDULE_CONDITIONS.SPECIFIC_DAY_ONLY).forEach(([memberId, days]) => {
+      const dayNames = days.map(d => getDayNameChinese(d)).join('、');
+      html += `• ${getMemberName(memberId)}：只排${dayNames}<br>`;
+    });
+    html += '</div>';
+  }
+  
+  // 4. 禁止日期
+  if (SCHEDULE_CONDITIONS.FORBIDDEN_DAYS && Object.keys(SCHEDULE_CONDITIONS.FORBIDDEN_DAYS).length > 0) {
+    html += '<div style="margin-bottom:8px;"><strong style="color:#e91e63;">🚫 不能排特定日期：</strong><br>';
+    Object.entries(SCHEDULE_CONDITIONS.FORBIDDEN_DAYS).forEach(([memberId, days]) => {
+      const dayNames = days.map(d => getDayNameChinese(d)).join('、');
+      html += `• ${getMemberName(memberId)}：不排${dayNames}<br>`;
+    });
+    html += '</div>';
+  }
+  
+  // 5. 班別限制
+  if (SCHEDULE_CONDITIONS.FORBIDDEN_SHIFTS && Object.keys(SCHEDULE_CONDITIONS.FORBIDDEN_SHIFTS).length > 0) {
+    html += '<div><strong style="color:#e91e63;">⏰ 班別限制：</strong><br>';
+    Object.entries(SCHEDULE_CONDITIONS.FORBIDDEN_SHIFTS).forEach(([memberId, shifts]) => {
+      const shiftNames = shifts.map(s => {
+        const parts = s.split('-');
+        const day = getDayNameChinese(parts[0]);
+        const shift = parts[1] === 'evening' ? '晚班' : parts[1] === 'morning' ? '早班' : '中班';
+        return `${day}${shift}`;
+      }).join('、');
+      html += `• ${getMemberName(memberId)}：不排${shiftNames}<br>`;
+    });
+    html += '</div>';
+  }
+  
+  // 如果沒有任何條件
+  if (!SCHEDULE_CONDITIONS.REQUIRED_PAIRS && !SCHEDULE_CONDITIONS.FORBIDDEN_PAIRS && 
+      !SCHEDULE_CONDITIONS.SPECIFIC_DAY_ONLY && !SCHEDULE_CONDITIONS.FORBIDDEN_DAYS && 
+      !SCHEDULE_CONDITIONS.FORBIDDEN_SHIFTS) {
+    html += '<div style="color:#6c757d;text-align:center;padding:10px;">目前沒有設定任何排班條件</div>';
+  }
+  
+  html += '</div>';
+  
+  return html;
+}
+
+// 切換所有條件
+function toggleAllConditions(enabled) {
+  // 目前只是UI開關，實際條件由「排班條件設定.js」控制
+  console.log(enabled ? '✅ 啟用所有排班條件' : '❌ 停用所有排班條件');
+}
+
+// 打開條件編輯器
+function openConditionsEditor() {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:10000;padding:20px;overflow-y:auto;';
+  
+  const modal = document.createElement('div');
+  modal.style.cssText = 'background:#fff;padding:30px;border-radius:20px;max-width:800px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);';
+  
+  modal.innerHTML = `
+    <div style="text-align:center;margin-bottom:25px;">
+      <div style="width:60px;height:60px;margin:0 auto 15px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border-radius:50%;display:flex;align-items:center;justify-content:center;">
+        <span style="font-size:30px;">⚙️</span>
+      </div>
+      <h2 style="margin:0 0 8px;font-size:22px;color:#333;">排班條件編輯器</h2>
+      <p style="margin:0;color:#666;font-size:13px;">新增、編輯或刪除排班條件</p>
+    </div>
+    
+    <!-- 條件類型選擇 -->
+    <div style="margin-bottom:25px;">
+      <label style="display:block;font-weight:600;color:#333;margin-bottom:10px;font-size:14px;">選擇要新增的條件類型：</label>
+      <select id="conditionTypeSelect" style="width:100%;padding:12px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;background:#fff;" onchange="showConditionForm(this.value)">
+        <option value="">-- 請選擇 --</option>
+        <option value="required_pair">👥 必須配對（兩個成員必須排在同一天）</option>
+        <option value="forbidden_pair">🚫 禁止配對（兩個成員不能排在同一天）</option>
+        <option value="specific_day">📅 只能排特定日期（成員只能排特定星期幾）</option>
+        <option value="forbidden_day">🚫 不能排特定日期（成員不能排特定星期幾）</option>
+        <option value="forbidden_shift">⏰ 班別限制（成員不能排特定班別）</option>
+      </select>
+    </div>
+    
+    <!-- 動態表單區域 -->
+    <div id="conditionFormArea" style="display:none;margin-bottom:25px;padding:20px;background:#f8f9fa;border-radius:12px;border:2px dashed #dee2e6;">
+      <!-- 表單內容會動態插入 -->
+    </div>
+    
+    <!-- 目前已設定的條件 -->
+    <div style="margin-bottom:25px;">
+      <div style="font-weight:600;color:#333;margin-bottom:12px;font-size:15px;display:flex;align-items:center;gap:8px;">
+        <span>📋</span>
+        <span>目前已設定的條件</span>
+        <span style="font-size:12px;color:#999;font-weight:normal;">(點擊可刪除)</span>
+      </div>
+      <div id="currentConditionsList" style="max-height:300px;overflow-y:auto;">
+        ${generateEditableConditionsList()}
+      </div>
+    </div>
+    
+    <!-- 底部按鈕 -->
+    <div style="display:flex;gap:12px;margin-top:25px;">
+      <button onclick="exportConditionsCode()" 
+        style="flex:1;padding:14px;background:linear-gradient(135deg,#4caf50 0%,#66bb6a 100%);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:bold;cursor:pointer;transition:all 0.3s;box-shadow:0 4px 15px rgba(76,175,80,0.4);"
+        onmouseover="this.style.transform='translateY(-2px)';"
+        onmouseout="this.style.transform='translateY(0)';">
+        📤 匯出條件代碼
+      </button>
+      <button onclick="closeModal(this.closest('.modal-overlay'))" 
+        style="flex:1;padding:14px;background:#6c757d;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:bold;cursor:pointer;transition:all 0.3s;"
+        onmouseover="this.style.background='#5a6268';"
+        onmouseout="this.style.background='#6c757d';">
+        關閉
+      </button>
+    </div>
+  `;
+  
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+  
+  // 點擊遮罩關閉
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) {
+      closeModal(overlay);
+    }
+  });
+  
+  // ESC 鍵關閉
+  const escHandler = function(e) {
+    if (e.key === 'Escape') {
+      closeModal(overlay);
+      document.removeEventListener('keydown', escHandler);
+    }
+  };
+  document.addEventListener('keydown', escHandler);
+}
+
+// 生成可編輯的條件列表
+function generateEditableConditionsList() {
+  const getMemberName = (id) => {
+    const member = MEMBERS.find(m => m.id === id);
+    return member ? `${id}${member.name}` : id;
+  };
+  
+  const getDayNameChinese = (dayName) => {
+    const map = {
+      'sunday': '週日', 'monday': '週一', 'tuesday': '週二', 
+      'wednesday': '週三', 'thursday': '週四', 'friday': '週五', 'saturday': '週六'
+    };
+    return map[dayName] || dayName;
+  };
+  
+  let html = '';
+  let hasConditions = false;
+  
+  // 1. 必須配對
+  if (SCHEDULE_CONDITIONS.REQUIRED_PAIRS && Object.keys(SCHEDULE_CONDITIONS.REQUIRED_PAIRS).length > 0) {
+    hasConditions = true;
+    Object.keys(SCHEDULE_CONDITIONS.REQUIRED_PAIRS).forEach(pair => {
+      const [id1, id2] = pair.split('-');
+      html += `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 15px;background:#fff;border:1px solid #e0e0e0;border-radius:8px;margin-bottom:8px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:18px;">👥</span>
+            <span style="font-size:14px;color:#333;">${getMemberName(id1)} & ${getMemberName(id2)} 必須配對</span>
+          </div>
+          <button onclick="deleteCondition('required_pair', '${pair}')" 
+            style="padding:6px 12px;background:#dc3545;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;transition:all 0.2s;"
+            onmouseover="this.style.background='#c82333';"
+            onmouseout="this.style.background='#dc3545';">
+            🗑️ 刪除
+          </button>
+        </div>
+      `;
+    });
+  }
+  
+  // 2. 禁止配對
+  if (SCHEDULE_CONDITIONS.FORBIDDEN_PAIRS && Object.keys(SCHEDULE_CONDITIONS.FORBIDDEN_PAIRS).length > 0) {
+    hasConditions = true;
+    Object.keys(SCHEDULE_CONDITIONS.FORBIDDEN_PAIRS).forEach(pair => {
+      const [id1, id2] = pair.split('-');
+      html += `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 15px;background:#fff;border:1px solid #e0e0e0;border-radius:8px;margin-bottom:8px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:18px;">🚫</span>
+            <span style="font-size:14px;color:#333;">${getMemberName(id1)} & ${getMemberName(id2)} 禁止配對</span>
+          </div>
+          <button onclick="deleteCondition('forbidden_pair', '${pair}')" 
+            style="padding:6px 12px;background:#dc3545;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;transition:all 0.2s;"
+            onmouseover="this.style.background='#c82333';"
+            onmouseout="this.style.background='#dc3545';">
+            🗑️ 刪除
+          </button>
+        </div>
+      `;
+    });
+  }
+  
+  // 3. 只能排特定日期
+  if (SCHEDULE_CONDITIONS.SPECIFIC_DAY_ONLY && Object.keys(SCHEDULE_CONDITIONS.SPECIFIC_DAY_ONLY).length > 0) {
+    hasConditions = true;
+    Object.entries(SCHEDULE_CONDITIONS.SPECIFIC_DAY_ONLY).forEach(([memberId, days]) => {
+      const dayNames = days.map(d => getDayNameChinese(d)).join('、');
+      html += `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 15px;background:#fff;border:1px solid #e0e0e0;border-radius:8px;margin-bottom:8px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:18px;">📅</span>
+            <span style="font-size:14px;color:#333;">${getMemberName(memberId)} 只能排 ${dayNames}</span>
+          </div>
+          <button onclick="deleteCondition('specific_day', '${memberId}')" 
+            style="padding:6px 12px;background:#dc3545;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;transition:all 0.2s;"
+            onmouseover="this.style.background='#c82333';"
+            onmouseout="this.style.background='#dc3545';">
+            🗑️ 刪除
+          </button>
+        </div>
+      `;
+    });
+  }
+  
+  // 4. 不能排特定日期
+  if (SCHEDULE_CONDITIONS.FORBIDDEN_DAYS && Object.keys(SCHEDULE_CONDITIONS.FORBIDDEN_DAYS).length > 0) {
+    hasConditions = true;
+    Object.entries(SCHEDULE_CONDITIONS.FORBIDDEN_DAYS).forEach(([memberId, days]) => {
+      const dayNames = days.map(d => getDayNameChinese(d)).join('、');
+      html += `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 15px;background:#fff;border:1px solid #e0e0e0;border-radius:8px;margin-bottom:8px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:18px;">🚫</span>
+            <span style="font-size:14px;color:#333;">${getMemberName(memberId)} 不能排 ${dayNames}</span>
+          </div>
+          <button onclick="deleteCondition('forbidden_day', '${memberId}')" 
+            style="padding:6px 12px;background:#dc3545;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;transition:all 0.2s;"
+            onmouseover="this.style.background='#c82333';"
+            onmouseout="this.style.background='#dc3545';">
+            🗑️ 刪除
+          </button>
+        </div>
+      `;
+    });
+  }
+  
+  // 5. 班別限制
+  if (SCHEDULE_CONDITIONS.FORBIDDEN_SHIFTS && Object.keys(SCHEDULE_CONDITIONS.FORBIDDEN_SHIFTS).length > 0) {
+    hasConditions = true;
+    Object.entries(SCHEDULE_CONDITIONS.FORBIDDEN_SHIFTS).forEach(([memberId, shifts]) => {
+      const shiftNames = shifts.map(s => {
+        const parts = s.split('-');
+        const day = getDayNameChinese(parts[0]);
+        const shift = parts[1] === 'evening' ? '晚班' : parts[1] === 'morning' ? '早班' : '中班';
+        return `${day}${shift}`;
+      }).join('、');
+      html += `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 15px;background:#fff;border:1px solid #e0e0e0;border-radius:8px;margin-bottom:8px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:18px;">⏰</span>
+            <span style="font-size:14px;color:#333;">${getMemberName(memberId)} 不能排 ${shiftNames}</span>
+          </div>
+          <button onclick="deleteCondition('forbidden_shift', '${memberId}')" 
+            style="padding:6px 12px;background:#dc3545;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;transition:all 0.2s;"
+            onmouseover="this.style.background='#c82333';"
+            onmouseout="this.style.background='#dc3545';">
+            🗑️ 刪除
+          </button>
+        </div>
+      `;
+    });
+  }
+  
+  if (!hasConditions) {
+    html = '<div style="text-align:center;padding:30px;color:#999;font-size:14px;">目前沒有設定任何條件<br>請從上方選擇條件類型開始新增</div>';
+  }
+  
+  return html;
+}
+
+// 顯示條件表單
+function showConditionForm(type) {
+  const formArea = document.getElementById('conditionFormArea');
+  
+  if (!type) {
+    formArea.style.display = 'none';
+    return;
+  }
+  
+  formArea.style.display = 'block';
+  
+  // 生成成員選項
+  const memberOptions = MEMBERS.filter(m => !m.disabled).map(m => 
+    `<option value="${m.id}">${m.id} ${m.name}</option>`
+  ).join('');
+  
+  const dayOptions = `
+    <option value="sunday">週日</option>
+    <option value="monday">週一</option>
+    <option value="tuesday">週二</option>
+    <option value="wednesday">週三</option>
+    <option value="thursday">週四</option>
+    <option value="friday">週五</option>
+    <option value="saturday">週六</option>
+  `;
+  
+  let formHTML = '';
+  
+  switch(type) {
+    case 'required_pair':
+    case 'forbidden_pair':
+      const title = type === 'required_pair' ? '👥 新增必須配對' : '🚫 新增禁止配對';
+      formHTML = `
+        <h4 style="margin:0 0 15px;font-size:16px;color:#333;">${title}</h4>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:15px;">
+          <div>
+            <label style="display:block;font-size:13px;color:#666;margin-bottom:5px;">成員 A</label>
+            <select id="member1" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:14px;">
+              <option value="">-- 請選擇 --</option>
+              ${memberOptions}
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-size:13px;color:#666;margin-bottom:5px;">成員 B</label>
+            <select id="member2" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:14px;">
+              <option value="">-- 請選擇 --</option>
+              ${memberOptions}
+            </select>
+          </div>
+        </div>
+        <button onclick="addPairCondition('${type}')" 
+          style="width:100%;padding:12px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">
+          ✅ 新增條件
+        </button>
+      `;
+      break;
+      
+    case 'specific_day':
+    case 'forbidden_day':
+      const dayTitle = type === 'specific_day' ? '📅 新增只能排特定日期' : '🚫 新增不能排特定日期';
+      formHTML = `
+        <h4 style="margin:0 0 15px;font-size:16px;color:#333;">${dayTitle}</h4>
+        <div style="margin-bottom:15px;">
+          <label style="display:block;font-size:13px;color:#666;margin-bottom:5px;">成員</label>
+          <select id="memberSelect" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:14px;">
+            <option value="">-- 請選擇 --</option>
+            ${memberOptions}
+          </select>
+        </div>
+        <div style="margin-bottom:15px;">
+          <label style="display:block;font-size:13px;color:#666;margin-bottom:5px;">星期幾（可多選）</label>
+          <div id="dayCheckboxes" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
+            ${['sunday','monday','tuesday','wednesday','thursday','friday','saturday'].map(day => {
+              const label = {'sunday':'週日','monday':'週一','tuesday':'週二','wednesday':'週三','thursday':'週四','friday':'週五','saturday':'週六'}[day];
+              return `
+                <label style="display:flex;align-items:center;gap:5px;padding:8px;background:#fff;border:1px solid #ddd;border-radius:6px;cursor:pointer;font-size:13px;">
+                  <input type="checkbox" value="${day}" style="cursor:pointer;">
+                  ${label}
+                </label>
+              `;
+            }).join('')}
+          </div>
+        </div>
+        <button onclick="addDayCondition('${type}')" 
+          style="width:100%;padding:12px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">
+          ✅ 新增條件
+        </button>
+      `;
+      break;
+      
+    case 'forbidden_shift':
+      formHTML = `
+        <h4 style="margin:0 0 15px;font-size:16px;color:#333;">⏰ 新增班別限制</h4>
+        <div style="margin-bottom:15px;">
+          <label style="display:block;font-size:13px;color:#666;margin-bottom:5px;">成員</label>
+          <select id="memberSelect" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:14px;">
+            <option value="">-- 請選擇 --</option>
+            ${memberOptions}
+          </select>
+        </div>
+        <div style="margin-bottom:15px;">
+          <label style="display:block;font-size:13px;color:#666;margin-bottom:8px;">不能排的班別（可多選）</label>
+          <div id="shiftCheckboxes" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:12px;">
+            ${['sunday','monday','tuesday','wednesday','thursday','friday','saturday'].map(day => {
+              const label = {'sunday':'週日','monday':'週一','tuesday':'週二','wednesday':'週三','thursday':'週四','friday':'週五','saturday':'週六'}[day];
+              return `
+                <div style="grid-column:span 3;font-weight:600;color:#667eea;margin-top:8px;">${label}</div>
+                <label style="display:flex;align-items:center;gap:4px;padding:6px;background:#fff;border:1px solid #ddd;border-radius:4px;cursor:pointer;">
+                  <input type="checkbox" value="${day}-morning" style="cursor:pointer;">
+                  早班
+                </label>
+                <label style="display:flex;align-items:center;gap:4px;padding:6px;background:#fff;border:1px solid #ddd;border-radius:4px;cursor:pointer;">
+                  <input type="checkbox" value="${day}-afternoon" style="cursor:pointer;">
+                  中班
+                </label>
+                <label style="display:flex;align-items:center;gap:4px;padding:6px;background:#fff;border:1px solid #ddd;border-radius:4px;cursor:pointer;">
+                  <input type="checkbox" value="${day}-evening" style="cursor:pointer;">
+                  晚班
+                </label>
+              `;
+            }).join('')}
+          </div>
+        </div>
+        <button onclick="addShiftCondition()" 
+          style="width:100%;padding:12px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">
+          ✅ 新增條件
+        </button>
+      `;
+      break;
+  }
+  
+  formArea.innerHTML = formHTML;
+}
+
+// 新增配對條件
+function addPairCondition(type) {
+  const member1 = document.getElementById('member1').value;
+  const member2 = document.getElementById('member2').value;
+  
+  if (!member1 || !member2) {
+    showCustomAlert('請選擇兩個成員', 'error');
+    return;
+  }
+  
+  if (member1 === member2) {
+    showCustomAlert('請選擇不同的成員', 'error');
+    return;
+  }
+  
+  // 確保較小的ID在前面
+  const [id1, id2] = member1 < member2 ? [member1, member2] : [member2, member1];
+  const key = `${id1}-${id2}`;
+  
+  if (type === 'required_pair') {
+    if (!SCHEDULE_CONDITIONS.REQUIRED_PAIRS) {
+      SCHEDULE_CONDITIONS.REQUIRED_PAIRS = {};
+    }
+    SCHEDULE_CONDITIONS.REQUIRED_PAIRS[key] = true;
+    showCustomAlert('✅ 已新增必須配對條件！', 'success');
+  } else {
+    if (!SCHEDULE_CONDITIONS.FORBIDDEN_PAIRS) {
+      SCHEDULE_CONDITIONS.FORBIDDEN_PAIRS = {};
+    }
+    SCHEDULE_CONDITIONS.FORBIDDEN_PAIRS[key] = true;
+    showCustomAlert('✅ 已新增禁止配對條件！', 'success');
+  }
+  
+  // 刷新列表
+  document.getElementById('currentConditionsList').innerHTML = generateEditableConditionsList();
+  
+  // 清空表單
+  document.getElementById('member1').value = '';
+  document.getElementById('member2').value = '';
+}
+
+// 新增日期條件
+function addDayCondition(type) {
+  const memberId = document.getElementById('memberSelect').value;
+  const checkboxes = document.querySelectorAll('#dayCheckboxes input[type="checkbox"]:checked');
+  const days = Array.from(checkboxes).map(cb => cb.value);
+  
+  if (!memberId) {
+    showCustomAlert('請選擇成員', 'error');
+    return;
+  }
+  
+  if (days.length === 0) {
+    showCustomAlert('請至少選擇一個星期', 'error');
+    return;
+  }
+  
+  if (type === 'specific_day') {
+    if (!SCHEDULE_CONDITIONS.SPECIFIC_DAY_ONLY) {
+      SCHEDULE_CONDITIONS.SPECIFIC_DAY_ONLY = {};
+    }
+    SCHEDULE_CONDITIONS.SPECIFIC_DAY_ONLY[memberId] = days;
+    showCustomAlert('✅ 已新增只能排特定日期條件！', 'success');
+  } else {
+    if (!SCHEDULE_CONDITIONS.FORBIDDEN_DAYS) {
+      SCHEDULE_CONDITIONS.FORBIDDEN_DAYS = {};
+    }
+    SCHEDULE_CONDITIONS.FORBIDDEN_DAYS[memberId] = days;
+    showCustomAlert('✅ 已新增不能排特定日期條件！', 'success');
+  }
+  
+  // 刷新列表
+  document.getElementById('currentConditionsList').innerHTML = generateEditableConditionsList();
+  
+  // 清空表單
+  document.getElementById('memberSelect').value = '';
+  document.querySelectorAll('#dayCheckboxes input[type="checkbox"]').forEach(cb => cb.checked = false);
+}
+
+// 新增班別限制條件
+function addShiftCondition() {
+  const memberId = document.getElementById('memberSelect').value;
+  const checkboxes = document.querySelectorAll('#shiftCheckboxes input[type="checkbox"]:checked');
+  const shifts = Array.from(checkboxes).map(cb => cb.value);
+  
+  if (!memberId) {
+    showCustomAlert('請選擇成員', 'error');
+    return;
+  }
+  
+  if (shifts.length === 0) {
+    showCustomAlert('請至少選擇一個班別', 'error');
+    return;
+  }
+  
+  if (!SCHEDULE_CONDITIONS.FORBIDDEN_SHIFTS) {
+    SCHEDULE_CONDITIONS.FORBIDDEN_SHIFTS = {};
+  }
+  SCHEDULE_CONDITIONS.FORBIDDEN_SHIFTS[memberId] = shifts;
+  showCustomAlert('✅ 已新增班別限制條件！', 'success');
+  
+  // 刷新列表
+  document.getElementById('currentConditionsList').innerHTML = generateEditableConditionsList();
+  
+  // 清空表單
+  document.getElementById('memberSelect').value = '';
+  document.querySelectorAll('#shiftCheckboxes input[type="checkbox"]').forEach(cb => cb.checked = false);
+}
+
+// 刪除條件
+function deleteCondition(type, key) {
+  showConfirmModal(
+    '⚠️ 確認刪除',
+    `確定要刪除此條件嗎？\n\n此操作只會刪除當前會話中的條件，\n要永久刪除請點擊「匯出條件代碼」後\n更新「排班條件設定.js」檔案。`,
+    '確定刪除',
+    () => {
+      switch(type) {
+        case 'required_pair':
+          delete SCHEDULE_CONDITIONS.REQUIRED_PAIRS[key];
+          break;
+        case 'forbidden_pair':
+          delete SCHEDULE_CONDITIONS.FORBIDDEN_PAIRS[key];
+          break;
+        case 'specific_day':
+          delete SCHEDULE_CONDITIONS.SPECIFIC_DAY_ONLY[key];
+          break;
+        case 'forbidden_day':
+          delete SCHEDULE_CONDITIONS.FORBIDDEN_DAYS[key];
+          break;
+        case 'forbidden_shift':
+          delete SCHEDULE_CONDITIONS.FORBIDDEN_SHIFTS[key];
+          break;
+      }
+      
+      // 刷新列表
+      document.getElementById('currentConditionsList').innerHTML = generateEditableConditionsList();
+      showCustomAlert('✅ 條件已刪除！', 'success');
+    }
+  );
+}
+
+// 匯出條件代碼
+function exportConditionsCode() {
+  let code = `// ⭐ 自動生成的排班條件（複製以下代碼到「排班條件設定.js」）\n\n`;
+  code += `const SCHEDULE_CONDITIONS = {\n`;
+  
+  // 必須配對
+  code += `  // 👥 必須配對（這些成員必須排在同一天）\n`;
+  code += `  REQUIRED_PAIRS: {\n`;
+  if (SCHEDULE_CONDITIONS.REQUIRED_PAIRS) {
+    Object.keys(SCHEDULE_CONDITIONS.REQUIRED_PAIRS).forEach(pair => {
+      code += `    '${pair}': true,  // ${getMemberNameForExport(pair.split('-')[0])} & ${getMemberNameForExport(pair.split('-')[1])}\n`;
+    });
+  }
+  code += `  },\n\n`;
+  
+  // 禁止配對
+  code += `  // 🚫 禁止配對（這些成員不能排在同一天）\n`;
+  code += `  FORBIDDEN_PAIRS: {\n`;
+  if (SCHEDULE_CONDITIONS.FORBIDDEN_PAIRS) {
+    Object.keys(SCHEDULE_CONDITIONS.FORBIDDEN_PAIRS).forEach(pair => {
+      code += `    '${pair}': true,  // ${getMemberNameForExport(pair.split('-')[0])} & ${getMemberNameForExport(pair.split('-')[1])}\n`;
+    });
+  }
+  code += `  },\n\n`;
+  
+  // 只能排特定日期
+  code += `  // 📅 只能排特定日期\n`;
+  code += `  SPECIFIC_DAY_ONLY: {\n`;
+  if (SCHEDULE_CONDITIONS.SPECIFIC_DAY_ONLY) {
+    Object.entries(SCHEDULE_CONDITIONS.SPECIFIC_DAY_ONLY).forEach(([id, days]) => {
+      const daysStr = JSON.stringify(days);
+      code += `    '${id}': ${daysStr},  // ${getMemberNameForExport(id)}\n`;
+    });
+  }
+  code += `  },\n\n`;
+  
+  // 不能排特定日期
+  code += `  // 🚫 不能排特定日期\n`;
+  code += `  FORBIDDEN_DAYS: {\n`;
+  if (SCHEDULE_CONDITIONS.FORBIDDEN_DAYS) {
+    Object.entries(SCHEDULE_CONDITIONS.FORBIDDEN_DAYS).forEach(([id, days]) => {
+      const daysStr = JSON.stringify(days);
+      code += `    '${id}': ${daysStr},  // ${getMemberNameForExport(id)}\n`;
+    });
+  }
+  code += `  },\n\n`;
+  
+  // 班別限制
+  code += `  // ⏰ 班別限制\n`;
+  code += `  FORBIDDEN_SHIFTS: {\n`;
+  if (SCHEDULE_CONDITIONS.FORBIDDEN_SHIFTS) {
+    Object.entries(SCHEDULE_CONDITIONS.FORBIDDEN_SHIFTS).forEach(([id, shifts]) => {
+      const shiftsStr = JSON.stringify(shifts);
+      code += `    '${id}': ${shiftsStr},  // ${getMemberNameForExport(id)}\n`;
+    });
+  }
+  code += `  }\n`;
+  
+  code += `};\n`;
+  
+  // 複製到剪貼板
+  navigator.clipboard.writeText(code).then(() => {
+    showCustomAlert(`✅ 條件代碼已複製到剪貼板！\n\n請打開「排班條件設定.js」文件\n將剪貼板內容貼上並覆蓋整個 SCHEDULE_CONDITIONS 物件\n然後刷新頁面即可永久生效`, 'success');
+  }).catch(err => {
+    // 如果複製失敗，顯示在彈窗中
+    showCodeModal('排班條件代碼', code);
+  });
+}
+
+function getMemberNameForExport(id) {
+  const member = MEMBERS.find(m => m.id === id);
+  return member ? member.name : id;
+}
+
+function showCodeModal(title, code) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:11000;padding:20px;';
+  
+  const modal = document.createElement('div');
+  modal.style.cssText = 'background:#fff;padding:30px;border-radius:15px;max-width:700px;width:100%;max-height:80vh;overflow:hidden;display:flex;flex-direction:column;';
+  
+  modal.innerHTML = `
+    <h3 style="margin:0 0 20px;font-size:20px;color:#333;">${title}</h3>
+    <textarea readonly style="flex:1;padding:15px;border:1px solid #ddd;border-radius:8px;font-family:monospace;font-size:13px;line-height:1.6;resize:none;background:#f8f9fa;">${code}</textarea>
+    <div style="display:flex;gap:10px;margin-top:20px;">
+      <button onclick="navigator.clipboard.writeText(this.parentElement.previousElementSibling.value).then(() => showCustomAlert('✅ 已複製！', 'success'))" 
+        style="flex:1;padding:12px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:bold;cursor:pointer;">
+        📋 複製代碼
+      </button>
+      <button onclick="closeModal(this.closest('.modal-overlay'))" 
+        style="flex:1;padding:12px;background:#6c757d;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:bold;cursor:pointer;">
+        關閉
+      </button>
+    </div>
+  `;
+  
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+  
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) closeModal(overlay);
+  });
+}
+
+// 确认月份选择
+function confirmMonthSelection(overlay) {
+  const selectedYm = document.getElementById('nextMonthPicker').value;
+  
+  if (!selectedYm) {
+    showCustomAlert('請選擇月份', 'error');
+    return;
+  }
+  
+  // ⭐ 讀取排班條件設定
+  const enableAll = document.getElementById('enableAllConditions')?.checked ?? true;
+  const ignoreAll = document.getElementById('ignoreAllRestrictions')?.checked ?? false;
+  
+  const scheduleOptions = {
+    enableAllConditions: ignoreAll ? false : enableAll, // 如果勾選「忽略所有」，則停用所有條件
+    enableGroupPairs: ignoreAll ? false : enableAll,
+    enableDayRestrictions: ignoreAll ? false : enableAll,
+    enableShiftRestrictions: ignoreAll ? false : enableAll,
+    enableSmartInterval: ignoreAll ? false : enableAll
+  };
+  
+  console.log('排班條件設定:', scheduleOptions);
+  console.log(ignoreAll ? '🔓 已忽略所有限制條件' : (enableAll ? '🎯 啟用所有排班條件' : '⚠️ 已停用排班條件'));
+  
+  closeModal(overlay);
+  
+  if (window._monthSelectorCallback) {
+    window._monthSelectorCallback(selectedYm, scheduleOptions);
+    window._monthSelectorCallback = null;
+  }
+}
+
+// 為指定月份執行排班
+function executeAutoAssignForMonth(ym, scheduleOptions = {}){
+  console.log('開始為月份執行排班:', ym);
+  console.log('排班條件:', scheduleOptions);
+  
+  // ⭐ 保存排班條件到全局變量，供排班邏輯使用
+  window._customScheduleOptions = scheduleOptions;
+  
+  const days=daysInMonth(ym);
+  console.log('本月天數:', days);
+  const allMembers = MEMBERS.filter(m=>!m.disabled).map(m=>m.id);
+  console.log('可用成員:', allMembers);
+  if(allMembers.length===0){showCustomAlert('無可排班成員', 'error');return;}
+
+  // 計算總班數
+  let totalSlots=0;
+  for(let d=1;d<=days;d++){
+    const wd=new Date(`${ym}-${String(d).padStart(2,'0')}`).getDay();
+    totalSlots += (wd===0||wd===6)? WEEKEND_SHIFTS.length : WEEKDAY_SHIFTS.length;
+  }
+
+  const base = Math.floor(totalSlots / allMembers.length);
+  const remainder = totalSlots % allMembers.length;
+
+  // 獲取前3次的增額分配記錄
+  const previousExtraMembers = getPreviousExtraMembers(ym);
+  
+  // 使用固定的分配順序（基於成員ID排序，確保一致性）
+  const sortedMembers = [...allMembers].sort();
+  
+  // 優先選擇沒有增額過的成員（按固定順序）
+  const availableMembers = sortedMembers.filter(m => !previousExtraMembers.includes(m));
+  
+  // 如果可用成員不夠，再從所有成員中選擇（按固定順序）
+  let shuffled = [...availableMembers];
+  if (shuffled.length < remainder) {
+    const remainingNeeded = remainder - shuffled.length;
+    const otherMembers = sortedMembers.filter(m => !shuffled.includes(m));
+    shuffled = [...shuffled, ...otherMembers.slice(0, remainingNeeded)];
+  }
+  
+  // 如果還是湊不夠，就用所有成員（按固定順序）
+  if (shuffled.length < remainder) {
+    shuffled = sortedMembers.slice(0, remainder);
+  }
+  
+  // 只取需要的數量
+  shuffled = shuffled.slice(0, remainder);
+  
+  // 記錄這次的分配
+  recordScheduleHistory(ym, shuffled, remainder);
+
+  // 顯示分配計畫
+  let plan = `📋 ${ym} 次月排班表分配計畫\n\n`;
+  plan += `總班數: ${totalSlots}\n`;
+  plan += `平均每人: ${base} 班\n`;
+  plan += `多餘班數: ${remainder} 班\n\n`;
+  
+  if (previousExtraMembers.length > 0) {
+    plan += `前3次增額過的成員: ${previousExtraMembers.join(', ')}\n\n`;
+  }
+  
+  plan += '本次增額分配:\n';
+  shuffled.forEach((memberId) => {
+    const member = MEMBERS.find(m => m.id === memberId);
+    plan += `${memberId.padStart(2,'0')} ${member.name}\n`;
+  });
+  
+  plan += '\n分配方式:\n';
+  allMembers.forEach((memberId) => {
+    const member = MEMBERS.find(m => m.id === memberId);
+    const hasExtra = shuffled.includes(memberId);
+    const totalShifts = base + (hasExtra ? 1 : 0);
+    plan += `${memberId.padStart(2,'0')} ${member.name}: ${base}+${hasExtra ? 1 : 0} = ${totalShifts}班\n`;
+  });
+  
+  plan += '\n⭐ 此排班將生成並可複製到「指定月份排班表」';
+
+  showConfirmModal(
+    '📋 指定月份排班表計畫',
+    plan,
+    '確定要執行此分配計畫嗎？',
+    () => {
+      continueExecuteAutoAssignForMonth(ym, days, allMembers, window._customScheduleOptions || {});
+    }
+  );
+}
+
+// 為指定月份執行排班（續）
+function executeAutoAssignNextMonth(){
+  // ⭐ 這個函數已被 executeAutoAssignForMonth 取代
+  // 保留此函數名避免舊的調用出錯
+  console.log('⚠️ executeAutoAssignNextMonth 已棄用，請使用 autoAssignNextMonth');
+  autoAssignNextMonth();
+}
+
+// 為指定月份執行完整排班邏輯
+function continueExecuteAutoAssignForMonth(ym, days, allMembers, scheduleOptions = {}) {
+  console.log('開始執行排班邏輯:', ym);
+  console.log('應用的排班條件:', scheduleOptions);
+  
+  // 計算總班數
+  let totalSlots=0;
+  for(let d=1;d<=days;d++){
+    const wd=new Date(`${ym}-${String(d).padStart(2,'0')}`).getDay();
+    totalSlots += (wd===0||wd===6)? WEEKEND_SHIFTS.length : WEEKDAY_SHIFTS.length;
+  }
+
+  const base = Math.floor(totalSlots / allMembers.length);
+  const remainder = totalSlots % allMembers.length;
+  const previousExtraMembers = getPreviousExtraMembers(ym);
+  const sortedMembers = [...allMembers].sort();
+  const availableMembers = sortedMembers.filter(m => !previousExtraMembers.includes(m));
+  
+  let shuffled = [...availableMembers];
+  if (shuffled.length < remainder) {
+    const remainingNeeded = remainder - shuffled.length;
+    const otherMembers = sortedMembers.filter(m => !shuffled.includes(m));
+    shuffled = [...shuffled, ...otherMembers.slice(0, remainingNeeded)];
+  }
+  
+  if (shuffled.length < remainder) {
+    shuffled = sortedMembers.slice(0, remainder);
+  }
+  
+  shuffled = shuffled.slice(0, remainder);
+  recordScheduleHistory(ym, shuffled, remainder);
+
+  // 建立分配池
+  const pool=[];
+  allMembers.forEach(m=>{for(let j=0;j<base;j++) pool.push(m);});
+  for(let i=0;i<remainder;i++) pool.push(shuffled[i]);
+
+  const data={};
+  let idx=0;
+  
+  // 按組別分組成員
+  const groupMembers = {};
+  MEMBERS.forEach(member => {
+    if (member.group) {
+      if (!groupMembers[member.group]) {
+        groupMembers[member.group] = [];
+      }
+      groupMembers[member.group].push(member.id);
+    }
+  });
+  
+  console.log('識別到的組隊成員:', groupMembers);
+
+  // 隨機化分配池
+  pool.sort(() => Math.random() - 0.5);
+
+  // 記錄每個成員的排班歷史
+  const memberWorkHistory = {};
+  const lastWorkDay = {};
+  
+  // 區分組隊成員和單人成員
+  const groupedMembers = new Set();
+  const singleMembers = new Set();
+  
+  MEMBERS.forEach(member => {
+    if (member.group) {
+      groupedMembers.add(member.id);
+    } else if (!member.disabled) {
+      singleMembers.add(member.id);
+    }
+  });
+
+  // 智能間隔檢查函數（根據用戶設定決定是否啟用）
+  function canWorkOnDay(memberId, targetDay) {
+    // ⭐ 如果用戶關閉了智能間隔，直接返回 true
+    if (!scheduleOptions.enableSmartInterval) {
+      return true;
+    }
+    
+    if (singleMembers.has(memberId)) {
+      const workDays = memberWorkHistory[memberId] || [];
+      if (workDays.length === 0) return true;
+      const lastWork = Math.max(...workDays);
+      return (targetDay - lastWork) >= 2;
+    }
+    
+    if (groupedMembers.has(memberId)) {
+      const workDays = memberWorkHistory[memberId] || [];
+      if (workDays.length === 0) return true;
+      const lastWork = Math.max(...workDays);
+      return (targetDay - lastWork) >= 4;
+    }
+    
+    return true;
+  }
+  
+  function canGroupWorkOnDay(memberId, targetDay) {
+    if (!groupedMembers.has(memberId)) return true;
+    
+    const member = MEMBERS.find(m => m.id === memberId);
+    if (!member || !member.group) return true;
+    
+    const groupMembers = MEMBERS.filter(m => m.group === member.group && !m.disabled);
+    const minIntervalBetweenGroupMembers = 4;
+    
+    for (const groupMember of groupMembers) {
+      if (groupMember.id === memberId) continue;
+      
+      const groupMemberWorkDays = memberWorkHistory[groupMember.id] || [];
+      
+      for (const workDay of groupMemberWorkDays) {
+        const interval = Math.abs(targetDay - workDay);
+        if (interval < minIntervalBetweenGroupMembers) {
+          return false;
+        }
+      }
+      
+      if (lastWorkDay[groupMember.id]) {
+        const interval = Math.abs(targetDay - lastWorkDay[groupMember.id]);
+        if (interval < minIntervalBetweenGroupMembers) {
+          return false;
+        }
+      }
+    }
+    
+    return true;
+  }
+
+  function updateWorkHistory(memberId, workDay) {
+    if (!memberWorkHistory[memberId]) {
+      memberWorkHistory[memberId] = [];
+    }
+    memberWorkHistory[memberId].push(workDay);
+  }
+
+  // 執行排班邏輯（與原本相同）
+  for(let d=1;d<=days;d++){
+    const wd=new Date(`${ym}-${String(d).padStart(2,'0')}`).getDay();
+    const shifts = (wd===0||wd===6)? WEEKEND_SHIFTS : WEEKDAY_SHIFTS;
+    const isWeekend = (wd === 0 || wd === 6);
+    
+    const dayMembers = new Set();
+    const dayGroupMembers = {};
+    
+    const shuffledGroups = Object.keys(groupMembers).sort(() => Math.random() - 0.5);
+    
+    // ⭐ 假日組隊排班（根據用戶設定決定是否啟用）
+    if (isWeekend && shifts.length >= 2 && scheduleOptions.enableGroupPairs) {
+      for (const groupName of shuffledGroups) {
+        const members = groupMembers[groupName];
+        const availableGroupMembers = members.filter(m => {
+          if (!allMembers.includes(m) || dayMembers.has(m) || !pool.includes(m)) return false;
+          return canWorkOnDay(m, d) && canGroupWorkOnDay(m, d);
+        });
+        
+        if (availableGroupMembers.length >= 2 && pool.length >= 2) {
+          const assignmentType = Math.random() < 0.7;
+          
+          if (assignmentType) {
+            const possibleStarts = [0, 1];
+            const startShift = possibleStarts[Math.floor(Math.random() * possibleStarts.length)];
+            const endShift = startShift + 2;
+            
+            let canAssign = true;
+            for (let i = startShift; i < endShift; i++) {
+              const key = `${ym}:${d}-${shifts[i].key}`;
+              if (data[key]) {
+                canAssign = false;
+                break;
+              }
+            }
+            
+            if (canAssign) {
+              const selectedMembers = [];
+              const tempAvailable = [...availableGroupMembers];
+              for (let i = 0; i < Math.min(2, tempAvailable.length); i++) {
+                const randomIndex = Math.floor(Math.random() * tempAvailable.length);
+                selectedMembers.push(tempAvailable[randomIndex]);
+                tempAvailable.splice(randomIndex, 1);
+              }
+              
+              for (let i = 0; i < selectedMembers.length && startShift + i < endShift; i++) {
+                const key = `${ym}:${d}-${shifts[startShift + i].key}`;
+                const member = selectedMembers[i];
+                
+                data[key] = member;
+                dayMembers.add(member);
+                updateWorkHistory(member, d);
+                
+                const poolIndex = pool.findIndex(m => m === member);
+                if (poolIndex !== -1) {
+                  pool.splice(poolIndex, 1);
+                }
+                
+                if (!dayGroupMembers[groupName]) {
+                  dayGroupMembers[groupName] = [];
+                }
+                dayGroupMembers[groupName].push(member);
+              }
+            }
+          } else {
+            const availableShifts = [];
+            for (let i = 0; i < shifts.length; i++) {
+              const key = `${ym}:${d}-${shifts[i].key}`;
+              if (!data[key]) {
+                availableShifts.push(i);
+              }
+            }
+            
+            if (availableShifts.length > 0) {
+              const selectedShift = availableShifts[Math.floor(Math.random() * availableShifts.length)];
+              const key = `${ym}:${d}-${shifts[selectedShift].key}`;
+              
+              const selectedMembers = [];
+              const tempAvailable = [...availableGroupMembers];
+              for (let i = 0; i < Math.min(2, tempAvailable.length); i++) {
+                const randomIndex = Math.floor(Math.random() * tempAvailable.length);
+                selectedMembers.push(tempAvailable[randomIndex]);
+                tempAvailable.splice(randomIndex, 1);
+              }
+              
+              const member = selectedMembers[0];
+              data[key] = member;
+              dayMembers.add(member);
+              updateWorkHistory(member, d);
+              
+              const poolIndex = pool.findIndex(m => m === member);
+              if (poolIndex !== -1) {
+                pool.splice(poolIndex, 1);
+              }
+              
+              if (!dayGroupMembers[groupName]) {
+                dayGroupMembers[groupName] = [];
+              }
+              dayGroupMembers[groupName].push(member);
+            }
+          }
+        }
+      }
+    }
+    
+    for(const s of shifts){
+      const key=`${ym}:${d}-${s.key}`;
+      
+      if (data[key]) continue;
+      
+      let assigned = false;
+      
+      for (const groupName of shuffledGroups) {
+        const members = groupMembers[groupName];
+        
+        if (dayGroupMembers[groupName] && dayGroupMembers[groupName].length >= 2) continue;
+        
+        // ⭐ 根據用戶設定檢查排班條件
+        const availableGroupMembers = members.filter(m => {
+          if (!allMembers.includes(m) || dayMembers.has(m) || !pool.includes(m)) return false;
+          if (!canWorkOnDay(m, d) || !canGroupWorkOnDay(m, d)) return false;
+          
+          // 檢查排班條件（根據用戶設定）
+          if (scheduleOptions.enableDayRestrictions || scheduleOptions.enableShiftRestrictions) {
+            const dateStr = `${ym}-${String(d).padStart(2,'0')}`;
+            const dayOfWeek = new Date(dateStr).getDay();
+            const conditionCheck = canMemberWorkOnDay(m, dayOfWeek, s.key);
+            if (!conditionCheck.canWork) return false;
+          }
+          
+          return true;
+        });
+        
+        if (availableGroupMembers.length >= 1 && pool.length > 0) {
+          let selectedMember = null;
+          
+          if (!dayGroupMembers[groupName] || dayGroupMembers[groupName].length === 0) {
+            selectedMember = availableGroupMembers[Math.floor(Math.random() * availableGroupMembers.length)];
+          } else {
+            const alreadyAssigned = dayGroupMembers[groupName];
+            const remainingMembers = availableGroupMembers.filter(m => !alreadyAssigned.includes(m));
+            if (remainingMembers.length > 0) {
+              selectedMember = remainingMembers[Math.floor(Math.random() * remainingMembers.length)];
+            }
+          }
+          
+          if (selectedMember) {
+            const poolIndex = pool.findIndex(m => m === selectedMember);
+            if (poolIndex !== -1) {
+              data[key] = selectedMember;
+              dayMembers.add(selectedMember);
+              updateWorkHistory(selectedMember, d);
+              
+              if (!dayGroupMembers[groupName]) {
+                dayGroupMembers[groupName] = [];
+              }
+              dayGroupMembers[groupName].push(selectedMember);
+              
+              pool.splice(poolIndex, 1);
+              assigned = true;
+              break;
+            }
+          }
+        }
+      }
+      
+      if (!assigned && pool.length > 0) {
+        const singleMembersInPool = pool.filter(m => singleMembers.has(m));
+        const groupMembersInPool = pool.filter(m => groupedMembers.has(m));
+        
+        let selectedMember = null;
+        
+        if (singleMembersInPool.length > 0) {
+          const availableSingles = singleMembersInPool.filter(m => {
+            if (!canWorkOnDay(m, d)) return false;
+            
+            // ⭐ 根據用戶設定檢查排班條件
+            if (scheduleOptions.enableDayRestrictions || scheduleOptions.enableShiftRestrictions) {
+              const dateStr = `${ym}-${String(d).padStart(2,'0')}`;
+              const dayOfWeek = new Date(dateStr).getDay();
+              const conditionCheck = canMemberWorkOnDay(m, dayOfWeek, s.key);
+              if (!conditionCheck.canWork) return false;
+            }
+            
+            // ⭐ 根據用戶設定檢查組隊配對條件
+            if (scheduleOptions.enableGroupPairs) {
+              const dayCheck = checkDayScheduleConditions(Array.from(dayMembers), m);
+              if (!dayCheck.canAdd) return false;
+            }
+            
+            return true;
+          });
+          
+          if (availableSingles.length > 0) {
+            selectedMember = availableSingles[Math.floor(Math.random() * availableSingles.length)];
+          }
+        }
+        
+        if (!selectedMember && groupMembersInPool.length > 0) {
+          const availableGroups = groupMembersInPool.filter(m => {
+            if (!canWorkOnDay(m, d) || !canGroupWorkOnDay(m, d)) return false;
+            
+            // ⭐ 根據用戶設定檢查排班條件
+            if (scheduleOptions.enableDayRestrictions || scheduleOptions.enableShiftRestrictions) {
+              const dateStr = `${ym}-${String(d).padStart(2,'0')}`;
+              const dayOfWeek = new Date(dateStr).getDay();
+              const conditionCheck = canMemberWorkOnDay(m, dayOfWeek, s.key);
+              if (!conditionCheck.canWork) return false;
+            }
+            
+            // ⭐ 根據用戶設定檢查組隊配對條件
+            if (scheduleOptions.enableGroupPairs) {
+              const dayCheck = checkDayScheduleConditions(Array.from(dayMembers), m);
+              if (!dayCheck.canAdd) return false;
+            }
+            
+            return true;
+          });
+          
+          if (availableGroups.length > 0) {
+            selectedMember = availableGroups[Math.floor(Math.random() * availableGroups.length)];
+          }
+        }
+        
+        if (!selectedMember && singleMembersInPool.length > 0) {
+          selectedMember = singleMembersInPool[0];
+        }
+        
+        if (!selectedMember && groupMembersInPool.length > 0) {
+          selectedMember = groupMembersInPool[0];
+        }
+        
+        if (selectedMember) {
+          data[key] = selectedMember;
+          dayMembers.add(selectedMember);
+          updateWorkHistory(selectedMember, d);
+          lastWorkDay[selectedMember] = d;
+          
+          const poolIndex = pool.findIndex(m => m === selectedMember);
+          if (poolIndex !== -1) {
+            pool.splice(poolIndex, 1);
+          }
+        }
+      }
+    }
+  }
+
+  // ⭐ 注意：這裡不更新 localStorage，只發送到 Google Sheets
+  console.log(`次月排班完成，共安排了 ${Object.keys(data).length} 個班別`);
+  
+  // 統計信息
+  const groupStats = {};
+  Object.entries(groupMembers).forEach(([groupName, members]) => {
+    groupStats[groupName] = 0;
+    members.forEach(memberId => {
+      const memberShifts = Object.values(data).filter(member => member === memberId).length;
+      groupStats[groupName] += memberShifts;
+    });
+  });
+  
+  let statsMessage = `✅ 已完成次月排班表\n共安排了 ${Object.keys(data).length} 個班別\n\n組隊成員排班統計：\n`;
+  Object.entries(groupStats).forEach(([groupName, count]) => {
+    const groupMembersList = groupMembers[groupName].map(id => {
+      const member = MEMBERS.find(m => m.id === id);
+      return `${id}${member ? member.name : ''}`;
+    }).join('、');
+    statsMessage += `組隊${groupName}: ${groupMembersList} (共${count}班)\n`;
+  });
+  
+  const singleMemberStats = {};
+  MEMBERS.filter(m => !m.group && !m.disabled).forEach(member => {
+    const memberShifts = Object.values(data).filter(memberId => memberId === member.id).length;
+    if (memberShifts > 0) {
+      singleMemberStats[member.id] = memberShifts;
+    }
+  });
+  
+  if (Object.keys(singleMemberStats).length > 0) {
+    statsMessage += `\n單人成員排班統計：\n`;
+    Object.entries(singleMemberStats).forEach(([memberId, count]) => {
+      const member = MEMBERS.find(m => m.id === memberId);
+      statsMessage += `${memberId}${member ? member.name : ''}: ${count}班\n`;
+    });
+  }
+  
+  statsMessage += `\n⭐ 請點擊下方按鈕複製資料到「指定月份排班表」`;
+  
+  // ⭐ 顯示結果並提供複製功能
+  showNextMonthScheduleResult(ym, data, statsMessage, groupStats, singleMemberStats);
 }
 
 // 發送排班數據到 Google Sheets
@@ -1273,6 +2692,271 @@ async function syncCurrentMonthToGoogleSheets(scheduleType = '手動換班') {
   await sendScheduleToGoogleSheets(ym, monthData, 'update', scheduleType);
 }
 
+// ⭐ 顯示次月排班結果並提供複製功能
+function showNextMonthScheduleResult(yearMonth, scheduleData, statsMessage, groupStats, singleMemberStats) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 3000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: fadeIn 0.3s;
+  `;
+  
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+    background: linear-gradient(135deg, #e91e63 0%, #f06292 100%);
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    max-width: 800px;
+    width: 95%;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 0;
+    animation: slideIn 0.3s;
+  `;
+  
+  // 生成表格数据（用于复制）
+  const days = daysInMonth(yearMonth);
+  const tableData = [];
+  
+  // 表头
+  tableData.push(['时间戳记', '年月', '排班类型', '日期', '班别', '成员ID', '成员姓名', '班别时段']);
+  
+  // 数据行
+  const timestamp = new Date().toISOString();
+  Object.keys(scheduleData).forEach(key => {
+    const parts = key.split(':');
+    const datePart = parts[1];
+    const dashIndex = datePart.lastIndexOf('-');
+    const date = datePart.substring(0, dashIndex);
+    const shiftKey = datePart.substring(dashIndex + 1);
+    
+    const memberId = scheduleData[key];
+    const member = MEMBERS.find(m => m.id === memberId);
+    const memberName = member ? member.name : memberId;
+    
+    // 判断班别和时段
+    const dateNum = parseInt(date);
+    const dateObj = new Date(`${yearMonth}-${String(dateNum).padStart(2, '0')}`);
+    const weekday = dateObj.getDay();
+    const isWeekend = (weekday === 0 || weekday === 6);
+    
+    let shiftLabel = '';
+    let timeSlot = '';
+    
+    if (shiftKey === 'morning') {
+      shiftLabel = '早班';
+      timeSlot = isWeekend ? '09:30-13:30' : '09:30-15:30';
+    } else if (shiftKey === 'noon') {
+      shiftLabel = '中班';
+      timeSlot = '13:30-17:30';
+    } else if (shiftKey === 'evening') {
+      shiftLabel = '晚班';
+      timeSlot = isWeekend ? '17:30-21:00' : '15:30-21:00';
+    }
+    
+    tableData.push([
+      timestamp,
+      yearMonth,
+      '隨機平均排班',
+      date,
+      shiftLabel,
+      memberId,
+      memberName,
+      timeSlot
+    ]);
+  });
+  
+  // 转换为 TSV 格式（Tab 分隔，可直接贴到 Sheets）
+  const tsvData = tableData.map(row => row.join('\t')).join('\n');
+  
+  // 转换为 CSV 格式
+  const csvData = tableData.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+  
+  modal.innerHTML = `
+    <div style="background:#fff;padding:40px 30px;border-radius:20px;">
+      <div style="text-align:center;margin-bottom:30px;">
+        <div style="width:80px;height:80px;margin:0 auto 20px;background:linear-gradient(135deg,#e91e63 0%,#f06292 100%);border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 30px rgba(233,30,99,0.3);">
+          <span style="font-size:40px;">📋</span>
+        </div>
+        <h3 style="margin:0 0 10px;font-size:24px;color:#333;font-weight:bold;">指定月份排班表結果</h3>
+        <p style="margin:0;color:#666;font-size:14px;">${yearMonth} - 共 ${Object.keys(scheduleData).length} 個班別</p>
+      </div>
+      
+      <div style="background:#f8f9fa;padding:20px;border-radius:12px;margin-bottom:20px;max-height:300px;overflow-y:auto;">
+        <pre style="margin:0;font-size:13px;line-height:1.8;white-space:pre-wrap;color:#333;">${statsMessage}</pre>
+      </div>
+      
+      <div style="background:#fff3cd;padding:15px;border-radius:10px;margin-bottom:20px;border-left:4px solid #ffc107;">
+        <div style="font-size:14px;color:#856404;">
+          <strong>📝 使用方法：</strong><br>
+          <div style="margin-top:10px;line-height:1.8;">
+            1. 點擊「📋 複製到剪貼板」按鈕<br>
+            2. 打開 <a href="https://docs.google.com/spreadsheets/d/1_eujc5OwWR4riQ0oAkGbkkIQQXaX5U3a9xCLvi_qgoU/edit?gid=1122446648" target="_blank" style="color:#e91e63;font-weight:bold;text-decoration:underline;">Google Sheets 的「次月排班表」</a><br>
+            3. 點擊第2行第1列（A2）<br>
+            4. 按 Ctrl+V 貼上<br>
+            5. 完成！
+          </div>
+        </div>
+      </div>
+      
+      <div style="display:flex;gap:12px;flex-wrap:wrap;">
+        <button onclick="copyNextMonthSchedule()" id="copyBtn" 
+          style="flex:1;min-width:180px;padding:16px;background:linear-gradient(135deg,#e91e63 0%,#f06292 100%);color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:bold;cursor:pointer;transition:all 0.3s;box-shadow:0 4px 15px rgba(233,30,99,0.4);"
+          onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(233,30,99,0.5)';"
+          onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 15px rgba(233,30,99,0.4)';">
+          📋 複製到剪貼板
+        </button>
+        <button onclick="downloadNextMonthSchedule()" 
+          style="flex:1;min-width:180px;padding:16px;background:linear-gradient(135deg,#28a745 0%,#20c997 100%);color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:bold;cursor:pointer;transition:all 0.3s;box-shadow:0 4px 15px rgba(40,167,69,0.4);"
+          onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(40,167,69,0.5)';"
+          onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 15px rgba(40,167,69,0.4)';">
+          💾 下載 CSV
+        </button>
+        <button onclick="closeModal(this.closest('.modal-overlay'))" 
+          style="flex:1;min-width:120px;padding:16px;background:#6c757d;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:bold;cursor:pointer;transition:all 0.3s;"
+          onmouseover="this.style.background='#5a6268';"
+          onmouseout="this.style.background='#6c757d';">
+          ✕ 關閉
+        </button>
+      </div>
+    </div>
+  `;
+  
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+  
+  // 保存数据到全局变量，供复制和下载使用
+  window._nextMonthScheduleData = {
+    tsv: tsvData,
+    csv: csvData,
+    yearMonth: yearMonth,
+    recordCount: Object.keys(scheduleData).length
+  };
+  
+  // 点击遮罩关闭
+  overlay.addEventListener('click', function(e) {
+    if(e.target === overlay) {
+      closeModal(overlay);
+      window._nextMonthScheduleData = null;
+    }
+  });
+}
+
+// 复制次月排班表到剪贴板
+function copyNextMonthSchedule() {
+  if (!window._nextMonthScheduleData) {
+    showCustomAlert('❌ 找不到排班數據', 'error');
+    return;
+  }
+  
+  const tsvData = window._nextMonthScheduleData.tsv;
+  
+  // 复制到剪贴板
+  navigator.clipboard.writeText(tsvData).then(() => {
+    const btn = document.getElementById('copyBtn');
+    if (btn) {
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '✅ 已複製！';
+      btn.style.background = 'linear-gradient(135deg,#28a745 0%,#20c997 100%)';
+      
+      setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.style.background = 'linear-gradient(135deg,#e91e63 0%,#f06292 100%)';
+      }, 2000);
+    }
+    
+    showCustomAlert(`✅ 已複製 ${window._nextMonthScheduleData.recordCount} 筆排班數據！\n\n請打開 Google Sheets 的「次月排班表」或「指定月份排班表」工作表\n點擊 A2 儲存格，按 Ctrl+V 貼上`, 'success');
+  }).catch(err => {
+    showCustomAlert('❌ 複製失敗：' + err.message + '\n\n請手動選擇並複製數據', 'error');
+  });
+}
+
+// 下载次月排班表为 CSV
+function downloadNextMonthSchedule() {
+  if (!window._nextMonthScheduleData) {
+    showCustomAlert('❌ 找不到排班數據', 'error');
+    return;
+  }
+  
+  const csvData = window._nextMonthScheduleData.csv;
+  const yearMonth = window._nextMonthScheduleData.yearMonth;
+  
+  const blob = new Blob([csvData], {type:'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `指定月份排班表-${yearMonth}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  
+  showCustomAlert('✅ CSV 檔案已下載！\n\n可直接匯入 Excel 或 Google Sheets', 'success');
+}
+
+// ⭐ 發送排班到「次月排班表」（獨立函數，不影響其他功能）
+async function sendScheduleToNextMonthSheet(yearMonth, scheduleData) {
+  if (!GOOGLE_SHEETS_WEB_APP_URL || GOOGLE_SHEETS_WEB_APP_URL === 'YOUR_WEB_APP_URL_HERE') {
+    console.warn('⚠️ Google Sheets Web App URL 尚未設定');
+    return false;
+  }
+  
+  try {
+    // 準備成員名稱對照表
+    const memberNames = {};
+    MEMBERS.forEach(member => {
+      memberNames[member.id] = member.name;
+    });
+    
+    // 準備要發送的數據（獨立格式）
+    const postData = {
+      dataType: 'schedule',
+      yearMonth: yearMonth,
+      scheduleType: '隨機平均排班',
+      scheduleData: scheduleData,
+      members: memberNames,
+      timestamp: new Date().toISOString(),
+      action: 'update',
+      targetSheet: '次月排班表' // ⭐ 指定寫入「次月排班表」
+    };
+    
+    console.log(`📤 正在發送隨機排班數據到「次月排班表」...`);
+    console.log(`📊 共 ${Object.keys(scheduleData).length} 筆排班數據`);
+    
+    // 發送 POST 請求
+    const response = await fetch(GOOGLE_SHEETS_WEB_APP_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(postData)
+    });
+    
+    // 等待寫入完成
+    const recordCount = Object.keys(scheduleData).length;
+    const estimatedTime = Math.max(3000, recordCount * 50);
+    
+    console.log(`⏳ 等待 Google Sheets 寫入 ${recordCount} 筆資料到「次月排班表」...（預估 ${Math.round(estimatedTime/1000)} 秒）`);
+    await new Promise(resolve => setTimeout(resolve, estimatedTime));
+    
+    console.log(`✅ 隨機排班已成功發送到「次月排班表」`);
+    return true;
+    
+  } catch (error) {
+    console.error('❌ 發送到「次月排班表」時發生錯誤:', error);
+    return false;
+  }
+}
+
 // 發送鑰匙記錄到 Google Sheets
 async function sendKeyRecordToGoogleSheets(record, action) {
   // 檢查是否已設定 Web App URL
@@ -1407,8 +3091,8 @@ async function autoLoadTodayKeyRecords() {
         // 處理歸還時間
         if (sheetRecord.returnTime) {
           const returnDate = new Date(sheetRecord.returnTime);
-          localRecord.returnTime = returnDate.toISOString();
-          localRecord.returnTimeStr = `${returnDate.getMonth()+1}/${returnDate.getDate()} ${returnDate.getHours().toString().padStart(2,'0')}:${returnDate.getMinutes().toString().padStart(2,'0')}`;
+            localRecord.returnTime = returnDate.toISOString();
+            localRecord.returnTimeStr = `${returnDate.getMonth()+1}/${returnDate.getDate()} ${returnDate.getHours().toString().padStart(2,'0')}:${returnDate.getMinutes().toString().padStart(2,'0')}`;
         }
         
         localRecords.push(localRecord);
@@ -1481,8 +3165,8 @@ async function syncTodayKeyRecordsFromSheets() {
       // 處理歸還時間
       if (sheetRecord.returnTime) {
         const returnDate = new Date(sheetRecord.returnTime);
-        localRecord.returnTime = returnDate.toISOString();
-        localRecord.returnTimeStr = `${returnDate.getMonth()+1}/${returnDate.getDate()} ${returnDate.getHours().toString().padStart(2,'0')}:${returnDate.getMinutes().toString().padStart(2,'0')}`;
+          localRecord.returnTime = returnDate.toISOString();
+          localRecord.returnTimeStr = `${returnDate.getMonth()+1}/${returnDate.getDate()} ${returnDate.getHours().toString().padStart(2,'0')}:${returnDate.getMinutes().toString().padStart(2,'0')}`;
       }
       
       localRecords.push(localRecord);
@@ -1568,9 +3252,16 @@ async function loadAndCacheKeyList() {
   const keyList = await loadKeyListFromGoogleSheets();
   
   if (keyList && keyList.length > 0) {
-    keyNameList = keyList;
-    localStorage.setItem(KEY_LIST_KEY, JSON.stringify(keyList));
-    console.log(`✅ 已載入 ${keyList.length} 個鑰匙項目到搜尋清單`);
+    // ⭐ 映射數據格式：將 Google Sheets 格式轉換為前端格式
+    keyNameList = keyList.map(key => ({
+      id: key.id,
+      name: key.keyName || key.name,           // keyName -> name
+      category: key.developer || key.category,  // developer -> category
+      note: key.note || ''
+    }));
+    localStorage.setItem(KEY_LIST_KEY, JSON.stringify(keyNameList));
+    console.log(`✅ 已載入 ${keyNameList.length} 個鑰匙項目到搜尋清單`);
+    console.log('📋 示例數據:', keyNameList[0]); // 調試用
     
     // 初始化搜索功能
     initKeySearch();
@@ -1622,10 +3313,11 @@ function initKeySearch() {
       return;
     }
     
-    // 過濾匹配的鑰匙項目
+    // 過濾匹配的鑰匙項目（支援搜尋名稱、分類、備註）
     const matches = keyNameList.filter(key => 
       key.name.toLowerCase().includes(searchText) ||
-      (key.category && key.category.toLowerCase().includes(searchText))
+      (key.category && key.category.toLowerCase().includes(searchText)) ||
+      (key.note && key.note.toLowerCase().includes(searchText))
     );
     
     if (matches.length > 0) {
@@ -1636,7 +3328,8 @@ function initKeySearch() {
           onmouseover="this.style.background='#f0f7ff'"
           onmouseout="this.style.background='white'">
           <div style="font-weight: 600; color: #333; margin-bottom: 2px;">${key.name}</div>
-          ${key.category ? `<div style="font-size: 11px; color: #666;">分類：${key.category}</div>` : ''}
+          ${key.category ? `<div style="font-size: 11px; color: #666; margin-bottom: 2px;">🏷️ 分類：${key.category}</div>` : ''}
+          ${key.note ? `<div style="font-size: 11px; color: #999;">📝 備註：${key.note}</div>` : ''}
         </div>
       `).join('');
       searchDropdown.style.display = 'block';
@@ -1723,6 +3416,9 @@ function executeAdminAction(action) {
   switch(action) {
     case 'autoAssign':
       requirePassword('autoAssign');
+      break;
+    case 'autoAssignNextMonth':
+      requirePassword('autoAssignNextMonth');
       break;
     case 'clearData':
       requirePassword('clearData');
@@ -3887,6 +5583,9 @@ function renderKeyTable(){
     const isLongText = keyItemText.length > 50;
     const displayText = isLongText ? keyItemText.substring(0, 50) + '...' : keyItemText;
     
+    // ⭐ 查找鑰匙的詳細資料（分類和備註）
+    const keyInfo = keyNameList.find(k => k.name === keyItemText);
+    
     // 創建鑰匙項目顯示區域
     const keyDiv = document.createElement('div');
     keyDiv.style.cssText = 'word-break:break-word;line-height:1.5;cursor:pointer;color:#007bff;text-decoration:' + (isLongText ? 'underline' : 'none') + ';';
@@ -3901,12 +5600,20 @@ function renderKeyTable(){
       keyDiv.appendChild(badge);
     }
     
-    // 添加點擊事件
+    // 添加點擊事件，傳遞鑰匙資訊
     keyDiv.addEventListener('click', function() {
-      showFullKeyItem(keyItemText, itemCount);
+      showFullKeyItem(keyItemText, itemCount, keyInfo);
     });
     
     keyCell.appendChild(keyDiv);
+    
+    // ⭐ 添加備註顯示（如果有）
+    if(keyInfo && keyInfo.note) {
+      const noteDiv = document.createElement('div');
+      noteDiv.style.cssText = 'font-size: 11px; color: #999; margin-top: 4px; line-height: 1.3;';
+      noteDiv.textContent = '📝 備註：' + keyInfo.note;
+      keyCell.appendChild(noteDiv);
+    }
     
     const statusCell = document.createElement('td');
     statusCell.className = 'auto-size';
@@ -4716,6 +6423,7 @@ function requirePassword(functionName) {
   
   const functionNames = {
     'autoAssign': '隨機平均排班',
+    'autoAssignNextMonth': '指定月份排班表',
     'clearData': '清除本月資料',
     'exportCsv': '匯出 CSV',
     'quickFill': '快速填班',
@@ -4799,6 +6507,9 @@ function verifyPassword(functionName, overlay) {
     switch(functionName) {
       case 'autoAssign':
         autoAssign();
+        break;
+      case 'autoAssignNextMonth':
+        autoAssignNextMonth();
         break;
       case 'clearData':
         clearData();
@@ -4959,13 +6670,13 @@ function escapeHtml(text) {
 }
 
 // 顯示完整鑰匙項目內容的彈窗
-function showFullKeyItem(keyItem, itemCount) {
+function showFullKeyItem(keyItem, itemCount, keyInfo) {
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
   
   const modal = document.createElement('div');
   modal.className = 'modal-content';
-  modal.style.maxWidth = '600px';
+  modal.style.maxWidth = '700px';
   
   // 創建關閉按鈕
   const closeBtn = document.createElement('button');
@@ -4991,13 +6702,264 @@ function showFullKeyItem(keyItem, itemCount) {
   
   // 創建內容區域
   const contentWrapper = document.createElement('div');
-  contentWrapper.style.cssText = 'padding:20px;background:#f8f9fa;border-radius:8px;margin:15px 0;max-height:400px;overflow-y:auto;';
+  contentWrapper.style.cssText = 'padding:15px;max-height:500px;overflow-y:auto;';
   
-  const contentDiv = document.createElement('div');
-  contentDiv.style.cssText = 'font-size:16px;line-height:1.8;color:#212529;word-break:break-word;white-space:pre-wrap;';
-  contentDiv.textContent = keyItem;
-  contentWrapper.appendChild(contentDiv);
+  // ⭐ 如果是批量借出（多個項目），拆分顯示每個鑰匙
+  if(itemCount > 1) {
+    // 嘗試分割鑰匙項目（用逗號、分號、換行符或頓號分隔）
+    const separators = /[,，;；\n、]/;
+    const keyItems = keyItem.split(separators)
+      .map(item => item.trim())
+      .filter(item => item.length > 0);
+    
+    // 顯示提示
+    const tipDiv = document.createElement('div');
+    tipDiv.style.cssText = 'padding:10px;background:#e3f2fd;border-radius:6px;margin-bottom:15px;font-size:13px;color:#1565c0;';
+    tipDiv.innerHTML = '💡 點擊任一鑰匙可查看詳細分類和備註';
+    contentWrapper.appendChild(tipDiv);
+    
+    // 為每個鑰匙創建可點擊的卡片
+    keyItems.forEach((singleKey, index) => {
+      const keyCard = document.createElement('div');
+      keyCard.style.cssText = `
+        padding:15px;
+        background:#fff;
+        border:2px solid #e0e0e0;
+        border-radius:8px;
+        margin-bottom:12px;
+        cursor:pointer;
+        transition:all 0.2s;
+      `;
+      
+      // 查找該鑰匙的資料
+      const thisKeyInfo = keyNameList.find(k => k.name === singleKey);
+      
+      // 鑰匙名稱
+      const nameDiv = document.createElement('div');
+      nameDiv.style.cssText = 'font-size:16px;font-weight:600;color:#212529;margin-bottom:8px;display:flex;align-items:center;gap:8px;';
+      nameDiv.innerHTML = `
+        <span style="background:#667eea;color:#fff;padding:2px 8px;border-radius:4px;font-size:12px;">${index + 1}</span>
+        ${singleKey}
+      `;
+      keyCard.appendChild(nameDiv);
+      
+      // 顯示簡要資訊
+      if(thisKeyInfo) {
+        if(thisKeyInfo.category) {
+          const catDiv = document.createElement('div');
+          catDiv.style.cssText = 'font-size:12px;color:#666;margin-top:4px;';
+          catDiv.innerHTML = `🏷️ ${thisKeyInfo.category}`;
+          keyCard.appendChild(catDiv);
+        }
+        if(thisKeyInfo.note) {
+          const notePreview = document.createElement('div');
+          notePreview.style.cssText = 'font-size:12px;color:#999;margin-top:4px;';
+          const shortNote = thisKeyInfo.note.length > 30 ? thisKeyInfo.note.substring(0, 30) + '...' : thisKeyInfo.note;
+          notePreview.innerHTML = `📝 ${shortNote}`;
+          keyCard.appendChild(notePreview);
+        }
+      }
+      
+      // 點擊提示
+      const clickHint = document.createElement('div');
+      clickHint.style.cssText = 'font-size:11px;color:#999;margin-top:8px;text-align:right;';
+      clickHint.textContent = '點擊查看完整資訊 →';
+      keyCard.appendChild(clickHint);
+      
+      // 懸停效果
+      keyCard.onmouseenter = function() {
+        this.style.borderColor = '#667eea';
+        this.style.background = '#f8f9ff';
+        this.style.transform = 'translateX(4px)';
+        this.style.boxShadow = '0 2px 8px rgba(102,126,234,0.2)';
+      };
+      
+      keyCard.onmouseleave = function() {
+        this.style.borderColor = '#e0e0e0';
+        this.style.background = '#fff';
+        this.style.transform = 'translateX(0)';
+        this.style.boxShadow = 'none';
+      };
+      
+      // 點擊顯示詳細資訊
+      keyCard.onclick = function() {
+        showSingleKeyDetail(singleKey, thisKeyInfo);
+      };
+      
+      contentWrapper.appendChild(keyCard);
+    });
+    
+  } else {
+    // ⭐ 單個鑰匙：顯示分類和備註資訊框
+    if(keyInfo && (keyInfo.category || keyInfo.note)) {
+      const infoBox = document.createElement('div');
+      infoBox.style.cssText = 'margin-bottom:15px;padding:15px;background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);border-radius:10px;box-shadow:0 4px 12px rgba(102,126,234,0.3);';
+      
+      let infoHtml = '';
+      
+      // 分類資訊
+      if(keyInfo.category) {
+        infoHtml += `
+          <div style="margin-bottom:${keyInfo.note ? '12px' : '0'};">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:20px;">🏷️</span>
+              <strong style="color:#fff;font-size:15px;">分類</strong>
+            </div>
+            <div style="margin-top:6px;padding:8px 12px;background:rgba(255,255,255,0.9);border-radius:6px;color:#333;font-size:14px;font-weight:500;">
+              ${keyInfo.category}
+            </div>
+          </div>
+        `;
+      }
+      
+      // 備註資訊
+      if(keyInfo.note) {
+        infoHtml += `
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:20px;">📝</span>
+              <strong style="color:#fff;font-size:15px;">備註</strong>
+            </div>
+            <div style="margin-top:6px;padding:8px 12px;background:rgba(255,255,255,0.9);border-radius:6px;color:#333;font-size:14px;line-height:1.6;">
+              ${keyInfo.note}
+            </div>
+          </div>
+        `;
+      }
+      
+      infoBox.innerHTML = infoHtml;
+      contentWrapper.appendChild(infoBox);
+    }
+    
+    // 鑰匙名稱
+    const nameBox = document.createElement('div');
+    nameBox.style.cssText = 'padding:20px;background:#f8f9fa;border-radius:8px;';
+    
+    const contentDiv = document.createElement('div');
+    contentDiv.style.cssText = 'font-size:16px;line-height:1.8;color:#212529;word-break:break-word;white-space:pre-wrap;font-weight:500;';
+    contentDiv.textContent = keyItem;
+    nameBox.appendChild(contentDiv);
+    contentWrapper.appendChild(nameBox);
+  }
+  
   modal.appendChild(contentWrapper);
+  
+  // 創建按鈕區域
+  const buttonsDiv = document.createElement('div');
+  buttonsDiv.className = 'modal-buttons';
+  
+  const confirmBtn = document.createElement('button');
+  confirmBtn.className = 'modal-btn confirm';
+  confirmBtn.textContent = '關閉';
+  confirmBtn.onclick = function() { closeModal(overlay); };
+  buttonsDiv.appendChild(confirmBtn);
+  modal.appendChild(buttonsDiv);
+  
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+  
+  // 點擊遮罩關閉彈窗
+  overlay.addEventListener('click', function(e) {
+    if(e.target === overlay) {
+      closeModal(overlay);
+    }
+  });
+  
+  // ESC鍵關閉彈窗
+  const escHandler = function(e) {
+    if(e.key === 'Escape') {
+      closeModal(overlay);
+      document.removeEventListener('keydown', escHandler);
+    }
+  };
+  document.addEventListener('keydown', escHandler);
+}
+
+// 顯示單個鑰匙的詳細資訊（從批量列表點擊）
+function showSingleKeyDetail(keyName, keyInfo) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  
+  const modal = document.createElement('div');
+  modal.className = 'modal-content';
+  modal.style.maxWidth = '550px';
+  
+  // 創建關閉按鈕
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'modal-close';
+  closeBtn.innerHTML = '&times;';
+  closeBtn.onclick = function() { closeModal(overlay); };
+  modal.appendChild(closeBtn);
+  
+  // 創建標題
+  const titleDiv = document.createElement('div');
+  titleDiv.className = 'modal-title';
+  titleDiv.style.cssText = 'display:flex;align-items:center;gap:8px;';
+  titleDiv.innerHTML = '🔑 鑰匙詳細資訊';
+  modal.appendChild(titleDiv);
+  
+  // 鑰匙名稱
+  const nameBox = document.createElement('div');
+  nameBox.style.cssText = 'padding:15px;background:#f8f9fa;border-radius:8px;margin:15px 0;border-left:4px solid #667eea;';
+  const nameDiv = document.createElement('div');
+  nameDiv.style.cssText = 'font-size:18px;font-weight:600;color:#212529;';
+  nameDiv.textContent = keyName;
+  nameBox.appendChild(nameDiv);
+  modal.appendChild(nameBox);
+  
+  // 顯示分類和備註
+  if(keyInfo) {
+    const infoContainer = document.createElement('div');
+    infoContainer.style.cssText = 'margin:15px 0;';
+    
+    // 分類資訊
+    if(keyInfo.category) {
+      const categoryBox = document.createElement('div');
+      categoryBox.style.cssText = 'margin-bottom:12px;padding:15px;background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);border-radius:8px;box-shadow:0 3px 10px rgba(102,126,234,0.3);';
+      categoryBox.innerHTML = `
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <span style="font-size:20px;">🏷️</span>
+          <strong style="color:#fff;font-size:15px;">分類</strong>
+        </div>
+        <div style="padding:10px 15px;background:rgba(255,255,255,0.95);border-radius:6px;color:#333;font-size:15px;font-weight:500;">
+          ${keyInfo.category}
+        </div>
+      `;
+      infoContainer.appendChild(categoryBox);
+    }
+    
+    // 備註資訊
+    if(keyInfo.note) {
+      const noteBox = document.createElement('div');
+      noteBox.style.cssText = 'padding:15px;background:linear-gradient(135deg, #ffd89b 0%, #19547b 100%);border-radius:8px;box-shadow:0 3px 10px rgba(255,216,155,0.3);';
+      noteBox.innerHTML = `
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <span style="font-size:20px;">📝</span>
+          <strong style="color:#fff;font-size:15px;">備註</strong>
+        </div>
+        <div style="padding:10px 15px;background:rgba(255,255,255,0.95);border-radius:6px;color:#333;font-size:14px;line-height:1.7;">
+          ${keyInfo.note}
+        </div>
+      `;
+      infoContainer.appendChild(noteBox);
+    }
+    
+    // 如果沒有分類也沒有備註
+    if(!keyInfo.category && !keyInfo.note) {
+      const noInfoDiv = document.createElement('div');
+      noInfoDiv.style.cssText = 'padding:20px;text-align:center;color:#999;font-size:14px;';
+      noInfoDiv.textContent = '📋 暫無分類和備註資訊';
+      infoContainer.appendChild(noInfoDiv);
+    }
+    
+    modal.appendChild(infoContainer);
+  } else {
+    // 沒有找到鑰匙資料
+    const noDataDiv = document.createElement('div');
+    noDataDiv.style.cssText = 'padding:20px;text-align:center;color:#999;font-size:14px;';
+    noDataDiv.textContent = '📋 暫無此鑰匙的詳細資料';
+    modal.appendChild(noDataDiv);
+  }
   
   // 創建按鈕區域
   const buttonsDiv = document.createElement('div');
