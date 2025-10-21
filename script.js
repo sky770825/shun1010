@@ -1,4 +1,11 @@
-﻿const EXCLUDED_MEMBERS = ['02','22','90','91','92','93','94'];
+﻿// ⭐ 彈窗 z-index 層級結構（由低到高）
+// 1000-3000: 基礎彈窗（月份選擇器、統計報表等）
+// 10000: 編輯器彈窗（排班條件編輯器）
+// 11000: 確認彈窗（刪除確認、密碼驗證、鑰匙詳情等）- 確保在編輯器之上
+// 11500: 嵌套詳情彈窗（從詳情中再次點擊查看）- 確保在第一層詳情之上
+// 12000: 快速提示（Toast 通知）- 最高層級
+
+const EXCLUDED_MEMBERS = ['02','22','90','91','92','93','94'];
 const STORE_KEY = 'schedule-checkin';
 const HISTORY_KEY = 'schedule-history';
 const KEY_RECORD_KEY = 'key-records';
@@ -1603,10 +1610,10 @@ function openConditionsEditor() {
     
     <!-- 目前已設定的條件 -->
     <div style="margin-bottom:25px;">
-      <div style="font-weight:600;color:#333;margin-bottom:12px;font-size:15px;display:flex;align-items:center;gap:8px;">
+      <div style="font-weight:600;color:#333;margin-bottom:12px;font-size:15px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
         <span>📋</span>
         <span>目前已設定的條件</span>
-        <span style="font-size:12px;color:#999;font-weight:normal;">(點擊可刪除)</span>
+        <span style="font-size:12px;color:#999;font-weight:normal;">(點擊🗑️刪除按鈕即可刪除)</span>
       </div>
       <div id="currentConditionsList" style="max-height:300px;overflow-y:auto;">
         ${generateEditableConditionsList()}
@@ -2133,13 +2140,18 @@ function addShiftCondition() {
   showCustomAlert('✅ 已新增班別限制條件！', 'success');
   
   // ⭐ 自動保存到 localStorage
-  saveCustomScheduleConditions();
+  const saved = saveCustomScheduleConditions();
   
   // 刷新列表和摘要
   document.getElementById('currentConditionsList').innerHTML = generateEditableConditionsList();
   const summaryDisplay = document.getElementById('conditionsSummaryDisplay');
   if (summaryDisplay) {
     summaryDisplay.innerHTML = generateConditionsSummaryHTML();
+  }
+  
+  // ⭐ 顯示保存狀態提示
+  if (saved) {
+    showQuickToast('💾 已自動保存', 'success');
   }
   
   // 清空表單
@@ -2173,7 +2185,7 @@ function deleteCondition(type, key) {
       }
       
       // ⭐ 自動保存到 localStorage
-      saveCustomScheduleConditions();
+      const saved = saveCustomScheduleConditions();
       
       // 刷新列表和摘要
       document.getElementById('currentConditionsList').innerHTML = generateEditableConditionsList();
@@ -2183,6 +2195,13 @@ function deleteCondition(type, key) {
       }
       
       showCustomAlert('✅ 條件已刪除並保存！', 'success');
+      
+      // ⭐ 顯示保存狀態提示
+      if (saved) {
+        setTimeout(() => {
+          showQuickToast('💾 已自動保存', 'success');
+        }, 500);
+      }
     }
   );
 }
@@ -3740,6 +3759,70 @@ function showSyncNotification(message) {
       }
     }, 500);
   }, 3000);
+}
+
+// 顯示快速提示（輕量級，自動消失）
+function showQuickToast(message, type = 'info') {
+  const existingToast = document.getElementById('quickToast');
+  if (existingToast) {
+    existingToast.remove();
+  }
+  
+  const toast = document.createElement('div');
+  toast.id = 'quickToast';
+  
+  const bgColors = {
+    success: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
+    error: 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)',
+    info: 'linear-gradient(135deg, #17a2b8 0%, #138496 100%)'
+  };
+  
+  toast.style.cssText = `
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: ${bgColors[type] || bgColors.info};
+    color: white;
+    padding: 10px 20px;
+    border-radius: 25px;
+    z-index: 12000;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    animation: slideDown 0.3s ease-out;
+  `;
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  
+  // 添加动画
+  if (!document.getElementById('toastAnimations')) {
+    const style = document.createElement('style');
+    style.id = 'toastAnimations';
+    style.textContent = `
+      @keyframes slideDown {
+        from {
+          transform: translateX(-50%) translateY(-50px);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(-50%) translateY(0);
+          opacity: 1;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+  
+  // 1.5秒後自動消失
+  setTimeout(() => {
+    toast.style.animation = 'fadeOut 0.3s ease-out';
+    setTimeout(() => {
+      if (toast.parentNode) {
+        toast.parentNode.removeChild(toast);
+      }
+    }, 300);
+  }, 1500);
 }
 
 // 顯示輕量級同步指示器
@@ -5994,34 +6077,60 @@ function renderKeyTable(){
     // ⭐ 查找鑰匙的詳細資料（分類和備註）
     const keyInfo = keyNameList.find(k => k.name === keyItemText);
     
-    // 創建鑰匙項目顯示區域
-    const keyDiv = document.createElement('div');
-    keyDiv.style.cssText = 'word-break:break-word;line-height:1.5;cursor:pointer;color:#007bff;text-decoration:' + (isLongText ? 'underline' : 'none') + ';';
-    keyDiv.title = '點擊查看完整內容';
-    keyDiv.textContent = displayText;
+    // ⭐ 創建鑰匙項目顯示區域（類似快速搜索的格式，整個可點擊）
+    const keyMainDiv = document.createElement('div');
+    keyMainDiv.style.cssText = 'cursor:pointer;padding:4px;border-radius:6px;transition:all 0.2s;';
+    keyMainDiv.title = '點擊查看完整內容';
+    
+    // 懸停效果
+    keyMainDiv.onmouseenter = function() {
+      this.style.background = '#f0f7ff';
+    };
+    keyMainDiv.onmouseout = function() {
+      this.style.background = 'transparent';
+    };
+    
+    // 點擊事件
+    keyMainDiv.onclick = function() {
+      showFullKeyItem(keyItemText, itemCount, keyInfo);
+    };
+    
+    // 第一行：鑰匙名稱 + 數量標籤
+    const firstRow = document.createElement('div');
+    firstRow.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap;';
+    
+    const nameSpan = document.createElement('span');
+    nameSpan.style.cssText = 'font-weight:600;color:#007bff;word-break:break-word;flex:1;min-width:80px;';
+    nameSpan.textContent = displayText;
+    firstRow.appendChild(nameSpan);
     
     // 添加數量標籤
     if(itemCount > 1) {
       const badge = document.createElement('span');
-      badge.style.cssText = 'background:#17a2b8;color:#fff;padding:2px 6px;border-radius:10px;font-size:10px;font-weight:bold;margin-left:4px;white-space:nowrap;';
+      badge.style.cssText = 'background:#17a2b8;color:#fff;padding:2px 6px;border-radius:10px;font-size:10px;font-weight:bold;white-space:nowrap;';
       badge.textContent = '×' + itemCount;
-      keyDiv.appendChild(badge);
+      firstRow.appendChild(badge);
     }
     
-    // 添加點擊事件，傳遞鑰匙資訊
-    keyDiv.addEventListener('click', function() {
-      showFullKeyItem(keyItemText, itemCount, keyInfo);
-    });
+    keyMainDiv.appendChild(firstRow);
     
-    keyCell.appendChild(keyDiv);
+    // ⭐ 第二行：分類（類似快速搜索）
+    if(keyInfo && keyInfo.category) {
+      const categoryDiv = document.createElement('div');
+      categoryDiv.style.cssText = 'font-size:11px;color:#666;margin-bottom:2px;line-height:1.3;';
+      categoryDiv.textContent = `🏷️ 分類：${keyInfo.category}`;
+      keyMainDiv.appendChild(categoryDiv);
+    }
     
-    // ⭐ 添加備註顯示（如果有）
+    // ⭐ 第三行：備註（類似快速搜索）
     if(keyInfo && keyInfo.note) {
       const noteDiv = document.createElement('div');
-      noteDiv.style.cssText = 'font-size: 11px; color: #999; margin-top: 4px; line-height: 1.3;';
-      noteDiv.textContent = '📝 備註：' + keyInfo.note;
-      keyCell.appendChild(noteDiv);
+      noteDiv.style.cssText = 'font-size:11px;color:#999;line-height:1.3;';
+      noteDiv.textContent = `📝 備註：${keyInfo.note}`;
+      keyMainDiv.appendChild(noteDiv);
     }
+    
+    keyCell.appendChild(keyMainDiv);
     
     const statusCell = document.createElement('td');
     statusCell.className = 'auto-size';
@@ -7083,6 +7192,8 @@ function escapeHtml(text) {
 function showFullKeyItem(keyItem, itemCount, keyInfo) {
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
+  // ⭐ 设置较高的 z-index
+  overlay.style.zIndex = '11000';
   
   const modal = document.createElement('div');
   modal.className = 'modal-content';
@@ -7200,56 +7311,71 @@ function showFullKeyItem(keyItem, itemCount, keyInfo) {
     });
     
   } else {
-    // ⭐ 單個鑰匙：顯示分類和備註資訊框
-    if(keyInfo && (keyInfo.category || keyInfo.note)) {
-      const infoBox = document.createElement('div');
-      infoBox.style.cssText = 'margin-bottom:15px;padding:15px;background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);border-radius:10px;box-shadow:0 4px 12px rgba(102,126,234,0.3);';
-      
-      let infoHtml = '';
+    // ⭐ 單個鑰匙：直接顯示分類和備註，不需要再次點擊
+    
+    // 鑰匙名稱（不可點擊，只是標題）
+    const nameBox = document.createElement('div');
+    nameBox.style.cssText = 'padding:20px;background:#f8f9fa;border-radius:8px;margin-bottom:15px;border-left:4px solid #667eea;';
+    
+    const contentDiv = document.createElement('div');
+    contentDiv.style.cssText = 'font-size:18px;line-height:1.8;color:#212529;word-break:break-word;white-space:pre-wrap;font-weight:600;';
+    contentDiv.textContent = keyItem;
+    nameBox.appendChild(contentDiv);
+    contentWrapper.appendChild(nameBox);
+    
+    // ⭐ 顯示完整的分類和備註
+    if(keyInfo) {
+      const infoContainer = document.createElement('div');
+      infoContainer.style.cssText = 'margin:15px 0;';
       
       // 分類資訊
       if(keyInfo.category) {
-        infoHtml += `
-          <div style="margin-bottom:${keyInfo.note ? '12px' : '0'};">
-            <div style="display:flex;align-items:center;gap:8px;">
-              <span style="font-size:20px;">🏷️</span>
-              <strong style="color:#fff;font-size:15px;">分類</strong>
-            </div>
-            <div style="margin-top:6px;padding:8px 12px;background:rgba(255,255,255,0.9);border-radius:6px;color:#333;font-size:14px;font-weight:500;">
-              ${keyInfo.category}
-            </div>
+        const categoryBox = document.createElement('div');
+        categoryBox.style.cssText = 'margin-bottom:12px;padding:15px;background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);border-radius:8px;box-shadow:0 3px 10px rgba(102,126,234,0.3);';
+        categoryBox.innerHTML = `
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+            <span style="font-size:20px;">🏷️</span>
+            <strong style="color:#fff;font-size:15px;">分類</strong>
+          </div>
+          <div style="padding:10px 15px;background:rgba(255,255,255,0.95);border-radius:6px;color:#333;font-size:15px;font-weight:500;">
+            ${keyInfo.category}
           </div>
         `;
+        infoContainer.appendChild(categoryBox);
       }
       
       // 備註資訊
       if(keyInfo.note) {
-        infoHtml += `
-          <div>
-            <div style="display:flex;align-items:center;gap:8px;">
-              <span style="font-size:20px;">📝</span>
-              <strong style="color:#fff;font-size:15px;">備註</strong>
-            </div>
-            <div style="margin-top:6px;padding:8px 12px;background:rgba(255,255,255,0.9);border-radius:6px;color:#333;font-size:14px;line-height:1.6;">
-              ${keyInfo.note}
-            </div>
+        const noteBox = document.createElement('div');
+        noteBox.style.cssText = 'padding:15px;background:linear-gradient(135deg, #ffd89b 0%, #19547b 100%);border-radius:8px;box-shadow:0 3px 10px rgba(255,216,155,0.3);';
+        noteBox.innerHTML = `
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+            <span style="font-size:20px;">📝</span>
+            <strong style="color:#fff;font-size:15px;">備註</strong>
+          </div>
+          <div style="padding:10px 15px;background:rgba(255,255,255,0.95);border-radius:6px;color:#333;font-size:14px;line-height:1.7;">
+            ${keyInfo.note}
           </div>
         `;
+        infoContainer.appendChild(noteBox);
       }
       
-      infoBox.innerHTML = infoHtml;
-      contentWrapper.appendChild(infoBox);
+      // 如果沒有分類也沒有備註
+      if(!keyInfo.category && !keyInfo.note) {
+        const noInfoDiv = document.createElement('div');
+        noInfoDiv.style.cssText = 'padding:20px;text-align:center;color:#999;font-size:14px;';
+        noInfoDiv.textContent = '📋 暫無分類和備註資訊';
+        infoContainer.appendChild(noInfoDiv);
+      }
+      
+      contentWrapper.appendChild(infoContainer);
+    } else {
+      // 沒有找到鑰匙資料
+      const noDataDiv = document.createElement('div');
+      noDataDiv.style.cssText = 'padding:20px;text-align:center;color:#999;font-size:14px;background:#fff3cd;border-radius:8px;';
+      noDataDiv.textContent = '📋 暫無此鑰匙的詳細資料';
+      contentWrapper.appendChild(noDataDiv);
     }
-    
-    // 鑰匙名稱
-    const nameBox = document.createElement('div');
-    nameBox.style.cssText = 'padding:20px;background:#f8f9fa;border-radius:8px;';
-    
-    const contentDiv = document.createElement('div');
-    contentDiv.style.cssText = 'font-size:16px;line-height:1.8;color:#212529;word-break:break-word;white-space:pre-wrap;font-weight:500;';
-    contentDiv.textContent = keyItem;
-    nameBox.appendChild(contentDiv);
-    contentWrapper.appendChild(nameBox);
   }
   
   modal.appendChild(contentWrapper);
@@ -7289,6 +7415,8 @@ function showFullKeyItem(keyItem, itemCount, keyInfo) {
 function showSingleKeyDetail(keyName, keyInfo) {
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
+  // ⭐ 确保在其他弹窗之上
+  overlay.style.zIndex = '11500';
   
   const modal = document.createElement('div');
   modal.className = 'modal-content';
