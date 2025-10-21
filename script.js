@@ -406,8 +406,42 @@ function bindEvents(){
       const currentMember = data[key];
       
       if(currentMember === member){
-        // 再點同一人 → 清空
-        delete data[key];
+        // 再點同一人 → 需要密碼驗證後才能清空
+        const memberName = MEMBERS.find(m=>m.id===member)?.name || member;
+        
+        // 獲取完整的日期和班別資訊
+        const dateStr = `${ym}-${String(day).padStart(2, '0')}`;
+        const shiftNames = {
+          'morning': isWeekend ? '早班 (09:30-13:30)' : '早班 (09:30-15:30)',
+          'noon': '中班 (13:30-17:30)',
+          'evening': isWeekend ? '晚班 (17:30-21:00)' : '晚班 (15:30-21:00)'
+        };
+        const shiftName = shiftNames[shift] || shift;
+        
+        // 先驗證密碼
+        showPasswordForShiftChange(
+          dateStr,
+          shiftName,
+          memberName,
+          '清空排班',
+          () => {
+            // 密碼驗證成功後執行清空
+            delete data[key];
+            localStorage.setItem(STORE_KEY,JSON.stringify(data));
+            hydrate();
+            renderMemberList(); // 更新成員統計
+            updateDutyMember(); // 更新值班人員
+            
+            showCustomAlert(`✅ 已清空「${memberName}」的排班`, 'success');
+            
+            // 同步到 Google Sheets（異步執行）
+            (async () => {
+              await updateSingleScheduleToSheets(ym, day, shift, '');
+              showSyncNotification('📊 清空排班已同步到 Google Sheets');
+            })();
+          }
+        );
+        return; // 等待驗證後再執行
       }else if(currentMember){
         // 已有人排班 → 需要密碼驗證後才能換班
         const memberName = MEMBERS.find(m=>m.id===member)?.name || member;
