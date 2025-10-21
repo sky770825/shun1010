@@ -396,9 +396,9 @@ function bindEvents(){
       renderMemberList(); // 更新成員統計
       updateDutyMember(); // 更新值班人員
       
-      // 同步到 Google Sheets（異步執行）
+      // 同步到 Google Sheets（異步執行 - 只更新這一筆）
       (async () => {
-        await syncCurrentMonthToGoogleSheets('手動排班');
+        await updateSingleScheduleToSheets(ym, day, shift, member);
         showSyncNotification('📊 排班已同步到 Google Sheets');
       })();
     });
