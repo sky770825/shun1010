@@ -15,7 +15,7 @@ const COLLEAGUE_HISTORY_KEY = 'colleague-history';
 const TEMP_DUTY_KEY = 'temp-duty-override'; // 临时代班数据
 const KEY_LIST_KEY = 'key-name-list'; // 鑰匙名稱清單
 const SCHEDULE_CONDITIONS_KEY = 'schedule-conditions-override'; // 自定義排班條件（覆蓋排班條件設定.js）
-const ADMIN_PASSWORD = '10108888'; // 管理員密碼
+const ADMIN_PASSWORD = '8888'; // 管理員密碼
 
 // 當前選擇的成員（用於鑰匙借出）
 let selectedMember = null;
@@ -3933,6 +3933,20 @@ function openGoogleSheets() {
   );
 }
 
+function openPropertySheet() {
+  const propertySheetUrl = 'https://docs.google.com/spreadsheets/d/1lnH6sJSLgFk85pzTKh3CkYcdp2VTZOLP/edit?usp=drive_link&ouid=110183219456660838766&rtpof=true&sd=true';
+  
+  showConfirmModal(
+    '📋 開啟物件總表',
+    '即將在新分頁開啟物件總表',
+    '您可以查看最新的物件資訊',
+    () => {
+      window.open(propertySheetUrl, '_blank');
+      showSyncNotification('📋 已開啟物件總表');
+    }
+  );
+}
+
 // 執行管理功能（下拉選單）
 function executeAdminAction(action) {
   if (!action) return; // 如果選擇的是預設選項，不執行任何操作
@@ -3960,6 +3974,9 @@ function executeAdminAction(action) {
       break;
     case 'openSheets':
       requirePassword('openSheets');
+      break;
+    case 'openPropertySheet':
+      requirePassword('openPropertySheet');
       break;
   }
 }
@@ -7081,6 +7098,9 @@ function verifyPassword(functionName, overlay) {
         break;
       case 'openSheets':
         openGoogleSheets();
+        break;
+      case 'openPropertySheet':
+        openPropertySheet();
         break;
     }
   } else {
