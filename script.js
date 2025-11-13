@@ -3947,6 +3947,48 @@ function openPropertySheet() {
   );
 }
 
+function openHBRLogin() {
+  const hbrLoginUrl = 'https://www.hbrealty.com.tw/index.asp';
+  
+  showConfirmModal(
+    '🏢 開啟虎翼登入系統',
+    '即將在新分頁開啟虎翼登入系統',
+    '您可以登入虎翼系統進行業務操作',
+    () => {
+      window.open(hbrLoginUrl, '_blank');
+      showSyncNotification('🏢 已開啟虎翼登入系統');
+    }
+  );
+}
+
+function openPropertyForm() {
+  const propertyFormUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSckQ8H5H5FekKuzAaOhoyABKiWk2ATmoQWr7vAcy3PW7SCAfg/viewform';
+  
+  showConfirmModal(
+    '📝 開啟物件資料表單',
+    '即將在新分頁開啟物件資料表單',
+    '您可以填寫物件資料表單',
+    () => {
+      window.open(propertyFormUrl, '_blank');
+      showSyncNotification('📝 已開啟物件資料表單');
+    }
+  );
+}
+
+function openLandForm() {
+  const landFormUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSfWJw-m-P-2HyR_mTZyNt6sDNLkHq3B3JdpPNYfuaMiXBj93w/viewform';
+  
+  showConfirmModal(
+    '🌾 開啟土地物件資料表單',
+    '即將在新分頁開啟土地物件資料表單',
+    '您可以填寫土地物件資料表單',
+    () => {
+      window.open(landFormUrl, '_blank');
+      showSyncNotification('🌾 已開啟土地物件資料表單');
+    }
+  );
+}
+
 // 執行管理功能（下拉選單）
 function executeAdminAction(action) {
   if (!action) return; // 如果選擇的是預設選項，不執行任何操作
@@ -3977,6 +4019,15 @@ function executeAdminAction(action) {
       break;
     case 'openPropertySheet':
       requirePassword('openPropertySheet');
+      break;
+    case 'openHBRLogin':
+      requirePassword('openHBRLogin');
+      break;
+    case 'openPropertyForm':
+      requirePassword('openPropertyForm');
+      break;
+    case 'openLandForm':
+      requirePassword('openLandForm');
       break;
   }
 }
@@ -7101,6 +7152,15 @@ function verifyPassword(functionName, overlay) {
         break;
       case 'openPropertySheet':
         openPropertySheet();
+        break;
+      case 'openHBRLogin':
+        openHBRLogin();
+        break;
+      case 'openPropertyForm':
+        openPropertyForm();
+        break;
+      case 'openLandForm':
+        openLandForm();
         break;
     }
   } else {
