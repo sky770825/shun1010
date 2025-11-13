@@ -4021,13 +4021,13 @@ function executeAdminAction(action) {
       requirePassword('openPropertySheet');
       break;
     case 'openHBRLogin':
-      requirePassword('openHBRLogin');
+      openHBRLogin();
       break;
     case 'openPropertyForm':
-      requirePassword('openPropertyForm');
+      openPropertyForm();
       break;
     case 'openLandForm':
-      requirePassword('openLandForm');
+      openLandForm();
       break;
   }
 }
@@ -7152,15 +7152,6 @@ function verifyPassword(functionName, overlay) {
         break;
       case 'openPropertySheet':
         openPropertySheet();
-        break;
-      case 'openHBRLogin':
-        openHBRLogin();
-        break;
-      case 'openPropertyForm':
-        openPropertyForm();
-        break;
-      case 'openLandForm':
-        openLandForm();
         break;
     }
   } else {
