@@ -53,12 +53,17 @@
     <span style="font-size:13px;font-weight:600;color:#495057;">管理功能</span>
     <select id="adminActionSelect" onchange="executeAdminAction(this.value)" style="width:100%;padding:8px;border:1px solid #ced4da;border-radius:4px;font-size:14px;cursor:pointer;">
       <option value="">▼ 選擇功能</option>
-      <option value="autoAssign">🔐 隨機平均排班</option>
-      <option value="autoAssignNextMonth">🔐 指定月份排班表</option>
-      <option value="clearData">🔐 清除本月資料</option>
-      <option value="showStatistics">🔐 排班統計</option>
-      <option value="syncFromSheets">🔐 從 Sheets 同步</option>
-      <option value="openSheets">🔐 開啟 Sheets</option>
+      <optgroup label="📅 排班管理">
+        <option value="autoAssign">🔐 隨機平均排班</option>
+        <option value="autoAssignNextMonth">🔐 指定月份排班表</option>
+        <option value="clearData">🔐 清除本月資料</option>
+        <option value="showStatistics">🔐 排班統計</option>
+        <option value="syncFromSheets">🔐 從 Sheets 同步</option>
+        <option value="openSheets">🔐 開啟 Sheets</option>
+      </optgroup>
+      <optgroup label="🏢 業務專區">
+        <option value="openPropertySheet">🔐 物件總表</option>
+      </optgroup>
     </select>
   </label>
 </div>
