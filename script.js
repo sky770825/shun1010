@@ -159,7 +159,7 @@ const MEMBERS = [
   {id:'20',name:'志偉'},
   {id:'21',name:'郁庭'},
   {id:'22',name:'婕茹',disabled:true},
-  {id:'23',name:'珈瑜',group:'group4'},
+  {id:'23',name:'珈瑜',disabled:true},
   {id:'25',name:'濬瑒',group:'group1'},
   {id:'26',name:'益呈'},
   {id:'90',name:'徐店東',disabled:true},
@@ -831,11 +831,28 @@ function executeAutoAssign(){
   const memberWorkHistory = {};
   const lastWorkDay = {}; // 記錄每個成員最後排班日期
   const memberWeekendCount = {}; // 記錄每個成員的假日班數量
+  const memberShiftCount = {}; // 記錄每個成員各班別次數（早/中/晚）
+  let memberWeekdayEveningCount = {}; // 記錄每個成員平日晚班數
   
   // 初始化假日班計數器
   allMembers.forEach(m => {
     memberWeekendCount[m] = 0;
+    memberShiftCount[m] = { morning: 0, noon: 0, evening: 0 };
+    memberWeekdayEveningCount[m] = 0;
   });
+
+  // 取得對向班別（用於早/晚平衡）
+  function getOppositeShift(shiftKey){
+    return shiftKey==='morning' ? 'evening' : (shiftKey==='evening' ? 'morning' : null);
+  }
+  // 檢查是否通過早/晚平衡（差值不可超過1：只允許領先0）
+  function passesShiftBalance(memberId, shiftKey){
+    if(shiftKey!=='morning' && shiftKey!=='evening') return true;
+    const opp = getOppositeShift(shiftKey);
+    const cur = (memberShiftCount[memberId]?.[shiftKey]||0);
+    const other = (memberShiftCount[memberId]?.[opp]||0);
+    return (cur - other) < 1;
+  }
   
   // 區分組隊成員和單人成員
   const groupedMembers = new Set();
@@ -941,6 +958,90 @@ function executeAutoAssign(){
     // 隨機化組別順序
     const shuffledGroups = Object.keys(groupMembers).sort(() => Math.random() - 0.5);
     
+    // ⭐ 先嘗試安排「必須同天配對」的成員
+    (function tryAssignRequiredPairsForDay() {
+      if (!SCHEDULE_CONDITIONS || !SCHEDULE_CONDITIONS.REQUIRED_PAIRS) return;
+      const pairs = Object.entries(SCHEDULE_CONDITIONS.REQUIRED_PAIRS)
+        .filter(([_, required]) => required)
+        .map(([pair]) => pair.split('-'))
+        // 去重（小到大排序後合併）
+        .map(([a,b]) => [a,b].sort())
+        .filter((p, idx, arr) => idx === arr.findIndex(q => q[0]===p[0] && q[1]===p[1]));
+      
+      function canAssign(memberId, shiftKey, dayNum) {
+        // 不能重複當天
+        if (dayMembers.has(memberId)) return false;
+        // 必須在pool中
+        if (!pool.includes(memberId)) return false;
+        // 條件與平衡
+        if (!canWorkOnDay(memberId, dayNum)) return false;
+        const dateStr = `${ym}-${String(dayNum).padStart(2,'0')}`;
+        const dayOfWeek = new Date(dateStr).getDay();
+        const cond = canMemberWorkOnDay(memberId, dayOfWeek, shiftKey);
+        if (!cond.canWork) return false;
+        if (!passesShiftBalance(memberId, shiftKey)) return false;
+        return true;
+      }
+      
+      function assignOne(memberId, keyShift) {
+        const key = `${ym}:${d}-${keyShift}`;
+        if (data[key]) return false;
+        data[key] = memberId;
+        dayMembers.add(memberId);
+        updateWorkHistory(memberId, d);
+        if (isWeekend) memberWeekendCount[memberId]++;
+        if (memberShiftCount[memberId] && memberShiftCount[memberId][keyShift] !== undefined) {
+          memberShiftCount[memberId][keyShift]++;
+        }
+        const poolIndex = pool.findIndex(m => m === memberId);
+        if (poolIndex !== -1) pool.splice(poolIndex, 1);
+        return true;
+      }
+      
+      for (const [m1, m2] of pairs) {
+        if (dayMembers.has(m1) || dayMembers.has(m2)) continue;
+        if (!pool.includes(m1) || !pool.includes(m2)) continue;
+        
+        // 假日：優先配早+中 或 中+晚
+        if (isWeekend && shifts.length >= 3) {
+          const combos = [
+            ['morning','noon'],
+            ['noon','evening']
+          ];
+          let placed = false;
+          for (const [s1, s2] of combos) {
+            const k1 = `${ym}:${d}-${s1}`, k2 = `${ym}:${d}-${s2}`;
+            if (data[k1] || data[k2]) continue;
+            // 兩人都可上
+            if (canAssign(m1, s1, d) && canAssign(m2, s2, d)) {
+              // 讓該班別次數較少者優先對應
+              const diff = (memberShiftCount[m1]?.[s1]||0) - (memberShiftCount[m2]?.[s2]||0);
+              // 直接指派
+              if (assignOne(m1, s1) && assignOne(m2, s2)) { placed = true; break; }
+            } else if (canAssign(m2, s1, d) && canAssign(m1, s2, d)) {
+              if (assignOne(m2, s1) && assignOne(m1, s2)) { placed = true; break; }
+            }
+          }
+          if (placed) continue;
+        } else {
+          // 平日：嘗試早+晚
+          const kM = `${ym}:${d}-morning`;
+          const kE = `${ym}:${d}-evening`;
+          if (!data[kM] && !data[kE]) {
+            const options = [
+              [m1,'morning', m2,'evening'],
+              [m2,'morning', m1,'evening']
+            ];
+            for (const [a,sa, b,sb] of options) {
+              if (canAssign(a, sa, d) && canAssign(b, sb, d)) {
+                if (assignOne(a, sa) && assignOne(b, sb)) break;
+              }
+            }
+          }
+        }
+      }
+    })();
+    
     // 如果是假日，優先安排同組成員連續排班（但要考慮假日班平均分配）
     if (isWeekend && shifts.length >= 2) {
       // ⭐ 計算假日班平均值（用於平衡分配）
@@ -979,24 +1080,37 @@ function executeAutoAssign(){
             }
             
             if (canAssign) {
-              // 隨機選擇2個同組成員
+              // 依條件選擇最多2位同組成員（優先週末未分配者、再看早/晚平衡）
+              const tempAvailable = [...availableGroupMembers].sort((a,b)=>{
+                const wa = memberWeekendCount[a]||0, wb = memberWeekendCount[b]||0;
+                if (wa!==wb) return wa-wb;
+                // 以本次起始班別優先平衡
+                const sa = (memberShiftCount[a]?.[shifts[startShift].key]||0) - (memberShiftCount[a]?.[getOppositeShift(shifts[startShift].key)]||0);
+                const sb = (memberShiftCount[b]?.[shifts[startShift].key]||0) - (memberShiftCount[b]?.[getOppositeShift(shifts[startShift].key)]||0);
+                return sa - sb;
+              });
               const selectedMembers = [];
-              const tempAvailable = [...availableGroupMembers];
-              for (let i = 0; i < Math.min(2, tempAvailable.length); i++) {
-                const randomIndex = Math.floor(Math.random() * tempAvailable.length);
-                selectedMembers.push(tempAvailable[randomIndex]);
-                tempAvailable.splice(randomIndex, 1);
+              while (tempAvailable.length>0 && selectedMembers.length<2){
+                const cand = tempAvailable.shift();
+                // 檢查第一個班別的平衡限制
+                if (!passesShiftBalance(cand, shifts[startShift].key)) continue;
+                selectedMembers.push(cand);
               }
               
-              // 安排連續班別
+              // 逐一安排連續班別（每一班再次檢查平衡）
               for (let i = 0; i < selectedMembers.length && startShift + i < endShift; i++) {
-                const key = `${ym}:${d}-${shifts[startShift + i].key}`;
+                const assignedShiftKey = shifts[startShift + i].key;
                 const member = selectedMembers[i];
+                if (!passesShiftBalance(member, assignedShiftKey)) continue;
+                const key = `${ym}:${d}-${assignedShiftKey}`;
                 
                 data[key] = member;
                 dayMembers.add(member);
                 updateWorkHistory(member, d); // 更新工作歷史
                 memberWeekendCount[member]++; // ⭐ 更新假日班計數
+                if (memberShiftCount[member] && memberShiftCount[member][assignedShiftKey] !== undefined) {
+                  memberShiftCount[member][assignedShiftKey]++;
+                }
                 
                 // 從pool中移除
                 const poolIndex = pool.findIndex(m => m === member);
@@ -1035,11 +1149,23 @@ function executeAutoAssign(){
               }
               
               // 安排同一個班別（取第一個成員）
-              const member = selectedMembers[0];
+              let member = selectedMembers[0];
+              // 檢查早/晚平衡
+              if (!passesShiftBalance(member, shifts[selectedShift].key)) {
+                member = (tempAvailable.find(m => passesShiftBalance(m, shifts[selectedShift].key)) || member);
+              }
+              if (!passesShiftBalance(member, shifts[selectedShift].key)) {
+                // 若仍不符則放棄此同班別策略
+              } else {
               data[key] = member;
               dayMembers.add(member);
               updateWorkHistory(member, d); // 更新工作歷史
               memberWeekendCount[member]++; // ⭐ 更新假日班計數
+              // ⭐ 更新班別統計
+              const assignedShiftKey = shifts[selectedShift].key;
+              if (memberShiftCount[member] && memberShiftCount[member][assignedShiftKey] !== undefined) {
+                memberShiftCount[member][assignedShiftKey]++;
+              }
               
               // 從pool中移除
               const poolIndex = pool.findIndex(m => m === member);
@@ -1052,6 +1178,7 @@ function executeAutoAssign(){
                 dayGroupMembers[groupName] = [];
               }
               dayGroupMembers[groupName].push(member);
+              }
             }
           }
         }
@@ -1085,6 +1212,8 @@ function executeAutoAssign(){
           
           // ⭐ 假日時檢查假日班數量
           if (isWeekend && memberWeekendCount[m] > avgWeekendShifts + 1) return false;
+          // ⭐ 早/晚平衡限制
+          if (!passesShiftBalance(m, s.key)) return false;
           
           return true;
         });
@@ -1095,13 +1224,41 @@ function executeAutoAssign(){
           
           // 如果該組別今天還沒有安排任何人，隨機選擇一個可用的
           if (!dayGroupMembers[groupName] || dayGroupMembers[groupName].length === 0) {
-            selectedMember = availableGroupMembers[Math.floor(Math.random() * availableGroupMembers.length)];
+            // ⭐ 優先選擇該班別次數較少者
+            availableGroupMembers.sort((a, b) => {
+              const sa = (memberShiftCount[a]?.[s.key] || 0);
+              const sb = (memberShiftCount[b]?.[s.key] || 0);
+              if (sa !== sb) return sa - sb;
+              if (isWeekend) {
+                const wa = memberWeekendCount[a] || 0;
+                const wb = memberWeekendCount[b] || 0;
+                if (wa !== wb) return wa - wb;
+              }
+              const ta = Object.values(memberShiftCount[a] || {}).reduce((x, y) => x + y, 0);
+              const tb = Object.values(memberShiftCount[b] || {}).reduce((x, y) => x + y, 0);
+              return ta - tb;
+            });
+            selectedMember = availableGroupMembers[0];
           } else {
             // 如果該組別今天已經安排了一個人，選擇另一個同組成員
             const alreadyAssigned = dayGroupMembers[groupName];
-            const remainingMembers = availableGroupMembers.filter(m => !alreadyAssigned.includes(m));
+            const remainingMembers = availableGroupMembers
+              .filter(m => !alreadyAssigned.includes(m))
+              .sort((a, b) => {
+                const sa = (memberShiftCount[a]?.[s.key] || 0);
+                const sb = (memberShiftCount[b]?.[s.key] || 0);
+                if (sa !== sb) return sa - sb;
+                if (isWeekend) {
+                  const wa = memberWeekendCount[a] || 0;
+                  const wb = memberWeekendCount[b] || 0;
+                  if (wa !== wb) return wa - wb;
+                }
+                const ta = Object.values(memberShiftCount[a] || {}).reduce((x, y) => x + y, 0);
+                const tb = Object.values(memberShiftCount[b] || {}).reduce((x, y) => x + y, 0);
+                return ta - tb;
+              });
             if (remainingMembers.length > 0) {
-              selectedMember = remainingMembers[Math.floor(Math.random() * remainingMembers.length)];
+              selectedMember = remainingMembers[0];
             }
           }
           
@@ -1112,6 +1269,10 @@ function executeAutoAssign(){
               dayMembers.add(selectedMember);
               updateWorkHistory(selectedMember, d); // 更新工作歷史
               if (isWeekend) memberWeekendCount[selectedMember]++; // ⭐ 更新假日班計數
+              // ⭐ 更新班別統計
+              if (memberShiftCount[selectedMember] && memberShiftCount[selectedMember][s.key] !== undefined) {
+                memberShiftCount[selectedMember][s.key]++;
+              }
               
               // 記錄該組別的成員
               if (!dayGroupMembers[groupName]) {
@@ -1147,18 +1308,30 @@ function executeAutoAssign(){
             
             // ⭐ 假日時優先選擇假日班較少的成員
             if (isWeekend && memberWeekendCount[m] > avgWeekendShifts + 1) return false;
+            // ⭐ 早/晚平衡限制
+            if (!passesShiftBalance(m, s.key)) return false;
             
             // 檢查當天已排班成員的條件限制
             const dayCheck = checkDayScheduleConditions(Array.from(dayMembers), m);
             return dayCheck.canAdd;
           });
           
-          // ⭐ 假日時按假日班數量排序（少的優先）
-          if (isWeekend && availableSingles.length > 0) {
-            availableSingles.sort((a, b) => memberWeekendCount[a] - memberWeekendCount[b]);
-            selectedMember = availableSingles[0]; // 選擇假日班最少的
-          } else if (availableSingles.length > 0) {
-            selectedMember = availableSingles[Math.floor(Math.random() * availableSingles.length)];
+          // ⭐ 依「該班別次數」優先，其次在假日依「假日班次數」，再依總班數
+          if (availableSingles.length > 0) {
+            availableSingles.sort((a, b) => {
+              const sa = (memberShiftCount[a]?.[s.key] || 0);
+              const sb = (memberShiftCount[b]?.[s.key] || 0);
+              if (sa !== sb) return sa - sb;
+              if (isWeekend) {
+                const wa = memberWeekendCount[a] || 0;
+                const wb = memberWeekendCount[b] || 0;
+                if (wa !== wb) return wa - wb;
+              }
+              const ta = Object.values(memberShiftCount[a] || {}).reduce((x, y) => x + y, 0);
+              const tb = Object.values(memberShiftCount[b] || {}).reduce((x, y) => x + y, 0);
+              return ta - tb;
+            });
+            selectedMember = availableSingles[0];
           }
         }
         
@@ -1169,18 +1342,30 @@ function executeAutoAssign(){
             
             // ⭐ 假日時優先選擇假日班較少的成員
             if (isWeekend && memberWeekendCount[m] > avgWeekendShifts + 1) return false;
+            // ⭐ 早/晚平衡限制
+            if (!passesShiftBalance(m, s.key)) return false;
             
             // 檢查當天已排班成員的條件限制
             const dayCheck = checkDayScheduleConditions(Array.from(dayMembers), m);
             return dayCheck.canAdd;
           });
           
-          // ⭐ 假日時按假日班數量排序（少的優先）
-          if (isWeekend && availableGroups.length > 0) {
-            availableGroups.sort((a, b) => memberWeekendCount[a] - memberWeekendCount[b]);
-            selectedMember = availableGroups[0]; // 選擇假日班最少的
-          } else if (availableGroups.length > 0) {
-            selectedMember = availableGroups[Math.floor(Math.random() * availableGroups.length)];
+          // ⭐ 依「該班別次數」優先，其次在假日依「假日班次數」，再依總班數
+          if (availableGroups.length > 0) {
+            availableGroups.sort((a, b) => {
+              const sa = (memberShiftCount[a]?.[s.key] || 0);
+              const sb = (memberShiftCount[b]?.[s.key] || 0);
+              if (sa !== sb) return sa - sb;
+              if (isWeekend) {
+                const wa = memberWeekendCount[a] || 0;
+                const wb = memberWeekendCount[b] || 0;
+                if (wa !== wb) return wa - wb;
+              }
+              const ta = Object.values(memberShiftCount[a] || {}).reduce((x, y) => x + y, 0);
+              const tb = Object.values(memberShiftCount[b] || {}).reduce((x, y) => x + y, 0);
+              return ta - tb;
+            });
+            selectedMember = availableGroups[0];
           }
         }
         
@@ -1200,6 +1385,14 @@ function executeAutoAssign(){
           updateWorkHistory(selectedMember, d);
           lastWorkDay[selectedMember] = d; // 記錄最後排班日期
           if (isWeekend) memberWeekendCount[selectedMember]++; // ⭐ 更新假日班計數
+          // ⭐ 更新班別統計
+          if (memberShiftCount[selectedMember] && memberShiftCount[selectedMember][s.key] !== undefined) {
+            memberShiftCount[selectedMember][s.key]++;
+          }
+          // ⭐ 平日晚班統計
+          if (!isWeekend && s.key === 'evening') {
+            memberWeekdayEveningCount[selectedMember] = (memberWeekdayEveningCount[selectedMember] || 0) + 1;
+          }
           
           // 從pool中移除
           const poolIndex = pool.findIndex(m => m === selectedMember);
@@ -1210,6 +1403,336 @@ function executeAutoAssign(){
       }
     }
   }
+
+  // ⭐ 後處理：確保每位可排假日的成員至少擁有1個假日班（若可行），優先從「平日晚班≥2 且有假日班」的成員交換
+  (function ensureMinimumWeekendPerEligible() {
+    // 構建索引：找出所有假日班與平日晚班的鍵
+    const weekendKeys = [];
+    const weekdayEveningKeysByMember = {};
+    const weekendKeysByMember = {};
+    for (let d = 1; d <= days; d++) {
+      const wd = new Date(`${ym}-${String(d).padStart(2,'0')}`).getDay();
+      const isWeekend = (wd === 0 || wd === 6);
+      const shifts = isWeekend ? WEEKEND_SHIFTS : WEEKDAY_SHIFTS;
+      for (const s of shifts) {
+        const key = `${ym}:${d}-${s.key}`;
+        const assignee = data[key];
+        if (!assignee) continue;
+        if (isWeekend) {
+          weekendKeys.push({ key, day: d, shift: s.key, member: assignee });
+          if (!weekendKeysByMember[assignee]) weekendKeysByMember[assignee] = [];
+          weekendKeysByMember[assignee].push({ key, day: d, shift: s.key });
+        } else if (s.key === 'evening') {
+          if (!weekdayEveningKeysByMember[assignee]) weekdayEveningKeysByMember[assignee] = [];
+          weekdayEveningKeysByMember[assignee].push({ key, day: d, shift: s.key });
+        }
+      }
+    }
+
+    // 判定成員是否具備「可排假日」資格（任一假日班別可排即可）
+    function isWeekendEligible(memberId) {
+      // 嘗試週六與週日的任一班別，只要有一種可行即視為可排假日
+      const tryDays = [0, 6]; // sunday, saturday（順序不重要）
+      const tryShifts = ['morning','noon','evening'];
+      for (let i = 0; i < tryDays.length; i++) {
+        for (let j = 0; j < tryShifts.length; j++) {
+          const check = canMemberWorkOnDay(memberId, tryDays[i], tryShifts[j]);
+          if (check.canWork) return true;
+        }
+      }
+      return false;
+    }
+
+    // 需要假日班的成員：可排假日且目前假日班為0
+    const needers = allMembers.filter(m => isWeekendEligible(m) && (memberWeekendCount[m] || 0) === 0);
+    if (needers.length === 0) return;
+
+    // 嘗試逐一補齊
+    for (const needer of needers) {
+      // 尋找可讓渡者（donor）：有至少1個假日班 且 平日晚班≥2（優先條件）
+      const donors = allMembers
+        .filter(m => (memberWeekendCount[m] || 0) > 0 && (memberWeekdayEveningCount[m] || 0) >= 2 && (weekendKeysByMember[m] || []).length > 0);
+      
+      let swapped = false;
+      if (donors.length === 0) continue;
+
+      // 先找 needer 名下的平日晚班作為交換（優先減少平日晚班壓力）
+      const neederWeekdayEvenings = (weekdayEveningKeysByMember[needer] || []);
+      
+      for (const donor of donors) {
+        if (swapped) break;
+        // 嘗試 donor 的任一假日班位置，換給 needer
+        const donorWeekendSlots = weekendKeysByMember[donor] || [];
+        for (const wk of donorWeekendSlots) {
+          if (swapped) break;
+          // 檢查 needer 能否上這個假日班
+          const dayOfWeek = new Date(`${ym}-${String(wk.day).padStart(2,'0')}`).getDay();
+          if (!canMemberWorkOnDay(needer, dayOfWeek, wk.shift).canWork) continue;
+          if (!passesShiftBalance(needer, wk.shift)) continue;
+
+          // 找一個 needer 的平日晚班，讓 donor 接手
+          for (const ev of neederWeekdayEvenings) {
+            // donor 是否可上該平日晚班
+            const evDow = new Date(`${ym}-${String(ev.day).padStart(2,'0')}`).getDay();
+            if (!canMemberWorkOnDay(donor, evDow, 'evening').canWork) continue;
+            // donor 的早晚平衡是否允許晚班+1
+            if (!passesShiftBalance(donor, 'evening')) continue;
+            
+            // 執行交換：donor 的週末班 → needer；needer 的平日晚班 → donor
+            data[wk.key] = needer;
+            data[ev.key] = donor;
+
+            // 更新統計
+            memberWeekendCount[donor] = (memberWeekendCount[donor]||0) - 1;
+            memberWeekendCount[needer] = (memberWeekendCount[needer]||0) + 1;
+
+            memberShiftCount[needer][wk.shift]++;
+            memberShiftCount[donor][wk.shift]--; // donor失去該班別一次
+
+            memberShiftCount[needer]['evening']--; // needer 失去一個晚班
+            memberShiftCount[donor]['evening']++;  // donor 增加一個晚班
+
+            memberWeekdayEveningCount[needer] = Math.max(0, (memberWeekdayEveningCount[needer]||0) - 1);
+            memberWeekdayEveningCount[donor] = (memberWeekdayEveningCount[donor]||0) + 1;
+
+            // 更新索引對應
+            // 從 donor 的週末列表移除 wk，加入 needer 的週末
+            weekendKeysByMember[donor] = (weekendKeysByMember[donor] || []).filter(x => x.key !== wk.key);
+            if (!weekendKeysByMember[needer]) weekendKeysByMember[needer] = [];
+            weekendKeysByMember[needer].push({ key: wk.key, day: wk.day, shift: wk.shift });
+
+            // 從 needer 的平日晚班移除 ev，加入 donor 的平日晚班
+            weekdayEveningKeysByMember[needer] = (weekdayEveningKeysByMember[needer] || []).filter(x => x.key !== ev.key);
+            if (!weekdayEveningKeysByMember[donor]) weekdayEveningKeysByMember[donor] = [];
+            weekdayEveningKeysByMember[donor].push({ key: ev.key, day: ev.day, shift: ev.shift });
+
+            swapped = true;
+            break;
+          }
+        }
+      }
+    }
+  })();
+
+  // ⭐ 後處理：總班數為4者，至少安排1天「假日中班」
+  (function ensureWeekendNoonForFourShifts() {
+    // 快速索引：假日中班位置、每人平日晚班、每人所有班、每人是否已有假日中班
+    const weekendNoonByMember = {};
+    const weekdayAnyByMember = {};
+    const weekdayEveningByMember = {};
+    const totalShiftsByMember = {};
+    const hasWeekendNoonByMember = {};
+
+    for (let d = 1; d <= days; d++) {
+      const wd = new Date(`${ym}-${String(d).padStart(2,'0')}`).getDay();
+      const isWeekend = (wd === 0 || wd === 6);
+      const shifts = isWeekend ? WEEKEND_SHIFTS : WEEKDAY_SHIFTS;
+      for (const s of shifts) {
+        const key = `${ym}:${d}-${s.key}`;
+        const assignee = data[key];
+        if (!assignee) continue;
+        totalShiftsByMember[assignee] = (totalShiftsByMember[assignee] || 0) + 1;
+        if (isWeekend && s.key === 'noon') {
+          if (!weekendNoonByMember[assignee]) weekendNoonByMember[assignee] = [];
+          weekendNoonByMember[assignee].push({ key, day: d, shift: s.key });
+          hasWeekendNoonByMember[assignee] = true;
+        }
+        if (!isWeekend) {
+          if (!weekdayAnyByMember[assignee]) weekdayAnyByMember[assignee] = [];
+          weekdayAnyByMember[assignee].push({ key, day: d, shift: s.key });
+          if (s.key === 'evening') {
+            if (!weekdayEveningByMember[assignee]) weekdayEveningByMember[assignee] = [];
+            weekdayEveningByMember[assignee].push({ key, day: d, shift: s.key });
+          }
+        }
+      }
+    }
+
+    // 找到需要補「假日中班」的對象（總班=4且未有假日中班），並且本身對假日中班沒有禁忌
+    const needers = allMembers.filter(m => {
+      const total = totalShiftsByMember[m] || 0;
+      if (total !== 4) return false;
+      if (hasWeekendNoonByMember[m]) return false;
+      // 檢查是否有能力上假日中班（週六/週日任一）
+      const canSat = canMemberWorkOnDay(m, 6, 'noon').canWork;
+      const canSun = canMemberWorkOnDay(m, 0, 'noon').canWork;
+      return (canSat || canSun);
+    });
+
+    if (needers.length === 0) return;
+
+    // 嘗試交換策略：
+    // donor條件：擁有至少一個假日中班；優先 donor 的 memberWeekendCount > 1；
+    // 交換對象：優先用 needer 的平日晚班，否則用任何平日班（需 donor 可上且通過平衡/限制）
+    for (const needer of needers) {
+      let done = false;
+      const neederWeekdayEvenings = (weekdayEveningByMember[needer] || []);
+      const neederWeekdays = (weekdayAnyByMember[needer] || []);
+      // 沒有可交換的平日班就跳過（避免產生空位）
+      if ((neederWeekdayEvenings.length + neederWeekdays.length) === 0) continue;
+      // 準備候選donor清單
+      const donors = allMembers
+        .filter(m => (weekendNoonByMember[m] || []).length > 0 && m !== needer)
+        .sort((a, b) => {
+          // 優先讓週末班多的人捐出
+          const wa = memberWeekendCount[a] || 0;
+          const wb = memberWeekendCount[b] || 0;
+          if (wb !== wa) return wb - wa;
+          // 次序隨意
+          return (totalShiftsByMember[b]||0) - (totalShiftsByMember[a]||0);
+        });
+
+      for (const donor of donors) {
+        if (done) break;
+        const donorNoons = weekendNoonByMember[donor] || [];
+        for (const noon of donorNoons) {
+          if (done) break;
+          // 檢查 needer 能否上這個假日中班
+          const dow = new Date(`${ym}-${String(noon.day).padStart(2,'0')}`).getDay();
+          if (!canMemberWorkOnDay(needer, dow, 'noon').canWork) continue;
+
+          // 嘗試用 needer 的平日晚班交換
+          let foundSwap = null;
+          for (const ev of neederWeekdayEvenings) {
+            const evDow = new Date(`${ym}-${String(ev.day).padStart(2,'0')}`).getDay();
+            if (!canMemberWorkOnDay(donor, evDow, 'evening').canWork) continue;
+            if (!passesShiftBalance(donor, 'evening')) continue;
+            // donor 如果週末班僅1個，避免把最後的假日班讓出（你要求每人至少有假日班）
+            if ((memberWeekendCount[donor]||0) <= 1) continue;
+            foundSwap = { giveKey: ev.key, giveDay: ev.day, giveShift: 'evening' };
+            break;
+          }
+
+          // 若沒有平日晚班可換，用任何平日班別（morning/evening）
+          if (!foundSwap) {
+            for (const wd of neederWeekdays) {
+              const evDow = new Date(`${ym}-${String(wd.day).padStart(2,'0')}`).getDay();
+              if (!canMemberWorkOnDay(donor, evDow, wd.shift).canWork) continue;
+              if ((wd.shift === 'evening') && !passesShiftBalance(donor, 'evening')) continue;
+              if ((wd.shift === 'morning') && !passesShiftBalance(donor, 'morning')) continue;
+              if ((memberWeekendCount[donor]||0) <= 1) continue;
+              foundSwap = { giveKey: wd.key, giveDay: wd.day, giveShift: wd.shift };
+              break;
+            }
+          }
+
+          if (!foundSwap) continue;
+
+          // 執行交換： donor(假日中班) → needer； needer(平日班) → donor
+          data[noon.key] = needer;
+          data[foundSwap.giveKey] = donor;
+
+          // 更新統計
+          memberWeekendCount[donor] = Math.max(0, (memberWeekendCount[donor]||0) - 1);
+          memberWeekendCount[needer] = (memberWeekendCount[needer]||0) + 1;
+
+          // 早晚/中班統計
+          // donor 失去 noon 一次
+          if (memberShiftCount[donor]) memberShiftCount[donor]['noon'] = Math.max(0, (memberShiftCount[donor]['noon']||0) - 1);
+          if (memberShiftCount[needer]) memberShiftCount[needer]['noon'] = (memberShiftCount[needer]['noon']||0) + 1;
+
+          // needer 失去一個平日班，donor 增加
+          if (memberShiftCount[needer] && memberShiftCount[needer][foundSwap.giveShift] !== undefined) {
+            memberShiftCount[needer][foundSwap.giveShift] = Math.max(0, (memberShiftCount[needer][foundSwap.giveShift]||0) - 1);
+          }
+          if (memberShiftCount[donor] && memberShiftCount[donor][foundSwap.giveShift] !== undefined) {
+            memberShiftCount[donor][foundSwap.giveShift] = (memberShiftCount[donor][foundSwap.giveShift]||0) + 1;
+          }
+
+          // 平日晚班計數
+          const isFoundSwapWeekend = false;
+          if (foundSwap.giveShift === 'evening' && !isFoundSwapWeekend) {
+            memberWeekdayEveningCount[needer] = Math.max(0, (memberWeekdayEveningCount[needer]||0) - 1);
+            memberWeekdayEveningCount[donor] = (memberWeekdayEveningCount[donor]||0) + 1;
+          }
+
+          done = true;
+          break;
+        }
+      }
+    }
+  })();
+
+  // ⭐ 後處理：總班數為4者，若僅有「假日早班」而沒有「假日中/晚」，嘗試把假日早班換成假日中班或晚班
+  (function preferWeekendNoonOrEveningForFourShifts() {
+    // 建索引：各成員的假日班按班別分類
+    const weekendByMember = {};
+    const totalShiftsByMember = {};
+    for (let d = 1; d <= days; d++) {
+      const wd = new Date(`${ym}-${String(d).padStart(2,'0')}`).getDay();
+      const isWeekend = (wd === 0 || wd === 6);
+      const shifts = isWeekend ? WEEKEND_SHIFTS : WEEKDAY_SHIFTS;
+      for (const s of shifts) {
+        const key = `${ym}:${d}-${s.key}`;
+        const assignee = data[key];
+        if (!assignee) continue;
+        totalShiftsByMember[assignee] = (totalShiftsByMember[assignee] || 0) + 1;
+        if (isWeekend) {
+          if (!weekendByMember[assignee]) weekendByMember[assignee] = { morning: [], noon: [], evening: [] };
+          weekendByMember[assignee][s.key]?.push({ key, day: d, shift: s.key });
+        }
+      }
+    }
+
+    const members = Object.keys(totalShiftsByMember).filter(m => (totalShiftsByMember[m]||0) === 4);
+    for (const m of members) {
+      const w = weekendByMember[m] || { morning: [], noon: [], evening: [] };
+      const hasWeekendMorning = (w.morning || []).length > 0;
+      const hasWeekendNoonOrEvening = (w.noon || []).length > 0 || (w.evening || []).length > 0;
+      if (!hasWeekendMorning || hasWeekendNoonOrEvening) continue;
+
+      // 嘗試把其中一個「假日早班」換成他人「假日中/晚」
+      const morningSlot = w.morning[0];
+      let swapped = false;
+
+      // 準備所有可能的donor（擁有假日中或晚）
+      const donors = Object.keys(weekendByMember).filter(id => id !== m && ((weekendByMember[id].noon||[]).length > 0 || (weekendByMember[id].evening||[]).length > 0));
+      
+      for (const donor of donors) {
+        if (swapped) break;
+        const candidateSlots = [
+          ...(weekendByMember[donor].evening || []).map(s => ({...s, pref: 1})),
+          ...(weekendByMember[donor].noon || []).map(s => ({...s, pref: 2}))
+        ].sort((a,b)=>a.pref-b.pref); // 先晚班，再中班
+        
+        for (const target of candidateSlots) {
+          if (swapped) break;
+          // 兩邊能否工作對應班別
+          const mDow = new Date(`${ym}-${String(target.day).padStart(2,'0')}`).getDay();
+          const donorDow = new Date(`${ym}-${String(morningSlot.day).padStart(2,'0')}`).getDay();
+
+          // m 改上 donor 的假日中/晚
+          if (!canMemberWorkOnDay(m, mDow, target.shift).canWork) continue;
+          // donor 改上 m 的假日早
+          if (!canMemberWorkOnDay(donor, donorDow, 'morning').canWork) continue;
+
+          // 早/晚平衡檢查（中班不檢查）
+          if (target.shift === 'evening' && !passesShiftBalance(m, 'evening')) continue;
+          // donor 換到 weekend morning，不會破壞早/晚平衡（但仍檢查保險）
+          if (!passesShiftBalance(donor, 'morning')) continue;
+
+          // 交換
+          data[target.key] = m;
+          data[morningSlot.key] = donor;
+
+          // 更新班別計數
+          // m: -morning(週末) + target.shift(週末)
+          if (memberShiftCount[m]) {
+            memberShiftCount[m]['morning'] = Math.max(0, (memberShiftCount[m]['morning']||0) - 1);
+            if (target.shift !== 'morning') memberShiftCount[m][target.shift] = (memberShiftCount[m][target.shift]||0) + 1;
+          }
+          // donor: +morning(週末) - target.shift(週末)
+          if (memberShiftCount[donor]) {
+            memberShiftCount[donor]['morning'] = (memberShiftCount[donor]['morning']||0) + 1;
+            if (target.shift !== 'morning') memberShiftCount[donor][target.shift] = Math.max(0, (memberShiftCount[donor][target.shift]||0) - 1);
+          }
+
+          swapped = true;
+          break;
+        }
+      }
+    }
+  })();
 
   localStorage.setItem(STORE_KEY,JSON.stringify(data));
   hydrate();
@@ -2533,11 +3056,28 @@ function continueExecuteAutoAssignForMonth(ym, days, allMembers, scheduleOptions
   const memberWorkHistory = {};
   const lastWorkDay = {};
   const memberWeekendCount = {}; // ⭐ 記錄每個成員的假日班數量
+  const memberShiftCount = {}; // ⭐ 記錄每個成員各班別次數
+  let memberWeekdayEveningCount = {}; // 記錄每個成員平日晚班數
   
   // 初始化假日班計數器
   allMembers.forEach(m => {
     memberWeekendCount[m] = 0;
+    memberShiftCount[m] = { morning: 0, noon: 0, evening: 0 };
+    memberWeekdayEveningCount[m] = 0;
   });
+
+  // 取得對向班別（用於早/晚平衡）
+  function getOppositeShift(shiftKey){
+    return shiftKey==='morning' ? 'evening' : (shiftKey==='evening' ? 'morning' : null);
+  }
+  // 檢查是否通過早/晚平衡（差值不可超過1：只允許領先0）
+  function passesShiftBalance(memberId, shiftKey){
+    if(shiftKey!=='morning' && shiftKey!=='evening') return true;
+    const opp = getOppositeShift(shiftKey);
+    const cur = (memberShiftCount[memberId]?.[shiftKey]||0);
+    const other = (memberShiftCount[memberId]?.[opp]||0);
+    return (cur - other) < 1;
+  }
   
   // 區分組隊成員和單人成員
   const groupedMembers = new Set();
@@ -2625,6 +3165,79 @@ function continueExecuteAutoAssignForMonth(ym, days, allMembers, scheduleOptions
     
     const shuffledGroups = Object.keys(groupMembers).sort(() => Math.random() - 0.5);
     
+    // ⭐ 先嘗試安排「必須同天配對」的成員（指定月份流程）
+    (function tryAssignRequiredPairsForDay() {
+      if (!SCHEDULE_CONDITIONS || !SCHEDULE_CONDITIONS.REQUIRED_PAIRS) return;
+      const pairs = Object.entries(SCHEDULE_CONDITIONS.REQUIRED_PAIRS)
+        .filter(([_, required]) => required)
+        .map(([pair]) => pair.split('-'))
+        .map(([a,b]) => [a,b].sort())
+        .filter((p, idx, arr) => idx === arr.findIndex(q => q[0]===p[0] && q[1]===p[1]));
+      
+      function canAssign(memberId, shiftKey, dayNum) {
+        if (dayMembers.has(memberId)) return false;
+        if (!pool.includes(memberId)) return false;
+        if (!canWorkOnDay(memberId, dayNum)) return false;
+        if (scheduleOptions.enableDayRestrictions || scheduleOptions.enableShiftRestrictions) {
+          const dateStr = `${ym}-${String(dayNum).padStart(2,'0')}`;
+          const dayOfWeek = new Date(dateStr).getDay();
+          const cond = canMemberWorkOnDay(memberId, dayOfWeek, shiftKey);
+          if (!cond.canWork) return false;
+        }
+        if (!passesShiftBalance(memberId, shiftKey)) return false;
+        return true;
+      }
+      
+      function assignOne(memberId, keyShift) {
+        const key = `${ym}:${d}-${keyShift}`;
+        if (data[key]) return false;
+        data[key] = memberId;
+        dayMembers.add(memberId);
+        updateWorkHistory(memberId, d);
+        if (isWeekend) memberWeekendCount[memberId]++;
+        if (memberShiftCount[memberId] && memberShiftCount[memberId][keyShift] !== undefined) {
+          memberShiftCount[memberId][keyShift]++;
+        }
+        const poolIndex = pool.findIndex(m => m === memberId);
+        if (poolIndex !== -1) pool.splice(poolIndex, 1);
+        return true;
+      }
+      
+      for (const [m1, m2] of pairs) {
+        if (dayMembers.has(m1) || dayMembers.has(m2)) continue;
+        if (!pool.includes(m1) || !pool.includes(m2)) continue;
+        
+        if (isWeekend && shifts.length >= 3) {
+          const combos = [['morning','noon'], ['noon','evening']];
+          let placed = false;
+          for (const [s1, s2] of combos) {
+            const k1 = `${ym}:${d}-${s1}`, k2 = `${ym}:${d}-${s2}`;
+            if (data[k1] || data[k2]) continue;
+            if (canAssign(m1, s1, d) && canAssign(m2, s2, d)) {
+              if (assignOne(m1, s1) && assignOne(m2, s2)) { placed = true; break; }
+            } else if (canAssign(m2, s1, d) && canAssign(m1, s2, d)) {
+              if (assignOne(m2, s1) && assignOne(m1, s2)) { placed = true; break; }
+            }
+          }
+          if (placed) continue;
+        } else {
+          const kM = `${ym}:${d}-morning`;
+          const kE = `${ym}:${d}-evening`;
+          if (!data[kM] && !data[kE]) {
+            const options = [
+              [m1,'morning', m2,'evening'],
+              [m2,'morning', m1,'evening']
+            ];
+            for (const [a,sa, b,sb] of options) {
+              if (canAssign(a, sa, d) && canAssign(b, sb, d)) {
+                if (assignOne(a, sa) && assignOne(b, sb)) break;
+              }
+            }
+          }
+        }
+      }
+    })();
+    
     // ⭐ 假日組隊排班（根據用戶設定決定是否啟用）
     if (isWeekend && shifts.length >= 2 && scheduleOptions.enableGroupPairs) {
       // ⭐ 計算假日班平均值
@@ -2658,22 +3271,34 @@ function continueExecuteAutoAssignForMonth(ym, days, allMembers, scheduleOptions
             }
             
             if (canAssign) {
+              // 依條件選擇最多2位同組成員（優先週末未分配者、再看早/晚平衡）
+              const tempAvailable = [...availableGroupMembers].sort((a,b)=>{
+                const wa = memberWeekendCount[a]||0, wb = memberWeekendCount[b]||0;
+                if (wa!==wb) return wa-wb;
+                const sa = (memberShiftCount[a]?.[shifts[startShift].key]||0) - (memberShiftCount[a]?.[getOppositeShift(shifts[startShift].key)]||0);
+                const sb = (memberShiftCount[b]?.[shifts[startShift].key]||0) - (memberShiftCount[b]?.[getOppositeShift(shifts[startShift].key)]||0);
+                return sa - sb;
+              });
               const selectedMembers = [];
-              const tempAvailable = [...availableGroupMembers];
-              for (let i = 0; i < Math.min(2, tempAvailable.length); i++) {
-                const randomIndex = Math.floor(Math.random() * tempAvailable.length);
-                selectedMembers.push(tempAvailable[randomIndex]);
-                tempAvailable.splice(randomIndex, 1);
+              while (tempAvailable.length>0 && selectedMembers.length<2){
+                const cand = tempAvailable.shift();
+                if (!passesShiftBalance(cand, shifts[startShift].key)) continue;
+                selectedMembers.push(cand);
               }
               
               for (let i = 0; i < selectedMembers.length && startShift + i < endShift; i++) {
-                const key = `${ym}:${d}-${shifts[startShift + i].key}`;
+                const assignedShiftKey = shifts[startShift + i].key;
                 const member = selectedMembers[i];
+                if (!passesShiftBalance(member, assignedShiftKey)) continue;
+                const key = `${ym}:${d}-${assignedShiftKey}`;
                 
                 data[key] = member;
                 dayMembers.add(member);
                 updateWorkHistory(member, d);
                 memberWeekendCount[member]++; // ⭐ 更新假日班計數
+                if (memberShiftCount[member] && memberShiftCount[member][assignedShiftKey] !== undefined) {
+                  memberShiftCount[member][assignedShiftKey]++;
+                }
                 
                 const poolIndex = pool.findIndex(m => m === member);
                 if (poolIndex !== -1) {
@@ -2707,11 +3332,22 @@ function continueExecuteAutoAssignForMonth(ym, days, allMembers, scheduleOptions
                 tempAvailable.splice(randomIndex, 1);
               }
               
-              const member = selectedMembers[0];
+              let member = selectedMembers[0];
+              if (!passesShiftBalance(member, shifts[selectedShift].key)) {
+                member = (tempAvailable.find(m => passesShiftBalance(m, shifts[selectedShift].key)) || member);
+              }
+              if (!passesShiftBalance(member, shifts[selectedShift].key)) {
+                // 放棄此同班別策略
+              } else {
               data[key] = member;
               dayMembers.add(member);
               updateWorkHistory(member, d);
               memberWeekendCount[member]++; // ⭐ 更新假日班計數
+              // ⭐ 更新班別統計
+              const assignedShiftKey = shifts[selectedShift].key;
+              if (memberShiftCount[member] && memberShiftCount[member][assignedShiftKey] !== undefined) {
+                memberShiftCount[member][assignedShiftKey]++;
+              }
               
               const poolIndex = pool.findIndex(m => m === member);
               if (poolIndex !== -1) {
@@ -2722,6 +3358,7 @@ function continueExecuteAutoAssignForMonth(ym, days, allMembers, scheduleOptions
                 dayGroupMembers[groupName] = [];
               }
               dayGroupMembers[groupName].push(member);
+              }
             }
           }
         }
@@ -2752,6 +3389,8 @@ function continueExecuteAutoAssignForMonth(ym, days, allMembers, scheduleOptions
           
           // ⭐ 假日時檢查假日班數量
           if (isWeekend && memberWeekendCount[m] > avgWeekendShifts + 1) return false;
+          // ⭐ 早/晚平衡限制
+          if (!passesShiftBalance(m, s.key)) return false;
           
           // 檢查排班條件（根據用戶設定）
           if (scheduleOptions.enableDayRestrictions || scheduleOptions.enableShiftRestrictions) {
@@ -2768,12 +3407,40 @@ function continueExecuteAutoAssignForMonth(ym, days, allMembers, scheduleOptions
           let selectedMember = null;
           
           if (!dayGroupMembers[groupName] || dayGroupMembers[groupName].length === 0) {
-            selectedMember = availableGroupMembers[Math.floor(Math.random() * availableGroupMembers.length)];
+            // ⭐ 依該班別次數排序
+            availableGroupMembers.sort((a, b) => {
+              const sa = (memberShiftCount[a]?.[s.key] || 0);
+              const sb = (memberShiftCount[b]?.[s.key] || 0);
+              if (sa !== sb) return sa - sb;
+              if (isWeekend) {
+                const wa = memberWeekendCount[a] || 0;
+                const wb = memberWeekendCount[b] || 0;
+                if (wa !== wb) return wa - wb;
+              }
+              const ta = Object.values(memberShiftCount[a] || {}).reduce((x, y) => x + y, 0);
+              const tb = Object.values(memberShiftCount[b] || {}).reduce((x, y) => x + y, 0);
+              return ta - tb;
+            });
+            selectedMember = availableGroupMembers[0];
           } else {
             const alreadyAssigned = dayGroupMembers[groupName];
-            const remainingMembers = availableGroupMembers.filter(m => !alreadyAssigned.includes(m));
+            const remainingMembers = availableGroupMembers
+              .filter(m => !alreadyAssigned.includes(m))
+              .sort((a, b) => {
+                const sa = (memberShiftCount[a]?.[s.key] || 0);
+                const sb = (memberShiftCount[b]?.[s.key] || 0);
+                if (sa !== sb) return sa - sb;
+                if (isWeekend) {
+                  const wa = memberWeekendCount[a] || 0;
+                  const wb = memberWeekendCount[b] || 0;
+                  if (wa !== wb) return wa - wb;
+                }
+                const ta = Object.values(memberShiftCount[a] || {}).reduce((x, y) => x + y, 0);
+                const tb = Object.values(memberShiftCount[b] || {}).reduce((x, y) => x + y, 0);
+                return ta - tb;
+              });
             if (remainingMembers.length > 0) {
-              selectedMember = remainingMembers[Math.floor(Math.random() * remainingMembers.length)];
+              selectedMember = remainingMembers[0];
             }
           }
           
@@ -2784,6 +3451,10 @@ function continueExecuteAutoAssignForMonth(ym, days, allMembers, scheduleOptions
               dayMembers.add(selectedMember);
               updateWorkHistory(selectedMember, d);
               if (isWeekend) memberWeekendCount[selectedMember]++; // ⭐ 更新假日班計數
+              // ⭐ 更新班別統計
+              if (memberShiftCount[selectedMember] && memberShiftCount[selectedMember][s.key] !== undefined) {
+                memberShiftCount[selectedMember][s.key]++;
+              }
               
               if (!dayGroupMembers[groupName]) {
                 dayGroupMembers[groupName] = [];
@@ -2815,6 +3486,8 @@ function continueExecuteAutoAssignForMonth(ym, days, allMembers, scheduleOptions
             
             // ⭐ 假日時優先選擇假日班較少的成員
             if (isWeekend && memberWeekendCount[m] > avgWeekendShifts + 1) return false;
+            // ⭐ 早/晚平衡限制
+            if (!passesShiftBalance(m, s.key)) return false;
             
             // ⭐ 根據用戶設定檢查排班條件
             if (scheduleOptions.enableDayRestrictions || scheduleOptions.enableShiftRestrictions) {
@@ -2833,12 +3506,22 @@ function continueExecuteAutoAssignForMonth(ym, days, allMembers, scheduleOptions
             return true;
           });
           
-          // ⭐ 假日時按假日班數量排序（少的優先）
-          if (isWeekend && availableSingles.length > 0) {
-            availableSingles.sort((a, b) => memberWeekendCount[a] - memberWeekendCount[b]);
-            selectedMember = availableSingles[0]; // 選擇假日班最少的
-          } else if (availableSingles.length > 0) {
-            selectedMember = availableSingles[Math.floor(Math.random() * availableSingles.length)];
+          // ⭐ 依「該班別次數」優先，其次在假日依「假日班次數」，再依總班數
+          if (availableSingles.length > 0) {
+            availableSingles.sort((a, b) => {
+              const sa = (memberShiftCount[a]?.[s.key] || 0);
+              const sb = (memberShiftCount[b]?.[s.key] || 0);
+              if (sa !== sb) return sa - sb;
+              if (isWeekend) {
+                const wa = memberWeekendCount[a] || 0;
+                const wb = memberWeekendCount[b] || 0;
+                if (wa !== wb) return wa - wb;
+              }
+              const ta = Object.values(memberShiftCount[a] || {}).reduce((x, y) => x + y, 0);
+              const tb = Object.values(memberShiftCount[b] || {}).reduce((x, y) => x + y, 0);
+              return ta - tb;
+            });
+            selectedMember = availableSingles[0];
           }
         }
         
@@ -2848,6 +3531,8 @@ function continueExecuteAutoAssignForMonth(ym, days, allMembers, scheduleOptions
             
             // ⭐ 假日時優先選擇假日班較少的成員
             if (isWeekend && memberWeekendCount[m] > avgWeekendShifts + 1) return false;
+            // ⭐ 早/晚平衡限制
+            if (!passesShiftBalance(m, s.key)) return false;
             
             // ⭐ 根據用戶設定檢查排班條件
             if (scheduleOptions.enableDayRestrictions || scheduleOptions.enableShiftRestrictions) {
@@ -2866,12 +3551,22 @@ function continueExecuteAutoAssignForMonth(ym, days, allMembers, scheduleOptions
             return true;
           });
           
-          // ⭐ 假日時按假日班數量排序（少的優先）
-          if (isWeekend && availableGroups.length > 0) {
-            availableGroups.sort((a, b) => memberWeekendCount[a] - memberWeekendCount[b]);
-            selectedMember = availableGroups[0]; // 選擇假日班最少的
-          } else if (availableGroups.length > 0) {
-            selectedMember = availableGroups[Math.floor(Math.random() * availableGroups.length)];
+          // ⭐ 依「該班別次數」優先，其次在假日依「假日班次數」，再依總班數
+          if (availableGroups.length > 0) {
+            availableGroups.sort((a, b) => {
+              const sa = (memberShiftCount[a]?.[s.key] || 0);
+              const sb = (memberShiftCount[b]?.[s.key] || 0);
+              if (sa !== sb) return sa - sb;
+              if (isWeekend) {
+                const wa = memberWeekendCount[a] || 0;
+                const wb = memberWeekendCount[b] || 0;
+                if (wa !== wb) return wa - wb;
+              }
+              const ta = Object.values(memberShiftCount[a] || {}).reduce((x, y) => x + y, 0);
+              const tb = Object.values(memberShiftCount[b] || {}).reduce((x, y) => x + y, 0);
+              return ta - tb;
+            });
+            selectedMember = availableGroups[0];
           }
         }
         
@@ -2889,6 +3584,14 @@ function continueExecuteAutoAssignForMonth(ym, days, allMembers, scheduleOptions
           updateWorkHistory(selectedMember, d);
           lastWorkDay[selectedMember] = d;
           if (isWeekend) memberWeekendCount[selectedMember]++; // ⭐ 更新假日班計數
+          // ⭐ 更新班別統計
+          if (memberShiftCount[selectedMember] && memberShiftCount[selectedMember][s.key] !== undefined) {
+            memberShiftCount[selectedMember][s.key]++;
+          }
+          // ⭐ 平日晚班統計
+          if (!isWeekend && s.key === 'evening') {
+            memberWeekdayEveningCount[selectedMember] = (memberWeekdayEveningCount[selectedMember] || 0) + 1;
+          }
           
           const poolIndex = pool.findIndex(m => m === selectedMember);
           if (poolIndex !== -1) {
@@ -2898,6 +3601,99 @@ function continueExecuteAutoAssignForMonth(ym, days, allMembers, scheduleOptions
       }
     }
   }
+
+  // ⭐ 後處理：確保每位可排假日的成員至少擁有1個假日班（若可行），優先從「平日晚班≥2 且有假日班」的成員交換
+  (function ensureMinimumWeekendPerEligible() {
+    const weekendKeys = [];
+    const weekdayEveningKeysByMember = {};
+    const weekendKeysByMember = {};
+    for (let d = 1; d <= days; d++) {
+      const wd = new Date(`${ym}-${String(d).padStart(2,'0')}`).getDay();
+      const isWeekend = (wd === 0 || wd === 6);
+      const shifts = isWeekend ? WEEKEND_SHIFTS : WEEKDAY_SHIFTS;
+      for (const s of shifts) {
+        const key = `${ym}:${d}-${s.key}`;
+        const assignee = data[key];
+        if (!assignee) continue;
+        if (isWeekend) {
+          weekendKeys.push({ key, day: d, shift: s.key, member: assignee });
+          if (!weekendKeysByMember[assignee]) weekendKeysByMember[assignee] = [];
+          weekendKeysByMember[assignee].push({ key, day: d, shift: s.key });
+        } else if (s.key === 'evening') {
+          if (!weekdayEveningKeysByMember[assignee]) weekdayEveningKeysByMember[assignee] = [];
+          weekdayEveningKeysByMember[assignee].push({ key, day: d, shift: s.key });
+        }
+      }
+    }
+
+    function isWeekendEligible(memberId) {
+      const tryDays = [0, 6];
+      const tryShifts = ['morning','noon','evening'];
+      for (let i = 0; i < tryDays.length; i++) {
+        for (let j = 0; j < tryShifts.length; j++) {
+          const check = canMemberWorkOnDay(memberId, tryDays[i], tryShifts[j]);
+          if (check.canWork) return true;
+        }
+      }
+      return false;
+    }
+
+    const needers = allMembers.filter(m => isWeekendEligible(m) && (memberWeekendCount[m] || 0) === 0);
+    if (needers.length === 0) return;
+
+    for (const needer of needers) {
+      const donors = allMembers
+        .filter(m => (memberWeekendCount[m] || 0) > 0 && (memberWeekdayEveningCount[m] || 0) >= 2 && (weekendKeysByMember[m] || []).length > 0);
+      
+      let swapped = false;
+      if (donors.length === 0) continue;
+
+      const neederWeekdayEvenings = (weekdayEveningKeysByMember[needer] || []);
+      
+      for (const donor of donors) {
+        if (swapped) break;
+        const donorWeekendSlots = weekendKeysByMember[donor] || [];
+        for (const wk of donorWeekendSlots) {
+          if (swapped) break;
+          const dayOfWeek = new Date(`${ym}-${String(wk.day).padStart(2,'0')}`).getDay();
+          if (!canMemberWorkOnDay(needer, dayOfWeek, wk.shift).canWork) continue;
+          if (!passesShiftBalance(needer, wk.shift)) continue;
+
+          for (const ev of neederWeekdayEvenings) {
+            const evDow = new Date(`${ym}-${String(ev.day).padStart(2,'0')}`).getDay();
+            if (!canMemberWorkOnDay(donor, evDow, 'evening').canWork) continue;
+            if (!passesShiftBalance(donor, 'evening')) continue;
+            
+            data[wk.key] = needer;
+            data[ev.key] = donor;
+
+            memberWeekendCount[donor] = (memberWeekendCount[donor]||0) - 1;
+            memberWeekendCount[needer] = (memberWeekendCount[needer]||0) + 1;
+
+            memberShiftCount[needer][wk.shift]++;
+            memberShiftCount[donor][wk.shift]--;
+
+            memberShiftCount[needer]['evening']--;
+            memberShiftCount[donor]['evening']++;
+
+            memberWeekdayEveningCount[needer] = Math.max(0, (memberWeekdayEveningCount[needer]||0) - 1);
+            memberWeekdayEveningCount[donor] = (memberWeekdayEveningCount[donor]||0) + 1;
+
+            weekendKeysByMember[donor] = (weekendKeysByMember[donor] || []).filter(x => x.key !== wk.key);
+            if (!weekendKeysByMember[needer]) weekendKeysByMember[needer] = [];
+            weekendKeysByMember[needer].push({ key: wk.key, day: wk.day, shift: wk.shift });
+
+            weekdayEveningKeysByMember[needer] = (weekdayEveningKeysByMember[needer] || []).filter(x => x.key !== ev.key);
+            if (!weekdayEveningKeysByMember[donor]) weekdayEveningKeysByMember[donor] = [];
+            weekdayEveningKeysByMember[donor].push({ key: ev.key, day: ev.day, shift: ev.shift });
+
+            swapped = true;
+            break;
+          }
+        }
+      }
+    }
+  })();
 
   // ⭐ 注意：這裡不更新 localStorage，只發送到 Google Sheets
   console.log(`次月排班完成，共安排了 ${Object.keys(data).length} 個班別`);
@@ -3188,6 +3984,89 @@ function showNextMonthScheduleResult(yearMonth, scheduleData, statsMessage, grou
   // 转换为 CSV 格式
   const csvData = tableData.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
   
+  // ⭐ 計算「早/晚班平衡」統計（僅針對本次指定月份的 scheduleData）
+  const memberIdsInPlan = new Set(Object.values(scheduleData));
+  const memberShiftStats = {};
+  memberIdsInPlan.forEach(id => {
+    memberShiftStats[id] = { 
+      name: (MEMBERS.find(m => m.id === id)?.name) || id,
+      total: 0, morning: 0, noon: 0, evening: 0
+    };
+  });
+  let totalMorning = 0, totalEvening = 0, totalNoon = 0;
+  Object.keys(scheduleData).forEach(key => {
+    const memberId = scheduleData[key];
+    const shiftKey = key.split('-').pop();
+    if (!memberShiftStats[memberId]) {
+      memberShiftStats[memberId] = { 
+        name: (MEMBERS.find(m => m.id === memberId)?.name) || memberId,
+        total: 0, morning: 0, noon: 0, evening: 0
+      };
+    }
+    memberShiftStats[memberId].total++;
+    if (shiftKey === 'morning') { memberShiftStats[memberId].morning++; totalMorning++; }
+    else if (shiftKey === 'evening') { memberShiftStats[memberId].evening++; totalEvening++; }
+    else if (shiftKey === 'noon') { memberShiftStats[memberId].noon++; totalNoon++; }
+  });
+  const memberCountInPlan = Object.keys(memberShiftStats).length || 1;
+  const avgMorning = Math.round((totalMorning / memberCountInPlan) * 10) / 10;
+  const avgEvening = Math.round((totalEvening / memberCountInPlan) * 10) / 10;
+  
+  // 生成早/晚班平衡檢查表格
+  const balanceRows = Object.entries(memberShiftStats)
+    .map(([id, s]) => ({
+      id, name: s.name, morning: s.morning, evening: s.evening, noon: s.noon,
+      diff: s.morning - s.evening, total: s.total
+    }))
+    .sort((a, b) => Math.abs(b.diff) - Math.abs(a.diff) || b.total - a.total);
+  
+  let balanceHtml = `
+    <div style="background:#eef7ff;padding:16px;border-radius:12px;margin-bottom:20px;border-left:4px solid #2196f3;">
+      <div style="font-weight:700;color:#0d47a1;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+        <span>✅</span><span>一鍵檢查：早/晚班平衡</span>
+      </div>
+      <div style="font-size:13px;color:#0d47a1;margin-bottom:10px;">
+        平均早班：<b>${avgMorning}</b>，平均晚班：<b>${avgEvening}</b>（只統計本次指定月份的排班結果）
+      </div>
+      <div style="overflow:auto;max-height:260px;border:1px solid #bbdefb;border-radius:8px;background:#fff;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead style="position:sticky;top:0;background:#e3f2fd;z-index:1;">
+            <tr>
+              <th style="padding:8px;border-bottom:1px solid #bbdefb;text-align:left;">成員</th>
+              <th style="padding:8px;border-bottom:1px solid #bbdefb;">總班</th>
+              <th style="padding:8px;border-bottom:1px solid #bbdefb;">早班</th>
+              <th style="padding:8px;border-bottom:1px solid #bbdefb;">晚班</th>
+              <th style="padding:8px;border-bottom:1px solid #bbdefb;">中班</th>
+              <th style="padding:8px;border-bottom:1px solid #bbdefb;">差值(早-晚)</th>
+            </tr>
+          </thead>
+          <tbody>
+  `;
+  balanceRows.forEach(r => {
+    const highlight = Math.abs(r.diff) >= 2 ? 'background:#fff3cd;' : '';
+    balanceHtml += `
+      <tr style="${highlight}">
+        <td style="padding:8px;border-bottom:1px solid #eee;">${r.id} ${r.name}</td>
+        <td style="padding:8px;border-bottom:1px solid #eee;text-align:center;font-weight:600;">${r.total}</td>
+        <td style="padding:8px;border-bottom:1px solid #eee;text-align:center;">${r.morning}</td>
+        <td style="padding:8px;border-bottom:1px solid #eee;text-align:center;">${r.evening}</td>
+        <td style="padding:8px;border-bottom:1px solid #eee;text-align:center;">${r.noon}</td>
+        <td style="padding:8px;border-bottom:1px solid #eee;text-align:center;font-weight:600;color:${r.diff>0?'#d32f2f':(r.diff<0?'#1976d2':'#2e7d32')};">
+          ${r.diff > 0 ? '+' + r.diff : r.diff}
+        </td>
+      </tr>
+    `;
+  });
+  balanceHtml += `
+          </tbody>
+        </table>
+      </div>
+      <div style="font-size:12px;color:#0d47a1;margin-top:8px;">
+        標示底色者為「早/晚差值≥2」的成員，建議手動微調。
+      </div>
+    </div>
+  `;
+  
   modal.innerHTML = `
     <div style="background:#fff;padding:40px 30px;border-radius:20px;">
       <div style="text-align:center;margin-bottom:30px;">
@@ -3201,6 +4080,8 @@ function showNextMonthScheduleResult(yearMonth, scheduleData, statsMessage, grou
       <div style="background:#f8f9fa;padding:20px;border-radius:12px;margin-bottom:20px;max-height:300px;overflow-y:auto;">
         <pre style="margin:0;font-size:13px;line-height:1.8;white-space:pre-wrap;color:#333;">${statsMessage}</pre>
       </div>
+      
+      ${balanceHtml}
       
       <div style="background:#fff3cd;padding:15px;border-radius:10px;margin-bottom:20px;border-left:4px solid #ffc107;">
         <div style="font-size:14px;color:#856404;">
