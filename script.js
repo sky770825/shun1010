@@ -145,7 +145,7 @@ const MEMBERS = [
   {id:'05',name:'莉羚'},
   {id:'06',name:'秋屏'},
   {id:'07',name:'林鋒',group:'group4'},
-  {id:'08',name:'秀華'},
+  {id:'08',name:'秀華',disabled:true},
   {id:'09',name:'盈橙',group:'group3'},
   {id:'10',name:'大同',group:'group3'},
   {id:'11',name:'曉敏'},
