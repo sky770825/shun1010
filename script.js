@@ -525,9 +525,16 @@ function hydrate(){
       }
       
       cell.textContent = data[key];
+      // 添加 title 屬性，滑鼠懸停時顯示成員姓名
+      if(member){
+        cell.title = `${data[key]} ${member.name}`;
+      }else{
+        cell.title = data[key];
+      }
     }else{
       // 沒有排班時，只顯示空白，不添加顏色
       cell.textContent = '';
+      cell.title = ''; // 清除 title
     }
   });
 }
