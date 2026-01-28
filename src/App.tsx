@@ -17,7 +17,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/index1" element={<Index />} />
-          <Route path="/index1.html" element={<Navigate to="/index1" replace />} />
+          <Route path="/index1.html" element={<Index />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
