@@ -1,0 +1,273 @@
+﻿<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5, user-scalable=yes">
+<title>常順地產值班key進出系統</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<h2>常順地產值班key進出系統</h2>
+
+<div class="controls" style="display:grid;grid-template-columns:0.9fr 1.1fr 1fr;gap:10px;align-items:start;">
+  <label style="display:flex;flex-direction:column;gap:4px;">
+    <span style="font-size:13px;font-weight:600;color:#495057;">選擇月份</span>
+    <input type="month" id="monthPicker" style="width:100%;padding:8px;border:1px solid #ced4da;border-radius:4px;font-size:14px;">
+  </label>
+  <label style="display:flex;flex-direction:column;gap:4px;">
+    <span style="font-size:13px;font-weight:600;color:#495057;">選擇成員</span>
+    <select id="memberInput" style="width:100%;padding:8px;border:1px solid #ced4da;border-radius:4px;font-size:14px;">
+      <option value="">-- 請選擇成員 --</option>
+      <option value="01">01 以蓁</option>
+      <option value="02" disabled>02 景翔（不列入排班）</option>
+      <option value="03">03 顯宗</option>
+      <option value="05">05 莉羚</option>
+      <option value="06">06 秋屏</option>
+      <option value="07">07 林鋒</option>
+      <option value="08">08 秀華</option>
+      <option value="09">09 盈橙</option>
+      <option value="10">10 大同</option>
+      <option value="11">11 曉敏</option>
+      <option value="12">12 雅婷</option>
+      <option value="13">13 瑀嬅</option>
+      <option value="15">15 皓宇</option>
+      <option value="16">16 永樺</option>
+      <option value="17" disabled>17 范沅（不列入排班）</option>
+      <option value="18">18 志桓</option>
+      <option value="19">19 子菲</option>
+      <option value="20">20 志偉</option>
+      <option value="21">21 郁庭</option>
+      <option value="22" disabled>22 婕茹（不列入排班）</option>
+      <option value="23">23 珈瑜</option>
+      <option value="25">25 濬瑒</option>
+      <option value="26">26 益呈</option>
+      <option value="90" disabled>90 徐店東（主管）</option>
+      <option value="91" disabled>91 簡副總（主管）</option>
+      <option value="92" disabled>92 王店（主管）</option>
+      <option value="93" disabled>93 曾經理（主管）</option>
+      <option value="94" disabled>94 羅珍妮（主管）</option>
+    </select>
+  </label>
+  <label style="display:flex;flex-direction:column;gap:4px;">
+    <span style="font-size:13px;font-weight:600;color:#495057;">管理功能</span>
+    <select id="adminActionSelect" onchange="executeAdminAction(this.value)" style="width:100%;padding:8px;border:1px solid #ced4da;border-radius:4px;font-size:14px;cursor:pointer;">
+      <option value="">▼ 選擇功能</option>
+      <option value="autoAssign">🔐 隨機平均排班</option>
+      <option value="clearData">🔐 清除本月資料</option>
+      <option value="showStatistics">🔐 排班統計</option>
+      <option value="syncFromSheets">🔐 從 Sheets 同步</option>
+      <option value="openSheets">🔐 開啟 Sheets</option>
+    </select>
+  </label>
+</div>
+
+<div class="table-container">
+<table id="grid"></table>
+</div>
+
+<div id="keyRecord">
+  <details style="background:#e3f2fd;padding:10px;border-radius:6px;margin-bottom:15px;border-left:4px solid #2196f3;font-size:13px;color:#1565c0;">
+    <summary style="cursor:pointer;font-weight:bold;user-select:none;list-style:none;display:flex;align-items:center;gap:5px;">
+      <span style="font-size:16px;">📌</span>
+      <span>使用說明</span>
+      <span style="font-size:10px;color:#6c757d;margin-left:auto;">(點擊展開/收起)</span>
+    </summary>
+    <ul style="margin:8px 0 0 20px;padding:0;line-height:1.8;">
+      <li><strong>成員借出：</strong>點擊下方成員 → 輸入鑰匙項目 → 登記借出</li>
+      <li><strong>同業借出：</strong>選擇公司 → 選擇常用記錄或輸入姓名 → 輸入鑰匙項目 → 登記借出</li>
+      <li><strong>歸還流程：</strong>點擊「歸還」按鈕 → 由值班人員點擊「<span style="color:#ff9800;">🏢 值班確認</span>」完成確認</li>
+      <li><strong>視覺標識：</strong>同業借出顯示橙色標籤和按鈕</li>
+    </ul>
+  </details>
+
+<details style="background:#fff8e1;padding:10px;border-radius:6px;margin-bottom:15px;border-left:4px solid #ffb300;font-size:13px;color:#795548;">
+  <summary style="cursor:pointer;font-weight:bold;user-select:none;list-style:none;display:flex;align-items:center;gap:5px;">
+    <span style="font-size:16px;">👥</span>
+    <span>值班換班說明</span>
+    <span style="font-size:10px;color:#8d6e63;margin-left:auto;">(點擊展開/收起)</span>
+  </summary>
+  <ul style="margin:8px 0 0 20px;padding:0;line-height:1.8;">
+    <li><strong>臨時代班設定：</strong> 當原值班人無法上班時，點擊 <b>👥 臨時代班設定</b> → 選擇代班人 → 按「確認」。系統會將今日值班改為新的人員。</li>
+    <li><strong>代班生效：</strong> 當天所有「鑰匙借出」「歸還確認」權限，將由代班人執行。</li>
+    <li><strong>取消代班：</strong> 代班結束後，點擊 <b>❌ 取消代班</b> 即可恢復原本值班人員。</li>
+    <li><strong>注意事項：</strong> 
+      <ul>
+        <li>換班僅影響「當日」值班，不會更改整月排班表。</li>
+        <li>若要永久調整排班，請由管理員在上方「排班表」直接修改。</li>
+      </ul>
+    </li>
+  </ul>
+</details>
+
+<div id="memberList">
+  <h3>成員編號對照表</h3>
+  <ul id="memberListUl"></ul>
+</div>
+  
+  <div style="text-align:center;margin-bottom:20px;position:relative;">
+    <div style="display:inline-block;background:linear-gradient(135deg,#ffc107 0%,#ff9800 100%);padding:15px 40px;border-radius:20px;box-shadow:0 8px 25px rgba(255,152,0,0.5);position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(45deg,rgba(255,255,255,0.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,0.15) 50%,rgba(255,255,255,0.15) 75%,transparent 75%,transparent);background-size:20px 20px;opacity:0.5;"></div>
+      <h3 style="margin:0;font-size:18px;font-weight:700;color:#000;text-shadow:0 2px 4px rgba(255,255,255,0.3);letter-spacing:1px;position:relative;z-index:1;display:flex;align-items:center;gap:6px;justify-content:center;">
+        <span style="font-size:20px;">🔑</span>
+        鑰匙借出表簿
+        <span style="font-size:20px;">🔑</span>
+      </h3>
+    </div>
+  </div>
+
+<details style="background:#fff3e0;padding:10px;border-radius:6px;margin-bottom:15px;border-left:4px solid #fb8c00;font-size:13px;color:#e65100;">
+  <summary style="cursor:pointer;font-weight:bold;display:flex;align-items:center;gap:5px;">
+    <span style="font-size:16px;">🔑</span>
+    <span>鑰匙借出與歸還注意事項</span>
+  </summary>
+  <ul style="margin:8px 0 0 20px;padding:0;line-height:1.8;">
+    <li>借出前請確認自己或同業資料正確，避免重複登記。</li>
+    <li>若是同業借出，務必填寫「公司、姓名、電話」，並確認橙色標籤顯示。</li>
+    <li>歸還後需由當班人員點「🏢 值班確認」後，狀態才會變為「✅ 已歸還」。</li>
+    <li>若按錯「歸還」，請立即告知管理員修正。</li>
+  </ul>
+</details>
+  
+  <div class="keyControls">
+    <!-- 兩欄佈局：左邊是借出類型切換，右邊是新增按鈕 -->
+    <div class="key-header-row" style="margin-bottom:15px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:0 10px;">
+      <!-- 左欄：成員/同業切換按鈕 -->
+      <div style="text-align:center;">
+        <div style="display:inline-block;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);padding:3px;border-radius:25px;box-shadow:0 4px 12px rgba(102,126,234,0.3);max-width:100%;">
+          <div style="display:flex;gap:3px;background:#fff;padding:3px;border-radius:22px;">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:10px 20px;border-radius:18px;transition:all 0.3s;min-width:120px;justify-content:center;" class="borrow-type-label" data-type="member">
+              <input type="radio" name="borrowType" value="member" checked onchange="switchBorrowType('member')" style="display:none;">
+              <span style="font-weight:700;font-size:15px;">👤 成員借出</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:10px 20px;border-radius:18px;transition:all 0.3s;min-width:120px;justify-content:center;" class="borrow-type-label" data-type="colleague">
+              <input type="radio" name="borrowType" value="colleague" onchange="switchBorrowType('colleague')" style="display:none;">
+              <span style="font-weight:700;font-size:15px;">🏢 同業借出</span>
+            </label>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 右欄：新增鑰匙名稱按鈕 -->
+      <div>
+        <button id="addKeyNameBtn" onclick="showAddKeyNameModal()" style="background:linear-gradient(135deg,#28a745 0%,#20c997 100%);color:#fff;border:none;padding:10px 20px;border-radius:20px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(40,167,69,0.3);transition:all 0.3s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(40,167,69,0.4)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 12px rgba(40,167,69,0.3)'">
+          <span style="font-size:16px;">➕</span>
+          <span class="btn-text">新增key名稱</span>
+        </button>
+      </div>
+    </div>
+    <div id="memberBorrowSection">
+      <div style="text-align:center;padding:20px 25px;background:linear-gradient(135deg,#fff3e0 0%,#ffe0b2 100%);border-radius:12px;border:2px dashed #ff9800;margin-bottom:10px;">
+        <span id="selectedMember" style="font-size:20px;font-weight:700;color:#f57c00;text-shadow:0 1px 2px rgba(245,124,0,0.2);display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;">
+          <span style="font-size:28px;animation:bounce 1s infinite;flex-shrink:0;">👆</span>
+          <span style="flex-shrink:1;text-align:center;word-break:keep-all;">點擊上方成員選擇借用人</span>
+          <span style="font-size:28px;animation:bounce 1s infinite;animation-delay:0.1s;flex-shrink:0;">👆</span>
+        </span>
+      </div>
+    </div>
+    <div id="colleagueBorrowSection" style="display:none;">
+      <div style="padding:15px;background:linear-gradient(135deg,#fff3e0 0%,#ffe0b2 100%);border-radius:12px;border:2px solid #ff9800;margin-bottom:10px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;align-items:start;">
+          <div>
+            <label style="display:block;margin-bottom:5px;font-size:12px;font-weight:bold;color:#e65100;">🏢 公司品牌</label>
+            <select id="colleagueCompany" style="width:100%;padding:9px 12px;border:2px solid #ff9800;border-radius:8px;font-size:13px;font-weight:500;background:#fff;transition:all 0.3s;" onchange="handleCompanyChange()" onfocus="this.style.borderColor='#f57c00';this.style.boxShadow='0 0 0 3px rgba(255,152,0,0.1)'" onblur="this.style.borderColor='#ff9800';this.style.boxShadow='none'">
+              <option value="">-- 選擇公司 --</option>
+              <option value="中信房屋">中信房屋</option>
+              <option value="21世紀">21世紀</option>
+              <option value="有巢氏">有巢氏</option>
+              <option value="台灣房屋">台灣房屋</option>
+              <option value="住商不動產">住商不動產</option>
+              <option value="永慶房屋">永慶房屋</option>
+              <option value="信義房屋">信義房屋</option>
+              <option value="東森房屋">東森房屋</option>
+              <option value="太平洋不動產">太平洋不動產</option>
+              <option value="全國不動產">全國不動產</option>
+              <option value="美祺不動產">美祺不動產</option>
+              <option value="屋主交代取回">屋主交代取回</option>
+              <option value="台慶房屋">台慶房屋</option>
+              <option value="其它">其它...</option>
+            </select>
+            <div id="companyHistorySelect" style="margin-top:6px;display:none;">
+              <select id="colleagueHistoryDropdown" style="width:100%;padding:7px 10px;border:1px solid #ff9800;border-radius:6px;font-size:12px;background:linear-gradient(135deg,#fff3e0 0%,#ffe0b2 100%);color:#e65100;font-weight:500;" onchange="selectFromHistoryDropdown()">
+                <option value="">-- 常用記錄 --</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label style="display:block;margin-bottom:5px;font-size:12px;font-weight:bold;color:#e65100;">👤 姓名/分店</label>
+            <input type="text" id="colleagueName" placeholder="輸入姓名或分店" style="width:100%;padding:9px 12px;border:2px solid #ff9800;border-radius:8px;font-size:13px;font-weight:500;background:#fff;transition:all 0.3s;" onfocus="this.style.borderColor='#f57c00';this.style.boxShadow='0 0 0 3px rgba(255,152,0,0.1)'" onblur="this.style.borderColor='#ff9800';this.style.boxShadow='none'">
+          </div>
+          <div>
+            <label style="display:block;margin-bottom:5px;font-size:12px;font-weight:bold;color:#e65100;">📱 電話號碼</label>
+            <input type="tel" id="colleaguePhone" placeholder="輸入電話" style="width:100%;padding:9px 12px;border:2px solid #ff9800;border-radius:8px;font-size:13px;font-weight:500;background:#fff;transition:all 0.3s;" onfocus="this.style.borderColor='#f57c00';this.style.boxShadow='0 0 0 3px rgba(255,152,0,0.1)'" onblur="this.style.borderColor='#ff9800';this.style.boxShadow='none'">
+          </div>
+        </div>
+        <div id="colleagueCustomInput" style="margin-top:10px;display:none;">
+          <label style="display:block;margin-bottom:5px;font-size:12px;font-weight:bold;color:#e65100;">✏️ 自訂公司名稱</label>
+          <input type="text" id="colleagueCustomCompany" placeholder="請輸入其它公司名稱" style="width:100%;padding:9px 12px;border:2px solid #ff9800;border-radius:8px;font-size:13px;font-weight:500;background:#fff;transition:all 0.3s;" onfocus="this.style.borderColor='#f57c00';this.style.boxShadow='0 0 0 3px rgba(255,152,0,0.1)'" onblur="this.style.borderColor='#ff9800';this.style.boxShadow='none'">
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:15px;">
+      <div style="display:flex;gap:10px;align-items:stretch;flex-wrap:nowrap;">
+        <div style="flex:2;min-width:200px;">
+          <input type="text" id="keyItem" placeholder="🔑 輸入鑰匙項目或勾選下方常用項目" maxlength="50" style="width:100%;padding:15px 22px;border:2px solid #ced4da;border-radius:10px;font-size:18px;font-weight:500;transition:all 0.3s;box-shadow:0 2px 8px rgba(0,0,0,0.05);" onfocus="this.style.borderColor='#667eea';this.style.boxShadow='0 4px 16px rgba(102,126,234,0.2)'" onblur="this.style.borderColor='#ced4da';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.05)'">
+        </div>
+        <button onclick="borrowKey()" style="flex:1;min-width:120px;padding:15px 20px;background:linear-gradient(135deg,#28a745 0%,#20c997 100%);color:#fff;border:none;border-radius:10px;cursor:pointer;font-size:18px;font-weight:bold;box-shadow:0 4px 12px rgba(40,167,69,0.3);transition:all 0.3s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(40,167,69,0.4)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 12px rgba(40,167,69,0.3)'">✅ 登記借出</button>
+      </div>
+    </div>
+  </div>
+  <div id="keyItemHistory" style="margin-bottom:15px;padding:10px;background:#fff;border-radius:8px;border:1px solid #dee2e6;display:none;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <strong style="color:#495057;">📝 常用鑰匙項目（勾選紅色表示已選）</strong>
+        <span id="selectedKeysCount" style="font-size:13px;color:#f44336;font-weight:bold;background:#ffebee;padding:3px 10px;border-radius:12px;display:none;">已選 0 項</span>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button onclick="clearKeySelection()" id="clearSelectionBtn" style="padding:4px 10px;font-size:12px;background:#6c757d;color:#fff;border:none;border-radius:4px;cursor:pointer;display:none;">清除選擇</button>
+        <button onclick="clearKeyItemHistory()" style="padding:4px 10px;font-size:12px;background:#dc3545;color:#fff;border:none;border-radius:4px;cursor:pointer;">清除記錄</button>
+      </div>
+    </div>
+    <div id="keyItemHistoryList" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+  </div>
+  <div class="dutyControls" style="display:flex;flex-direction:column;gap:8px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+      <span id="dutyMember" style="font-size:17px;font-weight:500;">值班人員：載入中...</span>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button onclick="quickSetTodayDuty()" style="padding:10px 18px;font-size:16px;background:linear-gradient(135deg,#ff9800 0%,#f57c00 100%);color:#fff;border:none;border-radius:8px;cursor:pointer;white-space:nowrap;font-weight:600;">👥 臨時代班設定</button>
+        <button onclick="clearTempDuty()" id="clearTempBtn" style="padding:10px 18px;font-size:16px;background:linear-gradient(135deg,#dc3545 0%,#c82333 100%);color:#fff;border:none;border-radius:8px;cursor:pointer;white-space:nowrap;display:none;font-weight:600;">❌ 取消代班</button>
+        <button onclick="showDebugInfo()" style="padding:10px 18px;font-size:16px;background:linear-gradient(135deg,#6c757d 0%,#5a6268 100%);color:#fff;border:none;border-radius:8px;cursor:pointer;white-space:nowrap;font-weight:600;">🔍 查看排班數據</button>
+      </div>
+    </div>
+    <div id="dutyHint" style="font-size:14px;color:#6c757d;display:none;">💡 提示：請先在上方排班表中點擊今天的日期格子，選擇值班人員完成排班</div>
+  </div>
+  <div class="keyDateNavigation" style="margin-bottom:15px;padding:15px;background:#fff;border-radius:8px;border:1px solid #dee2e6;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+    <button onclick="changeViewDate(-1)" style="padding:8px 16px;background:linear-gradient(135deg,#6c757d 0%,#5a6268 100%);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;">← 前一天</button>
+    <div style="display:flex;flex-direction:column;align-items:center;flex:1;min-width:200px;">
+      <span id="currentDateDisplay" style="font-size:18px;font-weight:bold;color:#495057;"></span>
+      <span id="currentDateRecordCount" style="font-size:12px;color:#6c757d;margin-top:5px;"></span>
+    </div>
+    <button onclick="changeViewDate(0)" style="padding:8px 16px;background:linear-gradient(135deg,#17a2b8 0%,#138496 100%);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;margin:0 5px;">今天</button>
+    <button onclick="changeViewDate(1)" style="padding:8px 16px;background:linear-gradient(135deg,#6c757d 0%,#5a6268 100%);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;">下一天 →</button>
+  </div>
+  <div class="table-container">
+    <table id="keyTable">
+      <thead>
+        <tr>
+          <th>時間</th>
+          <th>借用人</th>
+          <th>鑰匙項目</th>
+          <th>狀態</th>
+          <th>值班確認</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="keyTableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+
+<script src="script.js"></script>
+</body>
+</html>

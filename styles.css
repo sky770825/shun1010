@@ -1,0 +1,713 @@
+:root {
+  --base-font-size: 16px;
+  --scale-factor: 1;
+  --table-scale: 1;
+}
+* {
+  box-sizing: border-box;
+}
+body{font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;background:linear-gradient(135deg,#f8f9fa 0%,#e9ecef 100%);margin:0;padding:0;font-size:calc(var(--base-font-size) * var(--scale-factor));min-height:100vh;overflow-x:hidden;width:100%;max-width:100vw;}
+html{overflow-x:hidden;max-width:100vw;}
+h2{margin:0;font-size:1.6em;color:#495057;text-align:center;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;padding:15px 20px;box-shadow:0 2px 4px rgba(0,0,0,0.1);text-shadow:0 1px 2px rgba(0,0,0,0.1);position:sticky;top:0;z-index:100;}
+select,input,button{padding:10px 14px;margin:6px;font-size:1em;border-radius:6px;transition:all 0.2s;}
+select,input{border:1px solid #ced4da;background:#fff;}
+select:focus,input:focus{outline:none;border-color:#007bff;box-shadow:0 0 0 3px rgba(0,123,255,0.1);}
+button{background:linear-gradient(135deg,#007bff 0%,#0056b3 100%);color:#fff;border:none;cursor:pointer;box-shadow:0 2px 4px rgba(0,123,255,0.3);}
+button:hover{background:linear-gradient(135deg,#0056b3 0%,#004085 100%);transform:translateY(-1px);box-shadow:0 4px 8px rgba(0,123,255,0.4);}
+table{border-collapse:collapse;width:100%;margin:0 auto;font-size:calc(1em * var(--table-scale));box-shadow:0 4px 8px rgba(0,0,0,0.1);border-radius:8px;overflow:hidden;table-layout:fixed;}
+.table-container{margin:0 10px 20px 10px;background:#fff;padding:10px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);overflow-x:auto;max-width:calc(100vw - 20px);}
+th,td{border:1px solid #e9ecef;text-align:center;padding:0.5em 0.3em;word-wrap:break-word;overflow:hidden;text-overflow:ellipsis;}
+th{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;font-weight:bold;text-shadow:0 1px 2px rgba(0,0,0,0.1);font-size:0.85em;}
+th.weekend-header{background:linear-gradient(135deg,#dc3545 0%,#c82333 100%);color:#fff;font-weight:bold;text-shadow:0 1px 2px rgba(0,0,0,0.1);}
+th.weekday-header{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;font-weight:bold;text-shadow:0 1px 2px rgba(0,0,0,0.1);}
+th:first-child{width:80px;min-width:60px;}
+th:not(:first-child){width:auto;}
+
+/* 班別標題顏色 */
+th.morning-title{background:linear-gradient(135deg,#ffc107 0%,#ff9800 100%);color:#fff;font-weight:bold;text-shadow:0 1px 2px rgba(0,0,0,0.3);border-right:3px solid #ff5722;}
+th.noon-title{background:linear-gradient(135deg,#2196f3 0%,#1976d2 100%);color:#fff;font-weight:bold;text-shadow:0 1px 2px rgba(0,0,0,0.3);border-right:3px solid #1565c0;}
+th.evening-title{background:linear-gradient(135deg,#9c27b0 0%,#7b1fa2 100%);color:#fff;font-weight:bold;text-shadow:0 1px 2px rgba(0,0,0,0.3);border-right:3px solid #6a1b9a;}
+td{background:#fff;transition:background-color 0.2s;}
+td:hover{background:#f8f9fa;}
+.cell{cursor:pointer;min-height:2.5em;transition:all 0.2s;border-radius:4px;font-size:1em;padding:0.3em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cell:hover{background:#e3f2fd;transform:scale(1.02);}
+.cell.checked{color:#fff;box-shadow:0 2px 4px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;font-weight:bold;white-space:nowrap;}
+
+/* 班別顏色區分 */
+.cell.morning-shift{background:linear-gradient(135deg,#ffc107 0%,#ff9800 100%);color:#fff;border-left:4px solid #ff5722;}
+.cell.morning-shift.checked{background:linear-gradient(135deg,#ff5722 0%,#e64a19 100%);color:#fff;border-left:4px solid #d84315;}
+
+.cell.noon-shift{background:linear-gradient(135deg,#2196f3 0%,#1976d2 100%);color:#fff;border-left:4px solid #1565c0;}
+.cell.noon-shift.checked{background:linear-gradient(135deg,#1565c0 0%,#0d47a1 100%);color:#fff;border-left:4px solid #0a3d91;}
+
+.cell.evening-shift{background:linear-gradient(135deg,#9c27b0 0%,#7b1fa2 100%);color:#fff;border-left:4px solid #6a1b9a;}
+.cell.evening-shift.checked{background:linear-gradient(135deg,#6a1b9a 0%,#4a148c 100%);color:#fff;border-left:4px solid #38006b;}
+.cell.disabled{cursor:not-allowed;background:#f5f5f5;color:#999;opacity:0.5;}
+.cell.disabled:hover{background:#f5f5f5;transform:none;}
+
+.cell.weekday-shift{min-height:4em;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:8px;}
+.cell.weekday-shift .shift-time{font-size:0.75em;color:#666;margin-bottom:4px;font-weight:bold;white-space:nowrap;}
+.cell.weekday-shift .member-display{font-size:1.3em;font-weight:bold;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
+.cell.weekday-shift.checked{background:linear-gradient(135deg,#4caf50 0%,#45a049 100%);color:#fff;}
+.cell.weekday-shift.checked .shift-time{color:#fff;opacity:0.9;}
+.cell.weekday-shift.checked .member-display{color:#fff;}
+
+/* 平日合併儲存格樣式 */
+.weekday-merged-cell{vertical-align:top;padding:0;height:100%;}
+.weekday-shift-container{display:flex;flex-direction:column;height:100%;min-height:9em;}
+.shift-slot{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:8px;cursor:pointer;transition:all 0.2s;border-bottom:2px solid #dee2e6;position:relative;min-height:4em;}
+.shift-slot:last-child{border-bottom:none;}
+.shift-slot:hover{background:#e3f2fd;}
+.shift-slot .member-display{font-size:1.4em;font-weight:bold;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
+.shift-slot.checked{background:linear-gradient(135deg,#4caf50 0%,#45a049 100%);color:#fff;}
+.shift-slot.checked .member-display{color:#fff;}
+
+/* 為上下2欄添加視覺區分 */
+.shift-slot.morning-slot{border-bottom:2px solid #ffc107;background:#fff9e6;}
+.shift-slot.evening-slot{background:#f0f8ff;}
+.shift-slot.morning-slot:hover{background:#fff3cd;}
+.shift-slot.evening-slot:hover{background:#e3f2fd;}
+.controls{margin:15px 10px;padding:15px;background:#fff;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);max-width:calc(100vw - 20px);overflow:hidden;}
+.controls label{display:flex;flex-direction:column;gap:4px;width:100%;}
+.controls label span{font-size:13px;font-weight:600;color:#495057;}
+.controls select,.controls input{width:100%;padding:8px;border:1px solid #ced4da;border-radius:4px;font-size:14px;}
+#memberList{margin:0 10px 20px 10px;background:#fff;padding:15px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);max-width:calc(100vw - 20px);overflow-x:hidden;}
+#memberList h3{margin:0 0 15px;font-size:16px;text-align:center;color:#495057;background:linear-gradient(135deg,#f8f9fa 0%,#e9ecef 100%);padding:10px;border-radius:8px;border-left:4px solid #007bff;}
+#memberList ul{list-style:none;padding:0;margin:0;display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:100%;}
+#memberList li{background:linear-gradient(135deg,#f8f9fa 0%,#e9ecef 100%);padding:6px 10px;border-radius:8px;font-size:14px;cursor:pointer;transition:all 0.2s;border:1px solid #dee2e6;box-shadow:0 1px 3px rgba(0,0,0,0.1);white-space:nowrap;}
+#memberList li:hover{background:linear-gradient(135deg,#e3f2fd 0%,#bbdefb 100%);transform:translateY(-1px);box-shadow:0 2px 6px rgba(0,0,0,0.15);}
+#memberList li.disabled{background:#f8f9fa;color:#6c757d;text-decoration:line-through;cursor:default;opacity:0.6;}
+#memberList li.disabled:hover{background:#f8f9fa;transform:none;box-shadow:0 1px 3px rgba(0,0,0,0.1);}
+#memberList li.selected{background:linear-gradient(135deg,#007bff 0%,#0056b3 100%);color:#fff;box-shadow:0 3px 8px rgba(0,123,255,0.3);}
+
+#keyRecord{margin:0 10px 20px 10px;background:#fff;padding:15px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);max-width:calc(100vw - 20px);overflow:hidden;}
+#keyRecord h3{margin:0 0 15px;font-size:16px;text-align:center;color:#495057;background:linear-gradient(135deg,#f8f9fa 0%,#e9ecef 100%);padding:10px;border-radius:8px;border-left:4px solid #28a745;}
+.keyControls{margin-bottom:15px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px;background:linear-gradient(135deg,#f8f9fa 0%,#e9ecef 100%);border-radius:8px;border:1px solid #dee2e6;max-width:100%;}
+.keyControls select, .keyControls input{padding:8px 12px;font-size:14px;border:1px solid #ced4da;border-radius:6px;background:#fff;transition:border-color 0.2s;flex:1;min-width:120px;}
+.keyControls select:focus, .keyControls input:focus{outline:none;border-color:#007bff;box-shadow:0 0 0 3px rgba(0,123,255,0.1);}
+.keyControls button{padding:8px 14px;font-size:14px;background:linear-gradient(135deg,#007bff 0%,#0056b3 100%);color:#fff;border:none;border-radius:6px;cursor:pointer;transition:all 0.2s;box-shadow:0 2px 4px rgba(0,123,255,0.3);white-space:nowrap;}
+.keyControls button:hover{background:linear-gradient(135deg,#0056b3 0%,#004085 100%);transform:translateY(-1px);box-shadow:0 4px 8px rgba(0,123,255,0.4);}
+.keyControls button:last-child{background:linear-gradient(135deg,#dc3545 0%,#c82333 100%);box-shadow:0 2px 4px rgba(220,53,69,0.3);}
+.keyControls button:last-child:hover{background:linear-gradient(135deg,#c82333 0%,#bd2130 100%);box-shadow:0 4px 8px rgba(220,53,69,0.4);}
+
+.dutyControls{margin-bottom:15px;padding:15px;background:linear-gradient(135deg,#e8f5e8 0%,#d4edda 100%);border-radius:8px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;border:1px solid #c3e6cb;}
+.dutyControls span{font-weight:bold;color:#155724;}
+.dutyControls button{padding:8px 16px;font-size:14px;background:linear-gradient(135deg,#28a745 0%,#218838 100%);color:#fff;border:none;border-radius:6px;cursor:pointer;transition:all 0.2s;box-shadow:0 2px 4px rgba(40,167,69,0.3);}
+.dutyControls button:hover{background:linear-gradient(135deg,#218838 0%,#1e7e34 100%);transform:translateY(-1px);box-shadow:0 4px 8px rgba(40,167,69,0.4);}
+
+/* 鑰匙項目歷史記錄樣式 */
+#keyItemHistory{animation:slideDown 0.3s ease-out;}
+@keyframes slideDown{from{opacity:0;max-height:0;}to{opacity:1;max-height:500px;}}
+.key-history-badge{position:relative;overflow:hidden;}
+.key-history-badge::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.3),transparent);transition:left 0.5s;}
+.key-history-badge:hover::before{left:100%;}
+
+/* 日期導航樣式 */
+.keyDateNavigation{max-width:100%;}
+.keyDateNavigation button{transition:all 0.2s;white-space:nowrap;}
+.keyDateNavigation button:hover{transform:translateY(-2px);box-shadow:0 4px 8px rgba(0,0,0,0.2);}
+.keyDateNavigation button:active{transform:translateY(0);}
+
+/* 同業借出樣式 */
+#colleagueBorrowSection input,
+#colleagueBorrowSection select{max-width:100%;}
+#colleagueCustomInput{animation:slideDown 0.3s ease-out;}
+#companyHistorySelect{animation:slideDown 0.3s ease-out;}
+
+/* 借出類型按鈕樣式 - 更醒目的設計 */
+.borrow-type-label{position:relative;}
+.borrow-type-label:has(input:checked){
+  background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+  box-shadow:0 4px 15px rgba(102,126,234,0.4);
+  transform:scale(1.05);
+}
+.borrow-type-label:has(input:checked) span{color:#fff !important;text-shadow:0 1px 2px rgba(0,0,0,0.2);}
+.borrow-type-label:not(:has(input:checked)){background:#f8f9fa;}
+.borrow-type-label:not(:has(input:checked)) span{color:#6c757d;}
+.borrow-type-label:hover{
+  background:linear-gradient(135deg,#e9ecef 0%,#dee2e6 100%);
+  transform:translateY(-1px);
+}
+.borrow-type-label:has(input:checked):hover{
+  background:linear-gradient(135deg,#5568d3 0%,#6a3d93 100%);
+  transform:scale(1.05) translateY(-1px);
+}
+
+/* 鑰匙項目多選樣式 */
+#keyItemHistory label.key-history-badge{margin:0;}
+#selectedKeysCount{animation:pulse 0.3s;}
+@keyframes pulse{0%{transform:scale(1);}50%{transform:scale(1.1);}100%{transform:scale(1);}}
+
+/* 說明框樣式 */
+#keyRecord details summary{transition:all 0.2s;}
+#keyRecord details summary:hover{background:rgba(33,150,243,0.1);border-radius:4px;padding:2px 4px;margin:-2px -4px;}
+#keyRecord details[open] summary{margin-bottom:8px;}
+
+/* 密碼驗證彈窗動畫 */
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+@keyframes slideIn{from{opacity:0;transform:translateY(-30px);}to{opacity:1;transform:translateY(0);}}
+@keyframes shake{0%,100%{transform:translateX(0);}10%,30%,50%,70%,90%{transform:translateX(-5px);}20%,40%,60%,80%{transform:translateX(5px);}}
+@keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+#keyTable{width:100%;border-collapse:collapse;margin-top:15px;box-shadow:0 2px 4px rgba(0,0,0,0.1);border-radius:8px;overflow:hidden;table-layout:fixed;}
+#keyTable th, #keyTable td{border:1px solid #e9ecef;padding:6px 4px;text-align:center;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+#keyTable th{background:linear-gradient(135deg,#6c757d 0%,#5a6268 100%);color:#fff;font-weight:bold;text-shadow:0 1px 2px rgba(0,0,0,0.1);font-size:11px;padding:8px 4px;}
+#keyTable td{background:#fff;transition:background-color 0.2s;vertical-align:middle;}
+#keyTable td:hover{background:#f8f9fa;}
+#keyTable td > div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#keyTable td.status-borrowed{background:linear-gradient(135deg,#e3f2fd 0%,#bbdefb 100%);color:#1565c0;border-left:3px solid #2196f3;}
+#keyTable td.status-borrowed div{color:#1565c0;}
+#keyTable td.status-returned{background:linear-gradient(135deg,#ffebee 0%,#ffcdd2 100%);color:#c62828;border-left:3px solid #f44336;}
+#keyTable td.status-returned div{color:#c62828;}
+
+/* 固定鑰匙表格欄位寬度 */
+#keyTable th:nth-child(1),#keyTable td:nth-child(1){width:15%;min-width:80px;} /* 時間 */
+#keyTable th:nth-child(2),#keyTable td:nth-child(2){width:18%;min-width:100px;} /* 借用人 */
+#keyTable th:nth-child(3),#keyTable td:nth-child(3){width:20%;min-width:100px;} /* 鑰匙項目 */
+#keyTable th:nth-child(4),#keyTable td:nth-child(4){width:12%;min-width:70px;} /* 狀態 */
+#keyTable th:nth-child(5),#keyTable td:nth-child(5){width:18%;min-width:90px;} /* 值班確認 */
+#keyTable th:nth-child(6),#keyTable td:nth-child(6){width:17%;min-width:100px;} /* 操作 */
+.key-action-btn{padding:6px 10px;font-size:12px;border:none;border-radius:4px;cursor:pointer;margin:2px;transition:all 0.2s;box-shadow:0 2px 4px rgba(0,0,0,0.1);white-space:nowrap;}
+.key-action-btn:hover{transform:translateY(-1px);box-shadow:0 4px 8px rgba(0,0,0,0.2);}
+.key-action-btn.return{background:linear-gradient(135deg,#28a745 0%,#218838 100%);color:#fff;}
+.key-action-btn.confirm{background:linear-gradient(135deg,#17a2b8 0%,#138496 100%);color:#fff;}
+.key-action-btn.delete{background:linear-gradient(135deg,#dc3545 0%,#c82333 100%);color:#fff;}
+
+/* 鑰匙表格內文字大小調整 - 動態自適應 */
+#keyTable td{position:relative;}
+#keyTable td > div{line-height:1.25;word-wrap:break-word;overflow-wrap:break-word;hyphens:auto;width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;}
+#keyTable .status-borrowed,#keyTable .status-returned{font-weight:bold;}
+#keyTable td span{display:inline-block;}
+#keyTable td.auto-size{font-size:inherit;} /* 標記為自動調整大小的儲存格 */
+#keyTable td > div > div{width:100%;}
+
+/* 自定義彈窗樣式 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  max-width: 500px;
+  width: 90%;
+  position: relative;
+}
+
+.modal-close {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 24px;
+  font-weight: bold;
+  color: #aaa;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+.modal-close:hover {
+  color: #000;
+}
+
+.modal-title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 25px;
+  color: #333;
+}
+
+.modal-phone {
+  font-size: 28px;
+  font-weight: bold;
+  color: #007bff;
+  margin: 25px 0;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  border: 2px solid #007bff;
+}
+
+.modal-buttons {
+  margin-top: 25px;
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+}
+
+.modal-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  min-width: 100px;
+}
+
+.modal-btn.confirm {
+  background: #28a745;
+  color: white;
+}
+
+.modal-btn.confirm:hover {
+  background: #218838;
+}
+
+.modal-btn.cancel {
+  background: #6c757d;
+  color: white;
+}
+
+.modal-btn.cancel:hover {
+  background: #545b62;
+}
+
+.modal-message {
+  font-size: 20px;
+  color: #333;
+  margin: 20px 0;
+  line-height: 1.5;
+}
+
+.modal-success {
+  color: #28a745;
+}
+
+.modal-error {
+  color: #dc3545;
+}
+
+/* 響應式設計 - 完全自適應視窗 */
+@media (min-width: 1400px) {
+  :root { --scale-factor: 1.05; --table-scale: 1; }
+  .table-container { padding: 15px; }
+}
+
+@media (max-width: 1399px) {
+  :root { --scale-factor: 1; --table-scale: 0.95; }
+}
+
+@media (max-width: 1200px) {
+  :root { --base-font-size: 15px; --scale-factor: 0.95; --table-scale: 0.9; }
+  .controls, #memberList, #keyRecord, .table-container { margin-left: 8px; margin-right: 8px; }
+  th, td { padding: 0.4em 0.2em; }
+  .cell { min-height: 2.2em; font-size: 0.85em; }
+  th:first-child { width: 70px; min-width: 50px; }
+}
+
+@media (max-width: 992px) {
+  :root { --base-font-size: 14px; --scale-factor: 0.9; --table-scale: 0.85; }
+  th, td { padding: 0.35em 0.15em; font-size: 0.8em; }
+  .cell { min-height: 2em; font-size: 0.8em; padding: 0.2em; }
+  h2 { font-size: 1.4em; padding: 10px 15px; }
+  th:first-child { width: 60px; min-width: 45px; }
+}
+
+@media (max-width: 768px) {
+  :root { --base-font-size: 13px; --scale-factor: 0.85; --table-scale: 0.75; }
+  h2 { font-size: 1.3em; padding: 10px 12px; }
+  .controls { 
+    grid-template-columns: 0.9fr 1.1fr 1fr !important; 
+    gap: 3px !important;
+    margin-left: 3px !important; 
+    margin-right: 3px !important; 
+    padding: 5px 3px !important; 
+  }
+  .controls label { min-width: 0 !important; gap: 2px !important; }
+  .controls label span { font-size: 10px !important; line-height: 1.2 !important; }
+  .controls select, .controls input { font-size: 16px !important; padding: 5px 3px !important; box-sizing: border-box !important; }
+  #monthPicker { padding: 5px 2px !important; font-size: 14px !important; }
+  .keyControls > div[style*="margin-bottom"] { text-align: center !important; width: 100% !important; }
+  .keyControls > div[style*="margin-bottom"] > div { margin: 0 auto !important; }
+  .key-header-row { grid-template-columns: 1fr auto !important; gap: 8px !important; padding: 0 5px !important; }
+  .borrow-type-label { padding: 8px 12px !important; min-width: 90px !important; }
+  .borrow-type-label span { font-size: 13px !important; }
+  #addKeyNameBtn { padding: 8px 15px !important; font-size: 13px !important; }
+  #addKeyNameBtn span:first-child { font-size: 14px !important; }
+  #colleagueBorrowSection > div > div[style*="grid-template-columns"] { grid-template-columns: 1fr !important; gap: 8px !important; }
+  #colleagueBorrowSection label { font-size: 11px !important; }
+  #colleagueBorrowSection input, #colleagueBorrowSection select { font-size: 16px !important; padding: 7px 8px !important; }
+  #memberBorrowSection { width: 100% !important; box-sizing: border-box !important; }
+  #memberBorrowSection > div { padding: 10px 8px !important; margin: 0 auto !important; width: 100% !important; box-sizing: border-box !important; }
+  #selectedMember { font-size: 15px !important; gap: 5px !important; line-height: 1.3; }
+  #selectedMember span:first-child, #selectedMember span:last-child { font-size: 20px !important; }
+  #memberList, #keyRecord, .table-container { margin-left: 5px; margin-right: 5px; padding: 8px; }
+  th, td { padding: 0.3em 0.1em; font-size: 0.75em; }
+  .cell { min-height: 1.8em; font-size: 0.75em; padding: 0.15em; }
+  #memberList ul { gap: 6px; }
+  #memberList li { font-size: 13px; padding: 5px 8px; max-width: calc(50% - 3px); overflow: hidden; text-overflow: ellipsis; }
+  .keyControls { flex-direction: column; align-items: stretch; }
+  .keyControls > * { margin: 3px 0; }
+  #keyTable th, #keyTable td { padding: 5px 3px; font-size: 11px; }
+  #keyTable th { font-size: 10px; padding: 6px 3px; }
+  #keyTable th:nth-child(1),#keyTable td:nth-child(1){width:15%;min-width:65px;} 
+  #keyTable th:nth-child(2),#keyTable td:nth-child(2){width:18%;min-width:80px;} 
+  #keyTable th:nth-child(3),#keyTable td:nth-child(3){width:20%;min-width:80px;} 
+  #keyTable th:nth-child(4),#keyTable td:nth-child(4){width:10%;min-width:55px;} 
+  #keyTable th:nth-child(5),#keyTable td:nth-child(5){width:18%;min-width:75px;} 
+  #keyTable th:nth-child(6),#keyTable td:nth-child(6){width:17%;min-width:85px;}
+  .key-action-btn { padding: 4px 8px; font-size: 10px; margin: 1px; }
+  #keyTable td > div { font-size: 11px !important; }
+  #keyTable td span { font-size: 11px !important; }
+  select, input, button { padding: 8px 10px; margin: 3px; font-size: 0.9em; }
+  #keyItemHistory { padding: 6px; }
+  #keyItemHistory > div:first-child { flex-direction: column; align-items: flex-start; }
+  #keyItemHistoryList { gap: 5px; }
+  .key-history-badge { font-size: 12px !important; padding: 6px 10px !important; gap: 4px !important; }
+  .key-history-badge input[type="checkbox"] { width: 14px !important; height: 14px !important; }
+  #selectedKeysCount { font-size: 11px !important; padding: 2px 8px !important; }
+  #clearSelectionBtn { font-size: 11px !important; padding: 3px 8px !important; }
+  th:first-child { width: 50px; min-width: 40px; font-size: 0.7em; }
+  .keyDateNavigation { padding: 8px 6px !important; gap: 4px !important; }
+  .keyDateNavigation button { padding: 6px 8px !important; font-size: 11px !important; white-space: nowrap !important; }
+  .keyDateNavigation > div { min-width: 120px !important; }
+  #currentDateDisplay { font-size: 13px !important; }
+  #currentDateRecordCount { font-size: 10px !important; }
+  #colleagueBorrowSection > div:first-child { grid-template-columns: 1fr !important; gap: 6px !important; }
+  #colleagueBorrowSection input, #colleagueBorrowSection select { width: 100% !important; max-width: 100% !important; min-width: auto !important; }
+  .dutyControls { margin-bottom: 20px !important; }
+  .dutyControls > div:first-child { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; }
+  .dutyControls button { font-size: 13px !important; padding: 8px 12px !important; }
+  #dutyMember { 
+    font-size: 18px !important; 
+    font-weight: 700 !important; 
+    line-height: 1.4 !important;
+    padding: 12px !important;
+    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%) !important;
+    border-radius: 8px !important;
+    border-left: 4px solid #28a745 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  #keyItem { font-size: 16px !important; padding: 12px 16px !important; }
+  button[onclick="borrowKey()"] { font-size: 15px !important; padding: 12px 18px !important; }
+  #keyRecord details { font-size: 12px !important; padding: 10px !important; }
+  #keyRecord details summary { gap: 5px !important; }
+  #keyRecord details summary span:last-child { display: none; }
+  #keyRecord details ul { margin: 5px 0 0 15px !important; }
+  #keyRecord details li { line-height: 1.6 !important; }
+  #keyRecord h3 { font-size: 16px !important; }
+  #keyRecord h3 span { font-size: 18px !important; }
+  #keyRecord > div[style*="text-align:center"][style*="margin-bottom:20px"] { margin-bottom: 12px !important; }
+  #keyRecord > div[style*="text-align:center"] > div[style*="display:inline-block"] { padding: 10px 25px !important; }
+  #memberList h3 { font-size: 14px !important; padding: 8px !important; }
+}
+
+@media (max-width: 576px) {
+  .controls { grid-template-columns: 0.9fr 1.1fr 1fr !important; gap: 2px !important; padding: 4px 2px !important; }
+  .controls label { min-width: 0 !important; gap: 1px !important; }
+  .controls label span { font-size: 9px !important; line-height: 1.1 !important; }
+  .controls select, .controls input { font-size: 16px !important; padding: 4px 2px !important; box-sizing: border-box !important; }
+  #monthPicker { padding: 4px 1px !important; font-size: 13px !important; }
+  .keyControls > div[style*="margin-bottom"] { text-align: center !important; width: 100% !important; }
+  .keyControls > div[style*="margin-bottom"] > div { margin: 0 auto !important; }
+  .key-header-row { grid-template-columns: 1fr auto !important; gap: 6px !important; padding: 0 3px !important; }
+  .borrow-type-label { padding: 7px 10px !important; min-width: 80px !important; gap: 4px !important; }
+  .borrow-type-label span { font-size: 12px !important; }
+  #addKeyNameBtn { padding: 7px 12px !important; font-size: 12px !important; gap: 4px !important; }
+  #addKeyNameBtn span:first-child { font-size: 13px !important; }
+  #colleagueBorrowSection > div > div[style*="grid-template-columns"] { grid-template-columns: 1fr !important; gap: 8px !important; }
+  #colleagueBorrowSection label { font-size: 10px !important; }
+  #colleagueBorrowSection input, #colleagueBorrowSection select { font-size: 16px !important; padding: 6px 8px !important; }
+  #memberBorrowSection { width: 100% !important; box-sizing: border-box !important; }
+  #memberBorrowSection > div { padding: 8px 6px !important; margin: 0 auto !important; width: 100% !important; box-sizing: border-box !important; }
+  #selectedMember { font-size: 13px !important; gap: 4px !important; line-height: 1.3; }
+  #selectedMember span:first-child, #selectedMember span:last-child { font-size: 18px !important; }
+  #keyRecord h3 { font-size: 15px !important; }
+  #keyRecord h3 span { font-size: 17px !important; }
+  #keyRecord > div[style*="text-align:center"] > div[style*="display:inline-block"] { padding: 8px 20px !important; }
+  #memberList h3 { font-size: 13px !important; padding: 7px !important; }
+  #keyItem { font-size: 14px !important; padding: 10px 14px !important; }
+  button[onclick="borrowKey()"] { font-size: 13px !important; padding: 10px 14px !important; }
+  #dutyMember { font-size: 15px !important; padding: 10px !important; }
+  :root { --base-font-size: 12px; --scale-factor: 0.8; --table-scale: 0.65; }
+  th, td { padding: 0.25em 0.05em; font-size: 0.7em; border-width: 0.5px; }
+  .cell { min-height: 1.6em; font-size: 0.7em; padding: 0.1em; }
+  #memberList li { font-size: 12px; padding: 4px 6px; max-width: calc(50% - 3px); overflow: hidden; text-overflow: ellipsis; }
+  select, input, button { padding: 6px 8px; margin: 2px; font-size: 0.85em; }
+  th:first-child { width: 45px; min-width: 35px; font-size: 0.65em; }
+  h2 { font-size: 1.2em; padding: 8px 10px; }
+  #keyTable th, #keyTable td { padding: 4px 2px; font-size: 10px; }
+  #keyTable th { font-size: 9px; padding: 5px 2px; }
+  #keyTable th:nth-child(1),#keyTable td:nth-child(1){width:15%;min-width:60px;} 
+  #keyTable th:nth-child(2),#keyTable td:nth-child(2){width:18%;min-width:75px;} 
+  #keyTable th:nth-child(3),#keyTable td:nth-child(3){width:20%;min-width:70px;} 
+  #keyTable th:nth-child(4),#keyTable td:nth-child(4){width:10%;min-width:50px;} 
+  #keyTable th:nth-child(5),#keyTable td:nth-child(5){width:18%;min-width:65px;} 
+  #keyTable th:nth-child(6),#keyTable td:nth-child(6){width:17%;min-width:75px;}
+  .key-action-btn { padding: 3px 7px; font-size: 10px; margin: 1px; }
+  #keyTable td > div { font-size: 10px !important; }
+  #keyTable td span { font-size: 10px !important; }
+  .dutyControls { margin-bottom: 18px !important; }
+  .dutyControls > div:first-child { flex-direction: column !important; align-items: flex-start !important; gap: 10px !important; }
+  .dutyControls button { font-size: 12px !important; padding: 7px 10px !important; }
+  #dutyMember { 
+    font-size: 17px !important; 
+    font-weight: 700 !important; 
+    line-height: 1.4 !important;
+    padding: 10px !important;
+    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%) !important;
+    border-radius: 8px !important;
+    border-left: 4px solid #28a745 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  #keyItem { font-size: 15px !important; padding: 10px 14px !important; }
+  button[onclick="borrowKey()"] { font-size: 14px !important; padding: 10px 16px !important; }
+  #keyRecord h3 { font-size: 14px !important; }
+  #keyRecord h3 span { font-size: 16px !important; }
+}
+
+@media (max-width: 480px) {
+  .controls { grid-template-columns: 0.9fr 1.1fr 1fr !important; gap: 2px !important; padding: 3px 2px !important; }
+  .controls label { min-width: 0 !important; gap: 1px !important; }
+  .controls label span { font-size: 8px !important; line-height: 1.1 !important; }
+  .controls select, .controls input { font-size: 16px !important; padding: 3px 1px !important; box-sizing: border-box !important; }
+  #monthPicker { padding: 3px 1px !important; font-size: 12px !important; }
+  .keyControls > div[style*="margin-bottom"] { text-align: center !important; width: 100% !important; }
+  .keyControls > div[style*="margin-bottom"] > div { margin: 0 auto !important; }
+  .key-header-row { grid-template-columns: 1fr auto !important; gap: 5px !important; padding: 0 2px !important; }
+  .borrow-type-label { padding: 6px 8px !important; min-width: 70px !important; gap: 3px !important; }
+  .borrow-type-label span { font-size: 11px !important; }
+  #addKeyNameBtn { padding: 6px 10px !important; font-size: 10px !important; gap: 3px !important; }
+  #addKeyNameBtn span:first-child { font-size: 11px !important; }
+  #addKeyNameBtn .btn-text { white-space: normal !important; line-height: 1.1 !important; }
+  #colleagueBorrowSection > div > div[style*="grid-template-columns"] { grid-template-columns: 1fr !important; gap: 6px !important; }
+  #colleagueBorrowSection label { font-size: 9px !important; }
+  #colleagueBorrowSection input, #colleagueBorrowSection select { font-size: 16px !important; padding: 5px 6px !important; }
+  #memberBorrowSection { width: 100% !important; box-sizing: border-box !important; }
+  #memberBorrowSection > div { padding: 6px 5px !important; margin: 0 auto !important; width: 100% !important; box-sizing: border-box !important; }
+  #selectedMember { font-size: 11px !important; gap: 3px !important; line-height: 1.3; }
+  #selectedMember span:first-child, #selectedMember span:last-child { font-size: 16px !important; }
+  #keyRecord h3 { font-size: 13px !important; }
+  #keyRecord h3 span { font-size: 15px !important; }
+  #keyRecord > div[style*="text-align:center"] > div[style*="display:inline-block"] { padding: 6px 15px !important; }
+  #memberList h3 { font-size: 12px !important; padding: 6px !important; }
+  #keyItem { font-size: 12px !important; padding: 8px 12px !important; }
+  button[onclick="borrowKey()"] { font-size: 11px !important; padding: 8px 12px !important; }
+  #dutyMember { font-size: 13px !important; padding: 8px !important; }
+  :root { --base-font-size: 11px; --scale-factor: 0.75; --table-scale: 0.6; }
+  h2 { font-size: 1.1em; padding: 8px 8px; }
+  .controls, #memberList, #keyRecord, .table-container { margin-left: 3px; margin-right: 3px; padding: 6px; }
+  th, td { padding: 0.2em 0.05em; font-size: 0.65em; border-width: 0.5px; }
+  .cell { min-height: 1.5em; font-size: 0.65em; padding: 0.08em; }
+  #memberList li { font-size: 11px; padding: 3px 5px; max-width: calc(50% - 3px); overflow: hidden; text-overflow: ellipsis; }
+  #keyTable th, #keyTable td { padding: 3px 2px; font-size: 9px; }
+  #keyTable th { font-size: 8px; padding: 4px 2px; }
+  #keyTable th:nth-child(1),#keyTable td:nth-child(1){width:15%;min-width:55px;} 
+  #keyTable th:nth-child(2),#keyTable td:nth-child(2){width:18%;min-width:70px;} 
+  #keyTable th:nth-child(3),#keyTable td:nth-child(3){width:20%;min-width:65px;} 
+  #keyTable th:nth-child(4),#keyTable td:nth-child(4){width:10%;min-width:45px;} 
+  #keyTable th:nth-child(5),#keyTable td:nth-child(5){width:18%;min-width:60px;} 
+  #keyTable th:nth-child(6),#keyTable td:nth-child(6){width:17%;min-width:70px;}
+  .key-action-btn { padding: 3px 6px; font-size: 9px; margin: 1px; }
+  #keyTable td > div { font-size: 9px !important; }
+  #keyTable td span { font-size: 9px !important; }
+  .modal-content { padding: 12px; max-width: 95%; }
+  .modal-title { font-size: 14px; }
+  .modal-phone { font-size: 16px; }
+  select, input, button { padding: 5px 6px; margin: 2px; font-size: 0.8em; }
+  #keyItemHistory { padding: 4px; }
+  #keyItemHistoryList { gap: 4px; justify-content: center; }
+  .key-history-badge { font-size: 10px !important; padding: 4px 8px !important; }
+  th:first-child { width: 40px; min-width: 30px; font-size: 0.6em; }
+  .keyDateNavigation { padding: 6px 4px !important; gap: 3px !important; }
+  .keyDateNavigation button { padding: 5px 6px !important; font-size: 10px !important; white-space: nowrap !important; }
+  .keyDateNavigation > div { min-width: 100px !important; }
+  #currentDateDisplay { font-size: 11px !important; }
+  #currentDateRecordCount { font-size: 9px !important; }
+  #keyRecord details { font-size: 10px !important; padding: 6px !important; }
+  #keyRecord details ul { margin: 5px 0 0 12px !important; font-size: 10px !important; }
+  .dutyControls { margin-bottom: 16px !important; }
+  .dutyControls > div:first-child { flex-direction: column !important; align-items: flex-start !important; gap: 8px !important; }
+  .dutyControls button { font-size: 11px !important; padding: 6px 10px !important; }
+  #dutyMember { 
+    font-size: 16px !important; 
+    font-weight: 700 !important; 
+    line-height: 1.3 !important;
+    padding: 10px !important;
+    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%) !important;
+    border-radius: 6px !important;
+    border-left: 4px solid #28a745 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  #keyItem { font-size: 14px !important; padding: 9px 12px !important; }
+  button[onclick="borrowKey()"] { font-size: 13px !important; padding: 9px 14px !important; }
+  #keyRecord h3 { font-size: 12px !important; }
+  #keyRecord h3 span { font-size: 14px !important; }
+}
+
+@media (max-width: 360px) {
+  .controls { grid-template-columns: 0.9fr 1.1fr 1fr !important; gap: 2px !important; padding: 3px 1px !important; }
+  .controls label { min-width: 0 !important; gap: 1px !important; }
+  .controls label span { font-size: 7px !important; line-height: 1 !important; }
+  .controls select, .controls input { font-size: 16px !important; padding: 3px 1px !important; box-sizing: border-box !important; }
+  #monthPicker { padding: 3px 1px !important; font-size: 12px !important; }
+  .keyControls > div[style*="margin-bottom"] { text-align: center !important; width: 100% !important; }
+  .keyControls > div[style*="margin-bottom"] > div { margin: 0 auto !important; }
+  .key-header-row { grid-template-columns: 1fr auto !important; gap: 4px !important; padding: 0 2px !important; }
+  .borrow-type-label { padding: 5px 6px !important; min-width: 60px !important; gap: 2px !important; }
+  .borrow-type-label span { font-size: 10px !important; }
+  #addKeyNameBtn { padding: 5px 8px !important; font-size: 9px !important; gap: 2px !important; }
+  #addKeyNameBtn span:first-child { font-size: 10px !important; }
+  #addKeyNameBtn .btn-text { white-space: normal !important; line-height: 1.1 !important; }
+  #colleagueBorrowSection > div > div[style*="grid-template-columns"] { grid-template-columns: 1fr !important; gap: 5px !important; }
+  #colleagueBorrowSection label { font-size: 8px !important; }
+  #colleagueBorrowSection input, #colleagueBorrowSection select { font-size: 16px !important; padding: 4px 5px !important; }
+  #memberBorrowSection { width: 100% !important; box-sizing: border-box !important; }
+  #memberBorrowSection > div { padding: 5px 4px !important; margin: 0 auto !important; width: 100% !important; box-sizing: border-box !important; }
+  #selectedMember { font-size: 9px !important; gap: 2px !important; line-height: 1.3; }
+  #selectedMember span:first-child, #selectedMember span:last-child { font-size: 14px !important; }
+  #keyRecord h3 { font-size: 11px !important; }
+  #keyRecord h3 span { font-size: 13px !important; }
+  #keyRecord > div[style*="text-align:center"] > div[style*="display:inline-block"] { padding: 5px 12px !important; }
+  #memberList h3 { font-size: 10px !important; padding: 5px !important; }
+  #keyItem { font-size: 10px !important; padding: 6px 10px !important; }
+  button[onclick="borrowKey()"] { font-size: 9px !important; padding: 6px 10px !important; }
+  #dutyMember { font-size: 11px !important; padding: 6px !important; }
+  :root { --base-font-size: 10px; --scale-factor: 0.7; --table-scale: 0.55; }
+  .controls, #memberList, #keyRecord, .table-container { margin-left: 2px; margin-right: 2px; padding: 4px; }
+  th, td { padding: 0.15em 0.03em; font-size: 0.6em; }
+  .cell { min-height: 1.4em; font-size: 0.6em; padding: 0.05em; }
+  #memberList li { max-width: calc(50% - 3px); overflow: hidden; text-overflow: ellipsis; }
+  th:first-child { width: 35px; min-width: 25px; font-size: 0.55em; }
+  h2 { font-size: 1em; padding: 6px 6px; }
+  #keyTable th, #keyTable td { padding: 2px 1px; font-size: 8px; }
+  #keyTable th { font-size: 7px; padding: 3px 1px; }
+  #keyTable th:nth-child(1),#keyTable td:nth-child(1){width:15%;min-width:45px;} 
+  #keyTable th:nth-child(2),#keyTable td:nth-child(2){width:18%;min-width:60px;} 
+  #keyTable th:nth-child(3),#keyTable td:nth-child(3){width:20%;min-width:55px;} 
+  #keyTable th:nth-child(4),#keyTable td:nth-child(4){width:10%;min-width:35px;} 
+  #keyTable th:nth-child(5),#keyTable td:nth-child(5){width:18%;min-width:50px;} 
+  #keyTable th:nth-child(6),#keyTable td:nth-child(6){width:17%;min-width:60px;}
+  .key-action-btn { padding: 2px 4px; font-size: 8px; margin: 1px; }
+  #keyTable td > div { font-size: 8px !important; line-height: 1.2; }
+  #keyTable td span { font-size: 8px !important; }
+  .dutyControls { margin-bottom: 14px !important; }
+  .dutyControls > div:first-child { flex-direction: column !important; align-items: flex-start !important; gap: 6px !important; }
+  .dutyControls button { font-size: 10px !important; padding: 6px 8px !important; }
+  #dutyMember { 
+    font-size: 15px !important; 
+    font-weight: 700 !important; 
+    line-height: 1.3 !important;
+    padding: 8px !important;
+    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%) !important;
+    border-radius: 6px !important;
+    border-left: 4px solid #28a745 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  #keyItem { font-size: 13px !important; padding: 8px 10px !important; }
+  button[onclick="borrowKey()"] { font-size: 12px !important; padding: 8px 12px !important; }
+}
+
+/* 极小屏幕优化 (320px以下) */
+@media (max-width: 320px) {
+  h2 { font-size: 0.9em; padding: 5px; }
+  .controls { grid-template-columns: 0.9fr 1.1fr 1fr !important; padding: 2px 1px !important; gap: 1px !important; }
+  .controls label { min-width: 0 !important; gap: 0px !important; }
+  .controls label span { font-size: 7px !important; line-height: 1 !important; margin-bottom: 1px !important; }
+  .controls select, .controls input { font-size: 16px !important; padding: 2px 1px !important; box-sizing: border-box !important; }
+  #monthPicker { padding: 2px 1px !important; font-size: 11px !important; }
+  .key-header-row { grid-template-columns: 1fr auto !important; gap: 3px !important; padding: 0 2px !important; }
+  .borrow-type-label { padding: 4px 5px !important; min-width: 55px !important; gap: 2px !important; }
+  .borrow-type-label span { font-size: 9px !important; }
+  #addKeyNameBtn { padding: 4px 6px !important; font-size: 8px !important; gap: 2px !important; border-radius: 15px !important; }
+  #addKeyNameBtn span:first-child { font-size: 9px !important; }
+  #addKeyNameBtn .btn-text { white-space: normal !important; line-height: 1 !important; }
+  #keyRecord > div[style*="text-align:center"] > div[style*="display:inline-block"] { padding: 4px 10px !important; }
+  #keyRecord h3 { font-size: 10px !important; }
+  #keyRecord h3 span { font-size: 12px !important; }
+  #memberList h3 { font-size: 9px !important; padding: 4px !important; }
+  #memberList li { font-size: 10px !important; padding: 3px 4px !important; }
+  .keyControls > div[style*="margin-bottom"] { text-align: center !important; width: 100% !important; }
+  .keyControls > div[style*="margin-bottom"] > div { margin: 0 auto !important; }
+  .borrow-type-label { padding: 4px 5px !important; min-width: 50px !important; }
+  .borrow-type-label span { font-size: 9px !important; }
+  #memberBorrowSection { width: 100% !important; box-sizing: border-box !important; }
+  #memberBorrowSection > div { padding: 4px 3px !important; margin: 0 auto !important; width: 100% !important; box-sizing: border-box !important; }
+  #selectedMember { font-size: 8px !important; }
+  #selectedMember span:first-child, #selectedMember span:last-child { font-size: 12px !important; }
+  #keyItem { font-size: 9px !important; padding: 5px 8px !important; }
+  button[onclick="borrowKey()"] { font-size: 8px !important; padding: 5px 8px !important; }
+  .dutyControls button { font-size: 9px !important; padding: 5px 7px !important; }
+  #dutyMember { font-size: 10px !important; padding: 5px !important; }
+  .keyDateNavigation button { font-size: 10px !important; padding: 5px 8px !important; }
+}
+
+/* 触控优化 - 确保按钮足够大便于点击 */
+@media (hover: none) and (pointer: coarse) {
+  button, .borrow-type-label, #memberList li, .key-history-badge {
+    min-height: 44px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  .key-action-btn {
+    min-height: 36px !important;
+    min-width: 50px !important;
+  }
+}
+
+/* 統計報表樣式 */
+.stats-container{max-width:800px;margin:0 auto;padding:20px;background:#fff;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);}
+.stats-section{margin-bottom:25px;padding:15px;background:#f8f9fa;border-radius:6px;border-left:4px solid #007bff;}
+.stats-title{font-size:1.3em;font-weight:bold;color:#495057;margin-bottom:15px;display:flex;align-items:center;}
+.stats-title::before{content:"📈";margin-right:8px;}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-top:15px;}
+.stat-item{background:#fff;padding:15px;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,0.1);text-align:center;}
+.stat-value{font-size:1.8em;font-weight:bold;color:#007bff;margin-bottom:5px;}
+.stat-label{font-size:0.9em;color:#6c757d;}
+.chart-container{margin-top:20px;padding:20px;background:#fff;border-radius:6px;border:1px solid #dee2e6;}
+.bar-chart{display:flex;align-items:end;height:200px;gap:8px;margin-top:15px;}
+.bar{flex:1;background:linear-gradient(to top,#007bff,#0056b3);border-radius:4px 4px 0 0;position:relative;min-height:20px;display:flex;align-items:end;justify-content:center;}
+.bar-label{position:absolute;bottom:-25px;left:50%;transform:translateX(-50%);font-size:0.8em;color:#6c757d;white-space:nowrap;}
+.bar-value{color:#fff;font-weight:bold;margin-bottom:5px;font-size:0.9em;}
+
+/* 調班申請樣式 */
+.shift-change-container{max-width:900px;margin:0 auto;padding:20px;background:#fff;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);}
+.shift-change-form{background:#f8f9fa;padding:20px;border-radius:8px;margin-bottom:20px;border:1px solid #dee2e6;}
+.form-group{margin-bottom:15px;}
+.form-label{display:block;font-weight:bold;color:#495057;margin-bottom:5px;}
+.form-select,.form-input{width:100%;padding:8px 12px;border:1px solid #ced4da;border-radius:4px;font-size:14px;}
+.form-select:focus,.form-input:focus{outline:none;border-color:#007bff;box-shadow:0 0 0 2px rgba(0,123,255,0.25);}
+.form-textarea{width:100%;padding:8px 12px;border:1px solid #ced4da;border-radius:4px;font-size:14px;resize:vertical;min-height:80px;}
+.form-buttons{text-align:center;margin-top:20px;}
+.form-btn{padding:10px 20px;margin:0 5px;border:none;border-radius:4px;cursor:pointer;font-size:14px;transition:all 0.2s;}
+.form-btn-primary{background:#007bff;color:#fff;}
+.form-btn-primary:hover{background:#0056b3;}
+.form-btn-secondary{background:#6c757d;color:#fff;}
+.form-btn-secondary:hover{background:#545b62;}
+.requests-list{margin-top:20px;}
+.request-item{background:#fff;border:1px solid #dee2e6;border-radius:6px;padding:15px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,0.1);}
+.request-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.request-status{padding:4px 8px;border-radius:4px;font-size:12px;font-weight:bold;}
+.status-pending{background:#fff3cd;color:#856404;}
+.status-approved{background:#d4edda;color:#155724;}
+.status-rejected{background:#f8d7da;color:#721c24;}
+.request-details{font-size:14px;color:#6c757d;line-height:1.5;}
+.request-actions{margin-top:10px;}
+.action-btn{padding:5px 10px;margin-right:5px;border:none;border-radius:3px;cursor:pointer;font-size:12px;}
+.btn-approve{background:#28a745;color:#fff;}
+.btn-reject{background:#dc3545;color:#fff;}
+.btn-cancel{background:#6c757d;color:#fff;}
+
+/* 組別顏色標識 */
+.group1{background:linear-gradient(135deg,#ff6b6b 0%,#ee5a52 100%);color:#000;border-left:4px solid #e74c3c;}
+.group2{background:linear-gradient(135deg,#4ecdc4 0%,#44a08d 100%);color:#000;border-left:4px solid #16a085;}
+.group3{background:linear-gradient(135deg,#45b7d1 0%,#3498db 100%);color:#000;border-left:4px solid #2980b9;}
+.group4{background:linear-gradient(135deg,#f39c12 0%,#e67e22 100%);color:#000;border-left:4px solid #d35400;}
+
