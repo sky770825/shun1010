@@ -6,7 +6,7 @@ import path from "path";
 export default defineConfig({
   build: {
     rollupOptions: {
-      input: path.resolve(__dirname, 'index1.html'),
+      input: path.resolve(__dirname, 'app.html'),
     },
   },
   server: {

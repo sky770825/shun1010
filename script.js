@@ -1,11 +1,11 @@
-// ⭐ 彈窗 z-index 層級結構（由低到高）
+﻿// ⭐ 彈窗 z-index 層級結構（由低到高）
 // 1000-3000: 基礎彈窗（月份選擇器、統計報表等）
 // 10000: 編輯器彈窗（排班條件編輯器）
 // 11000: 確認彈窗（刪除確認、密碼驗證、鑰匙詳情等）- 確保在編輯器之上
 // 11500: 嵌套詳情彈窗（從詳情中再次點擊查看）- 確保在第一層詳情之上
 // 12000: 快速提示（Toast 通知）- 最高層級
 
-const EXCLUDED_MEMBERS = ['90','91','92','93','94'];
+const EXCLUDED_MEMBERS = ['02','22','90','91','92','93','94'];
 const STORE_KEY = 'schedule-checkin';
 const HISTORY_KEY = 'schedule-history';
 const KEY_RECORD_KEY = 'key-records';
@@ -140,10 +140,12 @@ const WEEKEND_SHIFTS = [
 // 成員清單
 const MEMBERS = [
   {id:'01',name:'以蓁'},
+  {id:'02',name:'景翔',disabled:true},
   {id:'03',name:'顯宗'},
   {id:'05',name:'莉羚'},
   {id:'06',name:'秋屏'},
   {id:'07',name:'林鋒',group:'group4'},
+  {id:'08',name:'秀華',disabled:true},
   {id:'09',name:'盈橙',group:'group3'},
   {id:'10',name:'大同',group:'group3'},
   {id:'11',name:'曉敏'},
@@ -156,6 +158,8 @@ const MEMBERS = [
   {id:'19',name:'子菲',group:'group1'},
   {id:'20',name:'志偉'},
   {id:'21',name:'郁庭'},
+  {id:'22',name:'婕茹',disabled:true},
+  {id:'23',name:'珈瑜',disabled:true},
   {id:'25',name:'濬瑒',group:'group1'},
   {id:'26',name:'益呈'},
   {id:'90',name:'徐店東',disabled:true},
