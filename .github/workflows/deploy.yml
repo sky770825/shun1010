@@ -18,14 +18,12 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: 常順班表/package-lock.json
+          cache-dependency-path: package-lock.json
       
       - name: Install dependencies
-        working-directory: 常順班表
         run: npm ci
       
       - name: Build
-        working-directory: 常順班表
         run: npm run build
       
       - name: Deploy to Cloudflare Pages
@@ -34,5 +32,5 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           projectName: shun1010
-          directory: 常順班表/dist
+          directory: dist
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
