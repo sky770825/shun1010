@@ -13,24 +13,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: package-lock.json
-      
-      - name: Install dependencies
-        run: npm ci
-      
-      - name: Build
-        run: npm run build
-      
-      - name: Copy old version (index.html) and assets to dist
+      - name: Prepare dist (舊版 only)
         run: |
-          cp index.html dist/
-          cp styles.css script.js dist/
-          cp 排班條件設定.js dist/
+          mkdir -p dist
+          cp index.html styles.css script.js 排班條件設定.js dist/
       
       - name: Deploy to Cloudflare Pages
         if: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
