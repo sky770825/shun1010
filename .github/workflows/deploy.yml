@@ -26,7 +26,14 @@ jobs:
       - name: Build
         run: npm run build
       
+      - name: Copy old version (index.html) and assets to dist
+        run: |
+          cp index.html dist/
+          cp styles.css script.js dist/
+          cp 排班條件設定.js dist/
+      
       - name: Deploy to Cloudflare Pages
+        if: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
         uses: cloudflare/pages-action@v1
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
