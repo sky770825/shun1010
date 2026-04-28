@@ -5,7 +5,8 @@
 ## 📌 技術
 
 - **傳統 HTML + JavaScript + CSS**
-- 依賴檔案：`index.html`、`script.js`、`styles.css`、`排班條件設定.js`
+- 依賴檔案：`index.html`、`script.js`、`styles.css`、`排班條件設定.js`（皆在本資料夾）
+- **Google Apps Script**：請複製上層目錄的 `google-apps-script/常順班表-WebApp.gs` 全文到 Apps Script 編輯器（勿再用專案內已刪除的舊版 `GoogleAppsScript-*.js`）
 - 支援 Google Sheets 同步
 - 完整排班表與鑰匙管理功能
 

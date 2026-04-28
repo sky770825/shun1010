@@ -5,7 +5,7 @@
 // 11500: 嵌套詳情彈窗（從詳情中再次點擊查看）- 確保在第一層詳情之上
 // 12000: 快速提示（Toast 通知）- 最高層級
 
-const EXCLUDED_MEMBERS = ['02','22','90','91','92','93','94'];
+const EXCLUDED_MEMBERS = ['90','91','92','93','94'];
 const STORE_KEY = 'schedule-checkin';
 const HISTORY_KEY = 'schedule-history';
 const KEY_RECORD_KEY = 'key-records';
@@ -92,29 +92,41 @@ let selectedKeyItems = new Set();
 let keyNameList = [];
 
 // Google Sheets Web App URL（請在部署 Apps Script 後替換此 URL）
-const GOOGLE_SHEETS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwYf5_7BwIcBxw-x4PpY1non0dXVpTkp0HgmT0YWiZiswCTllkgq7Uo2fbXN8RQw5U6ZA/exec';
+const GOOGLE_SHEETS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzXMtWHc6aMmUoMzlaOFBYSyp9S3M1qDUiqofHG5EtbIBVnCNSJZ9z31Y5yOfQ5WSBk/exec';
 
-// 聯絡電話資料
+// 排班試算本（與瀏覽器網址列 gid 一致）：1274331360 =「排班記錄」與 Web App 讀寫；1122446648 =「次月排班表」手動貼上
+const GOOGLE_SHEETS_SCHEDULE_DOC_ID = '1_eujc5OwWR4riQ0oAkGbkkIQQXaX5U3a9xCLvi_qgoU';
+const GOOGLE_SHEETS_GID_SCHEDULE_RECORD = '1274331360';
+const GOOGLE_SHEETS_GID_NEXT_MONTH = '1122446648';
+const GOOGLE_SHEETS_URL_SCHEDULE_RECORD = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEETS_SCHEDULE_DOC_ID}/edit?gid=${GOOGLE_SHEETS_GID_SCHEDULE_RECORD}`;
+const GOOGLE_SHEETS_URL_NEXT_MONTH = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEETS_SCHEDULE_DOC_ID}/edit?gid=${GOOGLE_SHEETS_GID_NEXT_MONTH}`;
+
+// 聯絡電話（編號＝紙本菁英名單；映儒／泓廷／煥文請補電話）
 const CONTACT_PHONES = {
   '01': '梁以蓁 0930-802-502',
-  '03': '邱顯宗 0935-540-532',
-  '05': '曾莉羚 0987-918-219',
-  '06': '梁秋屏 0909-320-909',
-  '07': '林鋒 0917-110-860',
-  '09': '朱盈橙 0972-492-576',
-  '10': '吳大同 0926-950-996',
-  '11': '陳曉敏 0938-534-277',
-  '12': '楊雅婷 0921-998-571',
-  '13': '潘瑀嬅 0921-534-575',
-  '15': '鍾皓宇 0900-068-939',
-  '16': '陳永樺 0916-877-000',
-  '17': '范沅 0976-122-166',
-  '18': '吳志桓 0916-205-238',
-  '19': '劉子菲 0925-666-597',
-  '20': '高志偉 0936-939-888',
-  '21': '黃郁庭 0988-562-796',
-  '25': '蔡濬瑒 0928-776-755',
-  '26': '葉益呈 0920-661-218',
+  '02': '邱顯宗 0935-540-532',
+  '03': '曾莉羚 0987-918-219',
+  '05': '梁秋屏 0909-320-909',
+  '06': '林鋒 0917-110-860',
+  '07': '朱盈橙 0972-492-576',
+  '08': '吳大同 0926-950-996',
+  '09': '陳曉敏 0938-534-277',
+  '10': '楊雅婷 0921-998-571',
+  '11': '潘瑪娜 0921-534-575',
+  '12': '鍾皓宇 0900-068-939',
+  '13': '陳永樺 0916-877-000',
+  '15': '范沅 0976-122-166',
+  '16': '吳志桓 0916-205-238',
+  '17': '劉子菲 0925-666-597',
+  '18': '高志偉 0936-939-888',
+  '19': '黃郁庭 0988-562-796',
+  '20': '蔡濬瑒 0928-776-755',
+  '21': '葉益呈 0920-661-218',
+  '22': '王世宗（電話待補）',
+  '23': '張維琄（電話待補）',
+  '25': '映儒（電話待補）',
+  '26': '泓廷（電話待補）',
+  '27': '煥文（電話待補）',
   '90': '徐店東 0916-186-362',
   '91': '簡副總 0973-070-637',
   '92': '王店 0989-813-686',
@@ -133,33 +145,165 @@ const WEEKEND_SHIFTS = [
   {key:'evening',label:'晚班 17:30-21:00'}
 ];
 
-// 成員清單
+// 成員清單（編號＝紙本菁英名單；舊 Google 表「成員ID」不同）
 const MEMBERS = [
   {id:'01',name:'以蓁'},
-  {id:'03',name:'顯宗'},
-  {id:'05',name:'莉羚'},
-  {id:'06',name:'秋屏'},
-  {id:'07',name:'林鋒',group:'group4'},
-  {id:'09',name:'盈橙',group:'group3'},
-  {id:'10',name:'大同',group:'group3'},
-  {id:'11',name:'曉敏'},
-  {id:'12',name:'雅婷',group:'group2'},
-  {id:'13',name:'瑀嬅',group:'group2'},
-  {id:'15',name:'皓宇'},
-  {id:'16',name:'永樺'},
-  {id:'17',name:'范沅'},
-  {id:'18',name:'志桓'},
-  {id:'19',name:'子菲',group:'group1'},
-  {id:'20',name:'志偉'},
-  {id:'21',name:'郁庭'},
-  {id:'25',name:'濬瑒',group:'group1'},
-  {id:'26',name:'益呈'},
+  {id:'02',name:'顯宗'},
+  {id:'03',name:'莉羚'},
+  {id:'05',name:'秋屏'},
+  {id:'06',name:'林鋒',group:'group4'},
+  {id:'07',name:'盈橙',group:'group3'},
+  {id:'08',name:'大同',group:'group3'},
+  {id:'09',name:'曉敏'},
+  {id:'10',name:'雅婷',group:'group2'},
+  {id:'11',name:'瑪娜',group:'group2'},
+  {id:'12',name:'皓宇'},
+  {id:'13',name:'永樺'},
+  {id:'15',name:'范沅'},
+  {id:'16',name:'志桓'},
+  {id:'17',name:'子菲',group:'group1'},
+  {id:'18',name:'志偉'},
+  {id:'19',name:'郁庭'},
+  {id:'20',name:'濬瑒',group:'group1'},
+  {id:'21',name:'益呈'},
+  {id:'22',name:'世宗'},
+  {id:'23',name:'維琄'},
+  {id:'25',name:'映儒'},
+  {id:'26',name:'泓廷'},
+  {id:'27',name:'煥文'},
   {id:'90',name:'徐店東',disabled:true},
   {id:'91',name:'簡副總',disabled:true},
   {id:'92',name:'王店',disabled:true},
   {id:'93',name:'曾經理',disabled:true},
   {id:'94',name:'羅珍妮',disabled:true}
 ];
+
+(function migrateLocalStorageToPaperMemberIdsIfNeeded() {
+  const DONE = 'member-id-paper-final-2025-v3';
+  if (localStorage.getItem(DONE)) return;
+  const SHEET_TO_PAPER = {
+    '03': '02', '05': '03', '06': '05', '07': '06', '09': '07', '10': '08', '11': '09', '12': '10', '13': '11',
+    '15': '12', '16': '13', '17': '15', '18': '16', '19': '17', '20': '18', '21': '19', '25': '20', '26': '21'
+  };
+  function norm(v) {
+    if (v == null || v === '') return '';
+    const s = String(v).trim();
+    if (!s) return '';
+    const n = parseInt(s, 10);
+    return Number.isNaN(n) ? s : String(n).padStart(2, '0');
+  }
+  function mapVal(v) {
+    const id = norm(v);
+    if (!id) return '';
+    if (SHEET_TO_PAPER[id]) return SHEET_TO_PAPER[id];
+    return id;
+  }
+  function scheduleLooksLikeGoogleSheetIds(data) {
+    const vals = Object.values(data).map(norm).filter(Boolean);
+    const set = new Set(vals);
+    if (localStorage.getItem('member-id-sheet-scheme-2025-v1')) return true;
+    if (set.has('09') || set.has('10')) return true;
+    if (set.has('25') && !set.has('20')) return true;
+    if (set.has('19') && !set.has('17')) return true;
+    return false;
+  }
+  try {
+    let looksSheet = false;
+    const sk = localStorage.getItem(STORE_KEY);
+    let data = {};
+    if (sk) {
+      try {
+        data = JSON.parse(sk);
+      } catch (e) {
+        data = {};
+      }
+    }
+    looksSheet = scheduleLooksLikeGoogleSheetIds(data);
+    if (looksSheet) {
+      let ch = false;
+      Object.keys(data).forEach((k) => {
+        const nv = mapVal(data[k]);
+        if (nv !== data[k]) {
+          data[k] = nv;
+          ch = true;
+        }
+      });
+      if (ch) localStorage.setItem(STORE_KEY, JSON.stringify(data));
+      const hk = localStorage.getItem(HISTORY_KEY);
+      if (hk) {
+        const hist = JSON.parse(hk);
+        let ch2 = false;
+        Object.keys(hist).forEach((ym) => {
+          const arr = hist[ym];
+          if (!Array.isArray(arr)) return;
+          hist[ym] = arr.map((batch) =>
+            Array.isArray(batch) ? batch.map((id) => mapVal(id)).filter(Boolean) : batch
+          );
+          ch2 = true;
+        });
+        if (ch2) localStorage.setItem(HISTORY_KEY, JSON.stringify(hist));
+      }
+      const tk = localStorage.getItem(TEMP_DUTY_KEY);
+      if (tk) {
+        const td = JSON.parse(tk);
+        let ch3 = false;
+        Object.keys(td).forEach((dk) => {
+          const day = td[dk];
+          if (!day || typeof day !== 'object') return;
+          Object.keys(day).forEach((shiftKey) => {
+            const nv = mapVal(day[shiftKey]);
+            if (nv !== day[shiftKey]) {
+              if (nv) day[shiftKey] = nv;
+              else delete day[shiftKey];
+              ch3 = true;
+            }
+          });
+        });
+        if (ch3) localStorage.setItem(TEMP_DUTY_KEY, JSON.stringify(td));
+      }
+      const kk = localStorage.getItem(KEY_RECORD_KEY);
+      if (kk) {
+        const recs = JSON.parse(kk);
+        if (Array.isArray(recs)) {
+          let ch4 = false;
+          recs.forEach((r) => {
+            if (r.borrowerType === 'member' && r.memberId) {
+              const nv = mapVal(r.memberId);
+              if (nv !== r.memberId) {
+                r.memberId = nv || null;
+                ch4 = true;
+              }
+            }
+          });
+          if (ch4) localStorage.setItem(KEY_RECORD_KEY, JSON.stringify(recs));
+        }
+      }
+      const rqk = localStorage.getItem(SHIFT_CHANGE_KEY);
+      if (rqk) {
+        const reqs = JSON.parse(rqk);
+        if (Array.isArray(reqs)) {
+          let ch5 = false;
+          reqs.forEach((r) => {
+            if (r.applicant) {
+              const nv = mapVal(r.applicant);
+              if (nv !== r.applicant) {
+                r.applicant = nv || '';
+                ch5 = true;
+              }
+            }
+          });
+          if (ch5) localStorage.setItem(SHIFT_CHANGE_KEY, JSON.stringify(reqs));
+        }
+      }
+    }
+    localStorage.removeItem('member-id-sheet-scheme-2025-v1');
+    localStorage.removeItem('member-id-migration-paper-elite-2025-05-v1');
+    localStorage.removeItem('member-id-paper-final-2025-v2');
+    localStorage.setItem(DONE, '1');
+  } catch (e) {
+    console.warn('member-id paper migration skipped:', e);
+  }
+})();
 
 // 設定預設為當前年月（2025年）
 const today = new Date();
@@ -4087,7 +4231,7 @@ function showNextMonthScheduleResult(yearMonth, scheduleData, statsMessage, grou
           <strong>📝 使用方法：</strong><br>
           <div style="margin-top:10px;line-height:1.8;">
             1. 點擊「📋 複製到剪貼板」按鈕<br>
-            2. 打開 <a href="https://docs.google.com/spreadsheets/d/1_eujc5OwWR4riQ0oAkGbkkIQQXaX5U3a9xCLvi_qgoU/edit?gid=1122446648" target="_blank" style="color:#e91e63;font-weight:bold;text-decoration:underline;">Google Sheets 的「次月排班表」</a><br>
+            2. 打開 <a href="${GOOGLE_SHEETS_URL_NEXT_MONTH}" target="_blank" style="color:#e91e63;font-weight:bold;text-decoration:underline;">Google Sheets 的「次月排班表」</a><br>
             3. 點擊第2行第1列（A2）<br>
             4. 按 Ctrl+V 貼上<br>
             5. 完成！
@@ -4798,13 +4942,13 @@ function showSyncIndicator(show) {
   }
 }
 
-// 開啟 Google Sheets
+// 開啟 Google Sheets（預設「排班記錄」分頁 gid=1274331360，與 Web App 同步資料同一頁）
 function openGoogleSheets() {
-  const sheetsUrl = 'https://docs.google.com/spreadsheets/d/1_eujc5OwWR4riQ0oAkGbkkIQQXaX5U3a9xCLvi_qgoU/edit';
+  const sheetsUrl = GOOGLE_SHEETS_URL_SCHEDULE_RECORD;
   
   showConfirmModal(
     '📊 開啟 Google Sheets',
-    '即將在新分頁開啟 Google Sheets 排班記錄',
+    '即將在新分頁開啟「排班記錄」工作表',
     '您可以查看最新的排班和鑰匙借還記錄',
     () => {
       window.open(sheetsUrl, '_blank');
@@ -4928,7 +5072,7 @@ async function loadScheduleFromGoogleSheets(yearMonth) {
       
       // 建立 JSONP 請求
       const url = yearMonth 
-        ? `${GOOGLE_SHEETS_WEB_APP_URL}?action=getSchedule&yearMonth=${yearMonth}&callback=${callbackName}`
+        ? `${GOOGLE_SHEETS_WEB_APP_URL}?action=getSchedule&yearMonth=${encodeURIComponent(yearMonth)}&callback=${callbackName}`
         : `${GOOGLE_SHEETS_WEB_APP_URL}?action=getSchedule&callback=${callbackName}`;
       
       // 定義全局 callback 函數
@@ -4941,20 +5085,30 @@ async function loadScheduleFromGoogleSheets(yearMonth) {
         }
         
         if (result.status === 'success') {
-          console.log(`✅ 成功讀取 ${result.recordCount} 筆排班記錄`);
+          const rows = result.data && typeof result.data === 'object' ? result.data : {};
+          const n = Object.keys(rows).length;
+          console.log(`✅ 成功讀取 ${result.recordCount != null ? result.recordCount : n} 筆排班記錄`);
           
           // 顯示調試信息
           if (result.debug) {
             console.log('📊 調試信息:', result.debug);
           }
           
-          // 顯示部分數據樣本
-          if (result.data && Object.keys(result.data).length > 0) {
-            const sampleKeys = Object.keys(result.data).slice(0, 5);
-            console.log('📝 數據樣本:', sampleKeys.map(k => `${k} => ${result.data[k]}`).join(', '));
+          if (yearMonth && n === 0) {
+            const am = result.availableMonths;
+            if (am && am.length) {
+              console.warn('📋 本月在試算本「排班記錄」無列；試算本內已有年月:', am.join(', '));
+            } else {
+              console.warn('📋 「排班記錄」無資料或欄位不符（須 B=年月、D=日、E=班別、F=成員ID）；若班表在「次月排班表」分頁，Web App 讀不到。');
+            }
           }
           
-          resolve(result.data);
+          if (n > 0) {
+            const sampleKeys = Object.keys(rows).slice(0, 5);
+            console.log('📝 數據樣本:', sampleKeys.map(k => `${k} => ${rows[k]}`).join(', '));
+          }
+          
+          resolve(rows);
         } else {
           console.error('❌ 讀取失敗:', result.message);
           showCustomAlert(`讀取失敗：${result.message}`, 'error');
