@@ -44,7 +44,7 @@ const SCHEDULE_CONDITIONS = {
   // 5. 特殊班別限制
   FORBIDDEN_SHIFTS: {
     '10': ['monday-evening', 'friday-evening'],  // 雅婷不要排週一跟週五晚班
-    '11': ['monday-evening', 'friday-evening'],  // 瑪娜不要排週一跟週五晚班
+    '11': ['monday-evening', 'friday-evening'],  // 瑀嬅不要排週一跟週五晚班
   }
 };
 
