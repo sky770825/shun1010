@@ -442,6 +442,95 @@ function renderMemberList(){
     }
     ul.appendChild(li);
   });
+
+  renderMemberBorrowSelect();
+  updateMemberListSummary(sortedMembers.length);
+}
+
+function isBorrowableMember(member) {
+  if (!member) return false;
+  return !member.disabled || parseInt(member.id, 10) >= 90;
+}
+
+function formatBorrowMemberLabel(member) {
+  const isManager = parseInt(member.id, 10) >= 90;
+  return isManager ? `👔 ${member.name}` : `${member.id} ${member.name}`;
+}
+
+function getBorrowableMembers() {
+  return MEMBERS
+    .filter(isBorrowableMember)
+    .sort((a, b) => a.id.localeCompare(b.id));
+}
+
+function updateMemberListSummary(totalCount = null) {
+  const summary = document.getElementById('memberListSummaryText');
+  if (!summary) return;
+
+  if (selectedMember) {
+    summary.textContent = `目前：${formatBorrowMemberLabel(selectedMember)}`;
+    return;
+  }
+
+  const count = totalCount || MEMBERS.length;
+  summary.textContent = `共 ${count} 人，點擊展開`;
+}
+
+function renderMemberBorrowSelect() {
+  const select = document.getElementById('memberBorrowSelect');
+  if (!select) return;
+
+  const currentValue = selectedMember ? selectedMember.id : select.value;
+  select.innerHTML = '<option value="">-- 選擇借用人 --</option>';
+
+  getBorrowableMembers().forEach(member => {
+    const option = document.createElement('option');
+    option.value = member.id;
+    option.textContent = formatBorrowMemberLabel(member);
+    select.appendChild(option);
+  });
+
+  const hasCurrentValue = getBorrowableMembers().some(member => member.id === currentValue);
+  select.value = hasCurrentValue ? currentValue : '';
+  updateMemberBorrowPanel();
+}
+
+function selectMemberById(memberId) {
+  if (!memberId) {
+    clearMemberSelection();
+    return;
+  }
+
+  const member = MEMBERS.find(m => m.id === memberId);
+  if (!isBorrowableMember(member)) {
+    showCustomAlert('這位成員不可借出', 'error');
+    renderMemberBorrowSelect();
+    return;
+  }
+
+  selectMember(member);
+}
+
+function updateMemberBorrowPanel() {
+  const notice = document.getElementById('selectedMemberNotice');
+  const clearButton = document.getElementById('clearMemberBorrowBtn');
+  const select = document.getElementById('memberBorrowSelect');
+
+  if (!notice) return;
+
+  if (selectedMember) {
+    notice.textContent = `已選擇：${formatBorrowMemberLabel(selectedMember)}`;
+    notice.classList.add('is-selected');
+    if (clearButton) clearButton.hidden = false;
+    if (select) select.value = selectedMember.id;
+  } else {
+    notice.textContent = '尚未選擇借用人';
+    notice.classList.remove('is-selected');
+    if (clearButton) clearButton.hidden = true;
+    if (select) select.value = '';
+  }
+
+  updateMemberListSummary();
 }
 
 // 計算某月有幾天
@@ -4790,20 +4879,37 @@ function selectKeyFromSearch(keyName) {
 
 // 顯示同步成功通知
 function showSyncNotification(message) {
+  const existingNotification = document.getElementById('syncNotification');
+  if (existingNotification) {
+    existingNotification.remove();
+  }
+
+  const isNarrowViewport = window.innerWidth <= 520;
   const notification = document.createElement('div');
+  notification.id = 'syncNotification';
   notification.style.cssText = `
     position: fixed;
-    top: 80px;
-    right: 20px;
+    top: auto;
+    bottom: ${isNarrowViewport ? '16px' : '18px'};
+    left: ${isNarrowViewport ? '50%' : 'auto'};
+    right: ${isNarrowViewport ? 'auto' : '18px'};
+    transform: ${isNarrowViewport ? 'translateX(-50%)' : 'none'};
     background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
     color: white;
-    padding: 15px 25px;
-    border-radius: 10px;
+    padding: ${isNarrowViewport ? '12px 16px' : '11px 16px'};
+    border-radius: 9px;
     z-index: 10000;
-    font-size: 16px;
+    box-sizing: border-box;
+    width: max-content;
+    max-width: min(${isNarrowViewport ? '420px' : '320px'}, calc(100vw - 24px));
+    line-height: 1.45;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    font-size: ${isNarrowViewport ? '14px' : '14px'};
     font-weight: bold;
-    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
-    animation: slideInRight 0.5s ease-out;
+    box-shadow: 0 8px 22px rgba(21, 93, 61, 0.18);
+    animation: ${isNarrowViewport ? 'syncToastMobileIn' : 'syncToastDesktopIn'} 0.28s ease-out;
   `;
   notification.textContent = message;
   document.body.appendChild(notification);
@@ -4845,6 +4951,12 @@ function showQuickToast(message, type = 'info') {
     padding: 10px 20px;
     border-radius: 25px;
     z-index: 12000;
+    box-sizing: border-box;
+    max-width: calc(100vw - 24px);
+    line-height: 1.4;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
     font-size: 14px;
     font-weight: 600;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
@@ -5317,13 +5429,23 @@ if (!document.getElementById('syncNotificationStyles')) {
   const style = document.createElement('style');
   style.id = 'syncNotificationStyles';
   style.textContent = `
-    @keyframes slideInRight {
+    @keyframes syncToastMobileIn {
       from {
-        transform: translateX(400px);
+        transform: translate(-50%, -14px);
         opacity: 0;
       }
       to {
-        transform: translateX(0);
+        transform: translate(-50%, 0);
+        opacity: 1;
+      }
+    }
+    @keyframes syncToastDesktopIn {
+      from {
+        transform: translateY(10px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
         opacity: 1;
       }
     }
@@ -5636,19 +5758,13 @@ function selectMember(member){
   if(member.disabled && !isManager) return;
   
   selectedMember = member;
-  
-  // 更新顯示 - 改為醒目的成功狀態
-  const displayName = isManager ? `👔 ${member.name}` : `${member.id} ${member.name}`;
-  const memberSection = document.getElementById('memberBorrowSection');
-  memberSection.innerHTML = `
-    <div style="text-align:center;padding:16px 20px;background:linear-gradient(135deg,#d4edda 0%,#c3e6cb 100%);border-radius:12px;border:2px solid #28a745;margin-bottom:10px;box-shadow:0 4px 12px rgba(40,167,69,0.2);cursor:pointer;transition:all 0.3s;" onclick="clearMemberSelection()" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 16px rgba(40,167,69,0.3)';" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 12px rgba(40,167,69,0.2)';">
-      <div style="font-size:17px;font-weight:700;color:#155724;display:flex;align-items:center;justify-content:center;gap:10px;">
-        <span style="font-size:26px;">✅</span>
-        已選擇：${displayName}
-        <span style="font-size:26px;">✅</span>
-      </div>
-    </div>
-  `;
+
+  const scheduleMemberSelect = document.getElementById('memberInput');
+  if (scheduleMemberSelect && !member.disabled) {
+    scheduleMemberSelect.value = member.id;
+  }
+
+  updateMemberBorrowPanel();
   
   // 重新渲染成員清單以更新選中狀態
   renderMemberList();
@@ -5660,18 +5776,7 @@ function selectMember(member){
 // 清除成員選擇
 function clearMemberSelection() {
   selectedMember = null;
-  
-  // 恢復原始提示
-  const memberSection = document.getElementById('memberBorrowSection');
-  memberSection.innerHTML = `
-    <div style="text-align:center;padding:20px 25px;background:linear-gradient(135deg,#fff3e0 0%,#ffe0b2 100%);border-radius:12px;border:2px dashed #ff9800;margin-bottom:10px;">
-      <span id="selectedMember" style="font-size:20px;font-weight:700;color:#f57c00;text-shadow:0 1px 2px rgba(245,124,0,0.2);display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;">
-        <span style="font-size:28px;animation:bounce 1s infinite;flex-shrink:0;">👆</span>
-        <span style="flex-shrink:1;text-align:center;word-break:keep-all;">點擊上方成員選擇借用人</span>
-        <span style="font-size:28px;animation:bounce 1s infinite;animation-delay:0.1s;flex-shrink:0;">👆</span>
-      </span>
-    </div>
-  `;
+  updateMemberBorrowPanel();
   
   // 重新渲染成員清單
   renderMemberList();
@@ -6009,7 +6114,7 @@ function executeBatchBorrowWithItems(keyItems) {
   
   if(currentBorrowType === 'member') {
     if(!selectedMember){
-      showCustomAlert('請先點擊上方成員選擇借用人', 'error');
+      showCustomAlert('請先選擇借用人', 'error');
       return;
     }
     borrowerInfo = {
@@ -6114,7 +6219,7 @@ function executeBatchBorrow() {
   
   if(currentBorrowType === 'member') {
     if(!selectedMember){
-      showCustomAlert('請先點擊上方成員選擇借用人', 'error');
+      showCustomAlert('請先選擇借用人', 'error');
       return;
     }
     borrowerInfo = {
@@ -6981,7 +7086,7 @@ function borrowKey(){
   if(currentBorrowType === 'member') {
     // 成員借出
     if(!selectedMember){
-      showCustomAlert('請先點擊上方成員選擇借用人', 'error');
+      showCustomAlert('請先選擇借用人', 'error');
       return;
     }
     borrowerInfo = {
@@ -9503,23 +9608,23 @@ function optimizeScale() {
     scaleFactor = 1;
     tableScale = 0.95;
   } else if (windowWidth >= 992) {
-    scaleFactor = 0.9;
-    tableScale = 0.85;
+    scaleFactor = 0.95;
+    tableScale = 0.92;
   } else if (windowWidth >= 768) {
-    scaleFactor = 0.85;
-    tableScale = 0.75;
+    scaleFactor = 0.93;
+    tableScale = 0.9;
   } else if (windowWidth >= 576) {
-    scaleFactor = 0.8;
-    tableScale = 0.65;
+    scaleFactor = 0.92;
+    tableScale = 0.9;
   } else if (windowWidth >= 480) {
-    scaleFactor = 0.75;
-    tableScale = 0.6;
+    scaleFactor = 0.9;
+    tableScale = 0.9;
   } else if (windowWidth >= 360) {
-    scaleFactor = 0.7;
-    tableScale = 0.55;
+    scaleFactor = 0.88;
+    tableScale = 0.88;
   } else {
-    scaleFactor = 0.65;
-    tableScale = 0.5;
+    scaleFactor = 0.86;
+    tableScale = 0.86;
   }
   
   rootElement.style.setProperty('--scale-factor', scaleFactor);
@@ -9531,23 +9636,8 @@ function optimizeScale() {
 
 // 動態調整表格以適應視窗
 function adjustTableToFit() {
-  const tables = document.querySelectorAll('.table-container table');
-  
-  tables.forEach(table => {
-    const container = table.closest('.table-container');
-    if (!container) return;
-    
-    const containerWidth = container.clientWidth;
-    const tableWidth = table.scrollWidth;
-    
-    // 如果表格寬度超過容器，進一步縮小
-    if (tableWidth > containerWidth) {
-      const currentScale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--table-scale'));
-      const ratio = containerWidth / tableWidth;
-      const newScale = currentScale * ratio * 0.95; // 留一點邊距
-      
-      document.documentElement.style.setProperty('--table-scale', Math.max(0.4, newScale));
-    }
+  document.querySelectorAll('.table-container').forEach(container => {
+    container.style.overflowX = 'auto';
   });
 }
 

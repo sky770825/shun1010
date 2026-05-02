@@ -711,3 +711,1873 @@ td:hover{background:#f8f9fa;}
 .group3{background:linear-gradient(135deg,#45b7d1 0%,#3498db 100%);color:#000;border-left:4px solid #2980b9;}
 .group4{background:linear-gradient(135deg,#f39c12 0%,#e67e22 100%);color:#000;border-left:4px solid #d35400;}
 
+/* 2026-05 layout refresh: quieter daily-ops dashboard */
+:root {
+  --base-font-size: 15px;
+  --surface: #ffffff;
+  --surface-soft: #f6f8f7;
+  --surface-muted: #eef3f1;
+  --line: #dbe4e0;
+  --text: #202a28;
+  --text-muted: #60706b;
+  --accent: #1f6f5b;
+  --accent-strong: #155846;
+  --danger: #b84040;
+  --warning: #b86a1d;
+  --blue: #2f628f;
+  --violet: #5a4377;
+  --shadow-soft: 0 12px 34px rgba(32, 42, 40, 0.08);
+}
+
+html {
+  background: #f3f6f4;
+}
+
+body {
+  color: var(--text);
+  background:
+    radial-gradient(circle at 8% 0%, rgba(31, 111, 91, 0.08), transparent 30rem),
+    linear-gradient(180deg, #f7f9f8 0%, #eef3f1 100%) !important;
+  font-family: "Aptos", "Segoe UI", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif !important;
+  font-variant-numeric: tabular-nums;
+}
+
+h2 {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  padding: 16px 24px !important;
+  background: #24312f !important;
+  color: #fff !important;
+  box-shadow: 0 10px 28px rgba(20, 35, 31, 0.18) !important;
+  letter-spacing: 0 !important;
+  text-shadow: none !important;
+}
+
+.controls,
+.table-container,
+#memberList,
+#keyRecord {
+  width: min(100% - 24px, 1680px) !important;
+  max-width: 1680px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 8px !important;
+  background: rgba(255, 255, 255, 0.94) !important;
+  box-shadow: var(--shadow-soft) !important;
+}
+
+.controls {
+  display: grid !important;
+  grid-template-columns: minmax(180px, 0.65fr) minmax(260px, 1fr) minmax(260px, 1fr) !important;
+  gap: 14px !important;
+  align-items: end !important;
+  margin-top: 14px !important;
+  margin-bottom: 14px !important;
+  padding: 16px !important;
+}
+
+.controls label span,
+#colleagueBorrowSection label {
+  color: var(--text-muted) !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+}
+
+select,
+input {
+  border: 1px solid var(--line) !important;
+  border-radius: 7px !important;
+  background: #fff !important;
+  color: var(--text) !important;
+  box-shadow: none !important;
+}
+
+select:focus,
+input:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px rgba(31, 111, 91, 0.13) !important;
+}
+
+button,
+.key-action-btn {
+  border-radius: 7px !important;
+  background: var(--accent) !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+button:hover,
+.key-action-btn:hover {
+  background: var(--accent-strong) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 8px 18px rgba(31, 111, 91, 0.18) !important;
+}
+
+button:active,
+.key-action-btn:active,
+#memberList li:active,
+.borrow-type-label:active {
+  transform: translateY(1px) scale(0.99) !important;
+}
+
+.table-container {
+  padding: 14px !important;
+  overflow-x: auto !important;
+  scrollbar-width: thin;
+  scrollbar-color: #9eb3ad #edf3f0;
+}
+
+.table-container::-webkit-scrollbar {
+  height: 10px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background: #9eb3ad;
+  border-radius: 999px;
+}
+
+table {
+  border-radius: 6px !important;
+  box-shadow: none !important;
+}
+
+#grid {
+  min-width: 1420px;
+}
+
+#keyTable {
+  min-width: 900px;
+  margin-top: 0 !important;
+}
+
+th {
+  background: #45524f !important;
+  color: #fff !important;
+  text-shadow: none !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+th.weekend-header {
+  background: #8f3037 !important;
+}
+
+th.weekday-header {
+  background: #45524f !important;
+}
+
+th.morning-title {
+  background: #c47428 !important;
+  border-right: 0 !important;
+}
+
+th.noon-title {
+  background: var(--blue) !important;
+  border-right: 0 !important;
+}
+
+th.evening-title {
+  background: var(--violet) !important;
+  border-right: 0 !important;
+}
+
+td {
+  border-color: #e2e9e6 !important;
+}
+
+.cell {
+  border-radius: 5px !important;
+  min-height: 2.35em !important;
+  box-shadow: none !important;
+}
+
+.cell.checked {
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.16) !important;
+}
+
+.cell.morning-shift,
+.cell.morning-shift.checked {
+  background: #e15432 !important;
+  border-left: 0 !important;
+}
+
+.cell.noon-shift,
+.cell.noon-shift.checked {
+  background: #1758a5 !important;
+  border-left: 0 !important;
+}
+
+.cell.evening-shift,
+.cell.evening-shift.checked {
+  background: #4e167b !important;
+  border-left: 0 !important;
+}
+
+#keyRecord {
+  padding: 18px !important;
+}
+
+#keyRecord details {
+  border: 1px solid var(--line) !important;
+  border-left: 4px solid #9bb8af !important;
+  border-radius: 8px !important;
+  background: var(--surface-soft) !important;
+  color: var(--text-muted) !important;
+  box-shadow: none !important;
+}
+
+#keyRecord details summary {
+  color: var(--text) !important;
+}
+
+#keyRecord details summary:hover {
+  background: rgba(31, 111, 91, 0.08) !important;
+}
+
+#memberList {
+  margin-top: 14px !important;
+  margin-bottom: 18px !important;
+  padding: 16px !important;
+  box-shadow: none !important;
+  background: #fbfcfb !important;
+}
+
+#memberList > summary {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  color: var(--text) !important;
+  cursor: pointer !important;
+  list-style: none !important;
+  user-select: none !important;
+  border-bottom: 0 !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+}
+
+#memberList > summary::-webkit-details-marker {
+  display: none !important;
+}
+
+#memberList > summary::before {
+  content: "▸";
+  color: var(--accent) !important;
+  font-size: 14px !important;
+  transform: translateY(-1px);
+}
+
+#memberList[open] > summary::before {
+  content: "▾";
+}
+
+#memberListSummaryText {
+  margin-left: auto !important;
+  color: var(--text-muted) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+}
+
+#memberList[open] #memberListUl {
+  margin-top: 14px !important;
+}
+
+#memberList h3,
+#keyRecord h3 {
+  text-align: left !important;
+  color: var(--text) !important;
+  background: transparent !important;
+  border-left: 0 !important;
+  border-bottom: 1px solid var(--line) !important;
+  border-radius: 0 !important;
+  padding: 0 0 10px 0 !important;
+  margin-bottom: 12px !important;
+  text-shadow: none !important;
+}
+
+#memberList ul {
+  justify-content: flex-start !important;
+  gap: 8px !important;
+}
+
+#memberList li {
+  border: 1px solid var(--line) !important;
+  border-radius: 7px !important;
+  background: #fff !important;
+  color: var(--text) !important;
+  box-shadow: none !important;
+  padding: 8px 11px !important;
+}
+
+#memberList li:hover {
+  background: #eef7f3 !important;
+  border-color: #b9d0c8 !important;
+  color: var(--accent-strong) !important;
+  box-shadow: none !important;
+}
+
+#memberList li.selected {
+  background: var(--accent) !important;
+  color: #fff !important;
+}
+
+#memberList li.disabled {
+  background: #fff7dc !important;
+  border-color: #e8c866 !important;
+  color: #6d5620 !important;
+  text-decoration: none !important;
+  opacity: 1 !important;
+}
+
+#keyRecord > div[style*="text-align:center"] {
+  margin: 8px 0 16px !important;
+}
+
+#keyRecord > div[style*="text-align:center"] > div[style*="display:inline-block"] {
+  background: #f8faf9 !important;
+  border: 1px solid var(--line) !important;
+  border-left: 5px solid var(--accent) !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+  padding: 12px 18px !important;
+}
+
+#keyRecord > div[style*="text-align:center"] > div[style*="display:inline-block"] > div {
+  display: none !important;
+}
+
+.keyControls {
+  display: block !important;
+  padding: 16px !important;
+  border: 1px solid var(--line) !important;
+  background: #fbfcfb !important;
+  border-radius: 8px !important;
+}
+
+.key-header-row {
+  grid-template-columns: 1fr auto !important;
+  gap: 12px !important;
+  padding: 0 !important;
+}
+
+.key-header-row > div:first-child > div {
+  background: #e8efec !important;
+  box-shadow: none !important;
+  border-radius: 9px !important;
+}
+
+.key-header-row > div:first-child > div > div {
+  border-radius: 7px !important;
+}
+
+.borrow-type-label {
+  border-radius: 6px !important;
+  box-shadow: none !important;
+  min-height: 42px !important;
+}
+
+.borrow-type-label:has(input:checked),
+.borrow-type-label:has(input:checked):hover {
+  background: var(--accent) !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.borrow-type-label:not(:has(input:checked)) {
+  background: #fff !important;
+}
+
+#addKeyNameBtn {
+  background: #255e4f !important;
+  border-radius: 7px !important;
+  box-shadow: none !important;
+}
+
+#memberBorrowSection > div,
+#colleagueBorrowSection > div {
+  background: #f7faf8 !important;
+  border: 1px dashed #bdd1ca !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+}
+
+#memberBorrowSection > .member-borrow-card {
+  padding: 14px !important;
+}
+
+.member-borrow-row {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  gap: 10px !important;
+  align-items: end !important;
+}
+
+.member-borrow-label {
+  display: grid !important;
+  gap: 6px !important;
+  color: var(--text) !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  text-align: left !important;
+}
+
+#memberBorrowSelect {
+  width: 100% !important;
+  min-height: 46px !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 7px !important;
+  background: #fff !important;
+  color: var(--text) !important;
+  font-size: 16px !important;
+  padding: 10px 12px !important;
+}
+
+.member-clear-btn {
+  min-height: 46px !important;
+  padding: 10px 14px !important;
+  border: 0 !important;
+  border-radius: 7px !important;
+  background: #6f7d79 !important;
+  color: #fff !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+}
+
+.member-selection-state {
+  margin-top: 10px !important;
+  padding: 10px 12px !important;
+  border: 1px dashed #bdd1ca !important;
+  border-radius: 7px !important;
+  background: #fff !important;
+  color: var(--text-muted) !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  text-align: center !important;
+}
+
+.member-selection-state.is-selected {
+  border-color: #96c7ae !important;
+  background: #e8f6ed !important;
+  color: #145d3c !important;
+}
+
+#colleagueCompany,
+#colleagueName,
+#colleaguePhone,
+#colleagueCustomCompany,
+#memberBorrowSelect,
+#keyItem {
+  border: 1px solid var(--line) !important;
+  border-radius: 7px !important;
+}
+
+button[onclick="borrowKey()"] {
+  background: #11633f !important;
+  border-radius: 7px !important;
+  min-height: 54px !important;
+  box-shadow: none !important;
+}
+
+#keyItemHistory {
+  border: 1px solid var(--line) !important;
+  background: #fff !important;
+  border-radius: 8px !important;
+}
+
+.dutyControls {
+  background: #eef7f1 !important;
+  border: 1px solid #c9ded2 !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+}
+
+.dutyControls span {
+  color: #184b37 !important;
+}
+
+.dutyControls button {
+  background: #45635a !important;
+}
+
+.keyDateNavigation {
+  border: 1px solid var(--line) !important;
+  background: #f8faf9 !important;
+  border-radius: 8px !important;
+}
+
+.keyDateNavigation button {
+  background: #45524f !important;
+  box-shadow: none !important;
+}
+
+#keyTable th {
+  background: #37413f !important;
+}
+
+#keyTable td.status-borrowed {
+  background: #e8f2fb !important;
+  color: #244f77 !important;
+  border-left: 3px solid var(--blue) !important;
+}
+
+#keyTable td.status-returned {
+  background: #f7e8e8 !important;
+  color: #8d3434 !important;
+  border-left: 3px solid var(--danger) !important;
+}
+
+.key-action-btn.return {
+  background: #1f6f5b !important;
+}
+
+.key-action-btn.confirm {
+  background: #2f628f !important;
+}
+
+.key-action-btn.delete,
+.keyControls button:last-child {
+  background: var(--danger) !important;
+}
+
+.keyControls button[onclick="borrowKey()"],
+.keyControls button[onclick="borrowKey()"]:hover {
+  background: #11633f !important;
+  color: #fff !important;
+}
+
+.keyControls button.member-clear-btn,
+.keyControls button.member-clear-btn:hover,
+.keyControls .member-borrow-row button.member-clear-btn,
+.keyControls .member-borrow-row button.member-clear-btn:hover {
+  background: #6f7d79 !important;
+  color: #fff !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+@media (max-width: 900px) {
+  .controls {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    padding: 12px !important;
+  }
+
+  #grid {
+    min-width: 1040px;
+  }
+
+  .key-header-row,
+  .keyControls > div[style*="margin-top:15px"] > div {
+    grid-template-columns: 1fr !important;
+    display: grid !important;
+  }
+
+  .key-header-row > div,
+  .key-header-row > div:first-child > div {
+    width: 100% !important;
+  }
+
+  .key-header-row > div:first-child > div > div {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  #addKeyNameBtn,
+  button[onclick="borrowKey()"] {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  #memberList ul {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  #memberList li {
+    max-width: none !important;
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .member-borrow-row {
+    grid-template-columns: 1fr !important;
+  }
+
+  .member-clear-btn {
+    width: 100% !important;
+  }
+
+  .dutyControls > div:first-child {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  .dutyControls > div:first-child > div {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    width: 100% !important;
+  }
+
+  #dutyMember {
+    display: block !important;
+    max-width: 100% !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    line-height: 1.45 !important;
+  }
+
+  #dutyMember span {
+    white-space: normal !important;
+  }
+
+  #dutyMember span[style*="margin-left"] {
+    display: block !important;
+    margin-left: 0 !important;
+    margin-top: 2px !important;
+  }
+
+  .keyDateNavigation {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .keyDateNavigation > div {
+    grid-column: 1 / -1;
+    order: -1;
+    min-width: 0 !important;
+  }
+}
+
+@media (max-width: 520px) {
+  body {
+    font-size: 14px !important;
+  }
+
+  h2 {
+    font-size: 1.08rem !important;
+    padding: 13px 14px !important;
+  }
+
+  .controls,
+  .table-container,
+  #memberList,
+  #keyRecord {
+    width: calc(100% - 16px) !important;
+    padding: 12px !important;
+  }
+
+  #grid {
+    min-width: 960px;
+  }
+
+  #memberList ul {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 7px !important;
+  }
+
+  #memberList li {
+    font-size: 13px !important;
+    padding: 9px 8px !important;
+  }
+
+  #memberList > summary {
+    font-size: 15px !important;
+  }
+
+  #memberListSummaryText {
+    max-width: 45% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    text-align: right !important;
+  }
+
+  #keyRecord details {
+    font-size: 12px !important;
+  }
+
+  #keyRecord details summary span:last-child {
+    display: inline !important;
+  }
+
+  #keyRecord details summary span[style*="margin-left:auto"] {
+    display: none !important;
+  }
+
+  .keyControls {
+    padding: 12px !important;
+  }
+
+  #keyItem {
+    font-size: 16px !important;
+    padding: 12px 14px !important;
+  }
+
+  button[onclick="borrowKey()"] {
+    font-size: 15px !important;
+  }
+}
+
+/* Compact key-borrow flow: keep pills content-sized and reduce vertical stacking. */
+#keyRecord > div[style*="text-align:center"][style*="position:relative"] {
+  text-align: left !important;
+  margin: 2px 0 10px !important;
+}
+
+#keyRecord > div[style*="text-align:center"][style*="position:relative"] > div[style*="display:inline-block"] {
+  display: inline-flex !important;
+  align-items: center !important;
+  width: auto !important;
+  max-width: max-content !important;
+  padding: 9px 14px !important;
+}
+
+#keyRecord > div[style*="text-align:center"][style*="position:relative"] h3 {
+  font-size: 16px !important;
+  line-height: 1.25 !important;
+  letter-spacing: 0 !important;
+}
+
+#keyRecord > details[style*="fff3e0"] {
+  margin-bottom: 10px !important;
+  padding: 8px 10px !important;
+}
+
+.keyControls {
+  padding: 12px !important;
+}
+
+.key-header-row {
+  display: grid !important;
+  grid-template-columns: auto auto !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  align-items: center !important;
+  margin-bottom: 10px !important;
+}
+
+.key-header-row > div:first-child {
+  justify-self: start !important;
+}
+
+.key-header-row > div:first-child > div {
+  width: auto !important;
+  max-width: max-content !important;
+}
+
+.key-header-row > div:first-child > div > div {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+}
+
+.borrow-type-label {
+  box-sizing: border-box !important;
+  min-width: 96px !important;
+  min-height: 38px !important;
+  padding: 8px 12px !important;
+}
+
+.borrow-type-label span {
+  font-size: 14px !important;
+}
+
+#addKeyNameBtn {
+  box-sizing: border-box !important;
+  min-height: 38px !important;
+  padding: 8px 12px !important;
+}
+
+#memberBorrowSection > .member-borrow-card {
+  display: grid !important;
+  grid-template-columns: minmax(220px, 320px) auto minmax(180px, 1fr) !important;
+  gap: 8px !important;
+  align-items: end !important;
+  padding: 12px !important;
+}
+
+.member-borrow-row {
+  display: contents !important;
+}
+
+.member-borrow-label {
+  gap: 4px !important;
+}
+
+#memberBorrowSelect,
+.member-clear-btn {
+  min-height: 42px !important;
+  padding: 8px 10px !important;
+}
+
+.member-selection-state {
+  min-height: 42px !important;
+  margin-top: 0 !important;
+  padding: 8px 10px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.keyControls > div[style*="margin-top:15px"] {
+  margin-top: 10px !important;
+}
+
+@media (max-width: 900px) {
+  .key-header-row {
+    grid-template-columns: auto auto !important;
+  }
+
+  .key-header-row > div:first-child > div {
+    width: auto !important;
+  }
+
+  #addKeyNameBtn {
+    width: auto !important;
+    justify-self: end !important;
+  }
+
+  #memberBorrowSection > .member-borrow-card {
+    grid-template-columns: minmax(0, 1fr) 72px !important;
+  }
+
+  .member-selection-state {
+    grid-column: 1 / -1 !important;
+  }
+
+  .member-clear-btn {
+    width: auto !important;
+  }
+}
+
+@media (max-width: 520px) {
+  #keyRecord > div[style*="text-align:center"][style*="position:relative"] {
+    margin: 0 0 8px !important;
+  }
+
+  #keyRecord > div[style*="text-align:center"][style*="position:relative"] > div[style*="display:inline-block"] {
+    padding: 8px 12px !important;
+  }
+
+  .key-header-row {
+    grid-template-columns: auto 42px !important;
+    gap: 8px !important;
+    justify-content: start !important;
+  }
+
+  .borrow-type-label {
+    min-width: 76px !important;
+    padding: 7px 9px !important;
+  }
+
+  .borrow-type-label span {
+    font-size: 13px !important;
+  }
+
+  #addKeyNameBtn {
+    width: 42px !important;
+    min-width: 42px !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    padding: 0 !important;
+    justify-content: center !important;
+    justify-self: start !important;
+  }
+
+  #addKeyNameBtn .btn-text {
+    display: none !important;
+  }
+
+  #memberBorrowSection > .member-borrow-card {
+    padding: 10px !important;
+  }
+
+  .member-selection-state {
+    font-size: 13px !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .key-header-row {
+    grid-template-columns: 1fr !important;
+  }
+
+  #addKeyNameBtn {
+    width: 100% !important;
+    justify-self: stretch !important;
+  }
+}
+
+@media (min-width: 901px) {
+  #keyRecord > div[style*="text-align:center"][style*="position:relative"],
+  #keyRecord > details[style*="fff3e0"],
+  .keyControls {
+    max-width: 980px !important;
+  }
+
+  .keyControls {
+    margin-right: auto !important;
+  }
+
+  .key-header-row {
+    grid-template-columns: auto auto !important;
+    justify-content: start !important;
+    gap: 12px !important;
+  }
+
+  #addKeyNameBtn {
+    justify-self: start !important;
+  }
+
+  #memberBorrowSection > .member-borrow-card {
+    grid-template-columns: minmax(260px, 320px) minmax(150px, 210px) auto !important;
+    max-width: 700px !important;
+  }
+
+  .member-borrow-label {
+    grid-column: 1 !important;
+  }
+
+  .member-selection-state {
+    grid-column: 2 !important;
+  }
+
+  .member-clear-btn {
+    grid-column: 3 !important;
+  }
+
+  .keyControls > div[style*="margin-top:15px"] > div {
+    display: grid !important;
+    grid-template-columns: minmax(420px, 1fr) 180px !important;
+    gap: 10px !important;
+    align-items: stretch !important;
+  }
+
+  button[onclick="borrowKey()"] {
+    min-width: 180px !important;
+    width: 180px !important;
+    justify-self: stretch !important;
+  }
+}
+
+.instruction-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+  max-width: 1100px !important;
+  margin-bottom: 12px !important;
+}
+
+.instruction-grid details {
+  margin: 0 !important;
+  min-width: 0 !important;
+}
+
+.instruction-grid summary {
+  min-height: 28px !important;
+}
+
+@media (max-width: 700px) {
+  .instruction-grid {
+    grid-template-columns: 1fr !important;
+    max-width: none !important;
+    gap: 8px !important;
+  }
+}
+
+/* Aesthetic polish: keep the operational controls compact and visually related. */
+@media (min-width: 901px) {
+  #keyRecord .instruction-grid,
+  #keyRecord #memberList,
+  #keyRecord .key-title-wrap,
+  #keyRecord .dutyControls,
+  #keyRecord .keyDateNavigation {
+    width: 100% !important;
+    max-width: 1100px !important;
+    margin-left: 0 !important;
+    margin-right: auto !important;
+  }
+
+  #keyRecord .keyControls {
+    width: 100% !important;
+    max-width: 880px !important;
+    margin-left: 0 !important;
+    margin-right: auto !important;
+  }
+
+  #keyRecord .key-title-wrap {
+    margin-top: 2px !important;
+    margin-bottom: 8px !important;
+  }
+
+  #keyRecord .key-title-card {
+    background: transparent !important;
+    border: 0 !important;
+    border-left: 4px solid var(--accent) !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 4px 0 4px 12px !important;
+  }
+
+  #keyRecord .key-title-card h3 {
+    border: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    font-size: 17px !important;
+    color: var(--text) !important;
+  }
+
+  #keyRecord .key-title-card h3 span {
+    font-size: 17px !important;
+  }
+
+  #memberBorrowSection > .member-borrow-card {
+    max-width: 660px !important;
+  }
+
+  .keyControls .key-entry-grid {
+    grid-template-columns: minmax(360px, 1fr) 166px !important;
+  }
+
+  .dutyControls {
+    padding: 14px 18px !important;
+  }
+
+  .keyDateNavigation {
+    padding: 12px 18px !important;
+  }
+}
+
+.table-container {
+  scrollbar-color: #aebfba #f1f6f4;
+}
+
+.table-container::-webkit-scrollbar {
+  height: 7px;
+}
+
+.table-container::-webkit-scrollbar-track {
+  background: #f1f6f4;
+  border-radius: 999px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background: #aebfba;
+  border-radius: 999px;
+}
+
+@media (max-width: 520px) {
+  #keyRecord .key-title-card {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  #keyRecord .key-title-card h3 {
+    justify-content: flex-start !important;
+  }
+}
+
+/* Desktop alignment pass: one shared content axis for every key-record section. */
+@media (min-width: 901px) {
+  .controls {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  #keyRecord {
+    --key-section-width: 1100px;
+  }
+
+  #keyRecord .instruction-grid,
+  #keyRecord #memberList,
+  #keyRecord .key-title-wrap,
+  #keyRecord .keyControls,
+  #keyRecord #keyItemHistory,
+  #keyRecord .dutyControls,
+  #keyRecord .keyDateNavigation,
+  #keyRecord > .table-container {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: var(--key-section-width) !important;
+    margin-left: 0 !important;
+    margin-right: auto !important;
+  }
+
+  #keyRecord .keyControls {
+    display: block !important;
+  }
+
+  #keyRecord .key-header-row {
+    grid-template-columns: minmax(0, 1fr) 180px !important;
+    justify-content: stretch !important;
+    width: 100% !important;
+  }
+
+  #addKeyNameBtn {
+    width: 180px !important;
+    min-width: 180px !important;
+    justify-content: center !important;
+    justify-self: stretch !important;
+  }
+
+  #memberBorrowSection > .member-borrow-card {
+    width: 100% !important;
+    max-width: none !important;
+    grid-template-columns: 340px 180px auto !important;
+    justify-content: start !important;
+  }
+
+  #memberBorrowSection .member-borrow-label {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    width: 340px !important;
+  }
+
+  #memberBorrowSection .member-selection-state {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    width: 180px !important;
+    margin-top: 0 !important;
+  }
+
+  #memberBorrowSection .member-clear-btn {
+    grid-column: 3 !important;
+    grid-row: 1 !important;
+    width: auto !important;
+    min-width: 72px !important;
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+
+  .keyControls .key-entry-grid,
+  .keyControls > div[style*="margin-top:15px"] > div {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 180px !important;
+    width: 100% !important;
+    gap: 10px !important;
+    align-items: stretch !important;
+  }
+
+  #keyItem {
+    width: 100% !important;
+  }
+
+  button[onclick="borrowKey()"] {
+    width: 180px !important;
+    min-width: 180px !important;
+  }
+
+  #keyRecord > .table-container {
+    padding: 14px !important;
+  }
+
+  #keyTable {
+    width: 100% !important;
+    table-layout: fixed !important;
+  }
+
+  #keyTable th:nth-child(1),
+  #keyTable td:nth-child(1) {
+    width: 15% !important;
+  }
+
+  #keyTable th:nth-child(2),
+  #keyTable td:nth-child(2) {
+    width: 18% !important;
+  }
+
+  #keyTable th:nth-child(3),
+  #keyTable td:nth-child(3) {
+    width: 25% !important;
+  }
+
+  #keyTable th:nth-child(4),
+  #keyTable td:nth-child(4) {
+    width: 12% !important;
+  }
+
+  #keyTable th:nth-child(5),
+  #keyTable td:nth-child(5) {
+    width: 18% !important;
+  }
+
+  #keyTable th:nth-child(6),
+  #keyTable td:nth-child(6) {
+    width: 12% !important;
+  }
+}
+
+/* Compact action sizing: buttons should read as actions, not oversized fields. */
+@media (min-width: 901px) {
+  #keyRecord {
+    --key-action-width: 144px;
+    --key-status-width: 156px;
+    --key-select-width: 320px;
+  }
+
+  #keyRecord .key-header-row {
+    grid-template-columns: minmax(0, 1fr) var(--key-action-width) !important;
+  }
+
+  #addKeyNameBtn,
+  button[onclick="borrowKey()"] {
+    width: var(--key-action-width) !important;
+    min-width: var(--key-action-width) !important;
+    min-height: 44px !important;
+    padding: 9px 12px !important;
+    font-size: 14px !important;
+    border-radius: 7px !important;
+  }
+
+  #memberBorrowSection > .member-borrow-card {
+    grid-template-columns: var(--key-select-width) var(--key-status-width) auto !important;
+    gap: 8px !important;
+  }
+
+  #memberBorrowSection .member-borrow-label {
+    width: var(--key-select-width) !important;
+  }
+
+  #memberBorrowSection .member-selection-state {
+    width: var(--key-status-width) !important;
+    min-height: 40px !important;
+    padding: 8px 10px !important;
+  }
+
+  #memberBorrowSelect,
+  .member-clear-btn {
+    min-height: 40px !important;
+  }
+
+  #memberBorrowSection .member-clear-btn {
+    min-width: 58px !important;
+    padding: 8px 12px !important;
+  }
+
+  .keyControls .key-entry-grid,
+  .keyControls > div[style*="margin-top:15px"] > div {
+    grid-template-columns: minmax(0, 1fr) var(--key-action-width) !important;
+  }
+
+  .dutyControls > div:first-child {
+    justify-content: center !important;
+  }
+
+  .dutyControls > div:first-child > div {
+    gap: 10px !important;
+  }
+
+  .dutyControls button {
+    width: auto !important;
+    min-width: 136px !important;
+    padding: 10px 14px !important;
+    font-size: 15px !important;
+  }
+
+  .keyDateNavigation button {
+    width: auto !important;
+    min-width: 76px !important;
+    padding: 8px 14px !important;
+    font-size: 14px !important;
+  }
+
+  #keyTable .key-action-btn {
+    min-width: 44px !important;
+    padding: 7px 10px !important;
+    font-size: 13px !important;
+  }
+}
+
+/* Button rhythm pass: consistent widths by button role, not ad hoc per button. */
+@media (min-width: 901px) {
+  #keyRecord {
+    --button-main-width: 132px;
+    --button-tool-width: 132px;
+    --button-date-width: 84px;
+    --button-table-width: 46px;
+    --borrow-select-width: 320px;
+    --borrow-state-width: 148px;
+  }
+
+  #keyRecord .key-header-row {
+    grid-template-columns: minmax(0, 1fr) var(--button-main-width) !important;
+  }
+
+  #addKeyNameBtn,
+  button[onclick="borrowKey()"] {
+    width: var(--button-main-width) !important;
+    min-width: var(--button-main-width) !important;
+    max-width: var(--button-main-width) !important;
+    min-height: 42px !important;
+    padding: 8px 10px !important;
+    font-size: 14px !important;
+    line-height: 1.2 !important;
+  }
+
+  .keyControls .key-entry-grid,
+  .keyControls > div[style*="margin-top:15px"] > div {
+    grid-template-columns: minmax(0, 1fr) var(--button-main-width) !important;
+    align-items: start !important;
+  }
+
+  #memberBorrowSection > .member-borrow-card {
+    grid-template-columns: var(--borrow-select-width) var(--borrow-state-width) auto !important;
+  }
+
+  #memberBorrowSection .member-borrow-label {
+    width: var(--borrow-select-width) !important;
+  }
+
+  #memberBorrowSection .member-selection-state {
+    width: var(--borrow-state-width) !important;
+    min-width: var(--borrow-state-width) !important;
+  }
+
+  #memberBorrowSection .member-clear-btn {
+    width: 58px !important;
+    min-width: 58px !important;
+    padding: 8px 0 !important;
+  }
+
+  .dutyControls button {
+    width: var(--button-tool-width) !important;
+    min-width: var(--button-tool-width) !important;
+    max-width: var(--button-tool-width) !important;
+    min-height: 42px !important;
+    padding: 9px 10px !important;
+    font-size: 14px !important;
+    line-height: 1.2 !important;
+    text-align: center !important;
+  }
+
+  .keyDateNavigation button {
+    width: var(--button-date-width) !important;
+    min-width: var(--button-date-width) !important;
+    max-width: var(--button-date-width) !important;
+    min-height: 38px !important;
+    padding: 8px 8px !important;
+    text-align: center !important;
+  }
+
+  #keyTable td:last-child {
+    white-space: nowrap !important;
+  }
+
+  #keyTable .key-action-btn {
+    width: var(--button-table-width) !important;
+    min-width: var(--button-table-width) !important;
+    max-width: var(--button-table-width) !important;
+    min-height: 32px !important;
+    padding: 6px 0 !important;
+    margin: 0 2px !important;
+    text-align: center !important;
+  }
+
+  button[onclick="borrowKey()"] {
+    height: 52px !important;
+    min-height: 52px !important;
+    max-height: 52px !important;
+    align-self: start !important;
+  }
+
+  .dutyControls > div:first-child {
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    gap: 12px !important;
+  }
+
+  .dutyControls > div:first-child > div {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    justify-content: flex-end !important;
+    gap: 10px !important;
+  }
+
+  .dutyControls button {
+    width: var(--button-main-width) !important;
+    min-width: var(--button-main-width) !important;
+    max-width: var(--button-main-width) !important;
+    min-height: 42px !important;
+    padding: 9px 10px !important;
+    font-size: 14px !important;
+    line-height: 1.2 !important;
+    text-align: center !important;
+  }
+
+  .keyDateNavigation {
+    display: grid !important;
+    grid-template-columns: var(--button-date-width, 84px) minmax(210px, 1fr) var(--button-date-width, 84px) var(--button-date-width, 84px) !important;
+    align-items: center !important;
+    gap: 10px !important;
+  }
+
+  .keyDateNavigation button {
+    width: var(--button-date-width, 84px) !important;
+    min-width: var(--button-date-width, 84px) !important;
+    max-width: var(--button-date-width, 84px) !important;
+    min-height: 38px !important;
+    padding: 8px 8px !important;
+    margin: 0 !important;
+    font-size: 14px !important;
+    text-align: center !important;
+  }
+
+  .keyDateNavigation > div {
+    min-width: 0 !important;
+  }
+}
+
+/* Inline title pass: desktop keeps the key title in the control row instead of spending a full row. */
+.key-form-title {
+  display: none;
+}
+
+@media (min-width: 760px) {
+  #keyRecord {
+    --button-main-width: 132px;
+    --borrow-select-width: 320px;
+    --borrow-state-width: 148px;
+  }
+
+  #keyRecord .key-title-wrap {
+    display: none !important;
+  }
+
+  #keyRecord #memberList {
+    margin-bottom: 10px !important;
+  }
+
+  #keyRecord .keyControls {
+    padding-top: 12px !important;
+  }
+
+  #keyRecord .key-header-row {
+    grid-template-columns: minmax(0, 1fr) var(--button-main-width) !important;
+    align-items: center !important;
+    gap: 12px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .key-borrow-toolbar {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 12px !important;
+    min-width: 0 !important;
+    text-align: left !important;
+  }
+
+  .key-borrow-toolbar > .key-form-title {
+    display: inline-flex !important;
+    align-items: center !important;
+    flex: 0 0 auto !important;
+    gap: 6px !important;
+    width: auto !important;
+    max-width: none !important;
+    min-height: 38px !important;
+    padding: 0 12px 0 11px !important;
+    background: transparent !important;
+    border-left: 4px solid var(--accent) !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    color: var(--text) !important;
+    font-size: 15px !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+  }
+
+  .key-borrow-toolbar > .key-form-title strong {
+    font-size: 15px !important;
+    font-weight: 800 !important;
+  }
+
+  .key-borrow-toolbar > .key-form-title span {
+    font-size: 16px !important;
+  }
+
+  .key-borrow-toolbar > .borrow-type-switch {
+    flex: 0 1 auto !important;
+    width: auto !important;
+    max-width: max-content !important;
+  }
+
+  #addKeyNameBtn {
+    justify-self: end !important;
+  }
+}
+
+@media (min-width: 760px) and (max-width: 900px) {
+  #keyRecord .keyControls {
+    display: block !important;
+    padding: 12px !important;
+  }
+
+  #addKeyNameBtn,
+  button[onclick="borrowKey()"] {
+    width: var(--button-main-width) !important;
+    min-width: var(--button-main-width) !important;
+    max-width: var(--button-main-width) !important;
+    min-height: 42px !important;
+    padding: 8px 10px !important;
+    font-size: 14px !important;
+    line-height: 1.2 !important;
+    border-radius: 7px !important;
+  }
+
+  #memberBorrowSection > .member-borrow-card {
+    display: grid !important;
+    grid-template-columns: var(--borrow-select-width) var(--borrow-state-width) auto !important;
+    justify-content: start !important;
+    gap: 8px !important;
+    width: auto !important;
+    max-width: none !important;
+  }
+
+  #memberBorrowSection .member-borrow-label {
+    grid-column: 1 !important;
+    width: var(--borrow-select-width) !important;
+  }
+
+  #memberBorrowSection .member-selection-state {
+    grid-column: 2 !important;
+    width: var(--borrow-state-width) !important;
+    min-width: var(--borrow-state-width) !important;
+    margin-top: 0 !important;
+  }
+
+  #memberBorrowSection .member-clear-btn {
+    grid-column: 3 !important;
+    width: 58px !important;
+    min-width: 58px !important;
+    padding: 8px 0 !important;
+  }
+
+  .keyControls .key-entry-grid,
+  .keyControls > div[style*="margin-top:15px"] > div {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) var(--button-main-width) !important;
+    width: 100% !important;
+    gap: 10px !important;
+    align-items: start !important;
+  }
+
+  button[onclick="borrowKey()"] {
+    height: 52px !important;
+    min-height: 52px !important;
+    max-height: 52px !important;
+    align-self: start !important;
+  }
+
+  .dutyControls > div:first-child {
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    gap: 12px !important;
+  }
+
+  .dutyControls > div:first-child > div {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    justify-content: flex-end !important;
+    gap: 10px !important;
+  }
+
+  .dutyControls button {
+    width: var(--button-main-width) !important;
+    min-width: var(--button-main-width) !important;
+    max-width: var(--button-main-width) !important;
+    min-height: 42px !important;
+    padding: 9px 10px !important;
+    font-size: 14px !important;
+    line-height: 1.2 !important;
+    text-align: center !important;
+  }
+
+  .keyDateNavigation {
+    display: grid !important;
+    grid-template-columns: var(--button-date-width, 84px) minmax(210px, 1fr) var(--button-date-width, 84px) var(--button-date-width, 84px) !important;
+    align-items: center !important;
+    gap: 10px !important;
+  }
+
+  .keyDateNavigation button {
+    width: var(--button-date-width, 84px) !important;
+    min-width: var(--button-date-width, 84px) !important;
+    max-width: var(--button-date-width, 84px) !important;
+    min-height: 38px !important;
+    padding: 8px 8px !important;
+    margin: 0 !important;
+    font-size: 14px !important;
+    text-align: center !important;
+  }
+
+  .keyDateNavigation > div {
+    min-width: 0 !important;
+  }
+}
+
+@media (max-width: 759px) {
+  html,
+  body {
+    overflow-x: hidden !important;
+  }
+
+  #keyRecord,
+  #memberList,
+  .instruction-grid,
+  .controls {
+    box-sizing: border-box !important;
+    width: auto !important;
+    max-width: none !important;
+    margin-left: 8px !important;
+    margin-right: 8px !important;
+  }
+
+  #keyRecord *,
+  #memberList * {
+    box-sizing: border-box !important;
+  }
+
+  #keyRecord .key-title-wrap {
+    display: none !important;
+  }
+
+  #keyRecord .keyControls {
+    padding: 10px !important;
+    overflow: hidden !important;
+  }
+
+  #keyRecord .key-header-row {
+    position: static !important;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin-bottom: 10px !important;
+    padding: 0 !important;
+  }
+
+  #keyRecord .key-header-row > div:first-child {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  #keyRecord .key-header-row > div:last-child {
+    position: static !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    justify-self: stretch !important;
+  }
+
+  .key-borrow-toolbar {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    min-width: 0 !important;
+    text-align: left !important;
+  }
+
+  .key-borrow-toolbar > .key-form-title {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    width: fit-content !important;
+    min-height: 32px !important;
+    padding: 0 9px 0 8px !important;
+    border-left: 4px solid var(--accent) !important;
+    color: var(--text) !important;
+    font-size: 14px !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+  }
+
+  .key-borrow-toolbar > .key-form-title strong {
+    font-size: 14px !important;
+    font-weight: 800 !important;
+  }
+
+  .key-borrow-toolbar > .borrow-type-switch {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  .key-borrow-toolbar > .borrow-type-switch > div {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  #addKeyNameBtn {
+    align-self: start !important;
+    justify-self: stretch !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    padding: 0 12px !important;
+    border-radius: 8px !important;
+    justify-content: center !important;
+    gap: 6px !important;
+  }
+
+  #addKeyNameBtn .btn-text {
+    display: inline !important;
+    white-space: nowrap !important;
+  }
+
+  #memberList > summary {
+    gap: 8px !important;
+  }
+
+  #memberListSummaryText {
+    flex: 0 1 110px !important;
+    max-width: 110px !important;
+    font-size: 12px !important;
+  }
+
+  #keyRecord .dutyControls {
+    overflow: hidden !important;
+  }
+
+  #keyRecord .dutyControls > div:first-child {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    gap: 10px !important;
+    text-align: center !important;
+  }
+
+  #dutyMember {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    font-size: 15px !important;
+    line-height: 1.45 !important;
+  }
+
+  #keyRecord .dutyControls > div:first-child > div {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  #keyRecord .dutyControls button {
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 40px !important;
+    padding: 9px 10px !important;
+  }
+}
+
+/* Button color pass: clearer action hierarchy and a readable add-key plus. */
+#addKeyNameBtn {
+  background: linear-gradient(135deg, #fde68a 0%, #f59e0b 100%) !important;
+  color: #3d2600 !important;
+  border: 1px solid rgba(180, 83, 9, 0.22) !important;
+  box-shadow: 0 3px 10px rgba(217, 119, 6, 0.22) !important;
+}
+
+#addKeyNameBtn:hover {
+  background: linear-gradient(135deg, #fcd34d 0%, #ea8a04 100%) !important;
+  color: #2b1a00 !important;
+  box-shadow: 0 5px 16px rgba(217, 119, 6, 0.28) !important;
+  transform: translateY(-1px) !important;
+}
+
+#addKeyNameBtn .add-key-symbol {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 18px !important;
+  height: 18px !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.62) !important;
+  color: #3d2600 !important;
+  font-size: 18px !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+}
+
+button[onclick="borrowKey()"] {
+  background: linear-gradient(135deg, #22c55e 0%, #0f8f55 100%) !important;
+  color: #fff !important;
+  box-shadow: 0 4px 12px rgba(15, 143, 85, 0.24) !important;
+}
+
+button[onclick="borrowKey()"]:hover {
+  background: linear-gradient(135deg, #16a34a 0%, #0b7a49 100%) !important;
+  box-shadow: 0 6px 18px rgba(15, 143, 85, 0.32) !important;
+}
+
+.borrow-type-label:has(input:checked),
+.borrow-type-label:has(input:checked):hover {
+  background: linear-gradient(135deg, #14745f 0%, #0f5f4f 100%) !important;
+  color: #fff !important;
+}
+
+.borrow-type-label:not(:has(input:checked)) {
+  background: #f4f7f5 !important;
+}
+
+.borrow-type-label:not(:has(input:checked)) span {
+  color: #52605b !important;
+}
+
+.dutyControls button {
+  background: linear-gradient(135deg, #58736b 0%, #3f5d56 100%) !important;
+  color: #fff !important;
+  box-shadow: 0 3px 10px rgba(63, 93, 86, 0.2) !important;
+}
+
+.dutyControls button:hover {
+  background: linear-gradient(135deg, #4b665f 0%, #354f49 100%) !important;
+  box-shadow: 0 5px 14px rgba(63, 93, 86, 0.28) !important;
+}
+
+.keyDateNavigation button {
+  background: #425653 !important;
+  color: #fff !important;
+  box-shadow: none !important;
+}
+
+.keyDateNavigation button:hover {
+  background: #334744 !important;
+  box-shadow: 0 4px 10px rgba(51, 71, 68, 0.2) !important;
+}
+
+#keyTable .key-action-btn.confirm {
+  background: #2f6fa3 !important;
+  color: #fff !important;
+}
+
+#keyTable .key-action-btn.return {
+  background: #18965f !important;
+  color: #fff !important;
+}
+
+#keyTable .key-action-btn.delete {
+  background: #c84c4c !important;
+  color: #fff !important;
+}
+
+@media (max-width: 759px) {
+  #addKeyNameBtn {
+    background: linear-gradient(135deg, #fde68a 0%, #f59e0b 100%) !important;
+    color: #3d2600 !important;
+  }
+
+  #addKeyNameBtn .add-key-symbol {
+    width: 24px !important;
+    height: 24px !important;
+    background: rgba(255, 255, 255, 0.68) !important;
+    color: #3d2600 !important;
+    font-size: 25px !important;
+  }
+}
