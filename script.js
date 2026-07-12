@@ -101,6 +101,76 @@ const GOOGLE_SHEETS_GID_NEXT_MONTH = '1122446648';
 const GOOGLE_SHEETS_URL_SCHEDULE_RECORD = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEETS_SCHEDULE_DOC_ID}/edit?gid=${GOOGLE_SHEETS_GID_SCHEDULE_RECORD}`;
 const GOOGLE_SHEETS_URL_NEXT_MONTH = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEETS_SCHEDULE_DOC_ID}/edit?gid=${GOOGLE_SHEETS_GID_NEXT_MONTH}`;
 
+const SHEET_WRITE_VERIFICATION_ATTEMPTS = 4;
+const SHEET_WRITE_VERIFICATION_DELAY_MS = 1500;
+
+function getSheetSyncUtils() {
+  if (!window.SheetSyncUtils) {
+    throw new Error('排班同步安全模組未載入，請重新整理頁面後再試一次');
+  }
+  return window.SheetSyncUtils;
+}
+
+function waitForSheet(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// Apps Script Web App POST 回應在跨網域情境下是 opaque，不能把 fetch 完成
+// 當成寫入成功。排班寫入後必須由 GET 讀回資料，比對成功才算完成。
+async function dispatchGoogleSheetsPost(postData) {
+  await fetch(GOOGLE_SHEETS_WEB_APP_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: {
+      // text/plain 是 CORS simple request；Apps Script 仍可從 postData.contents
+      // 取得 JSON 字串，避免 application/json 觸發無法處理的 preflight。
+      'Content-Type': 'text/plain;charset=utf-8',
+    },
+    body: JSON.stringify(postData)
+  });
+}
+
+async function verifyScheduleWrite(yearMonth, expectedSchedule) {
+  const { scheduleDataMatches } = getSheetSyncUtils();
+
+  for (let attempt = 1; attempt <= SHEET_WRITE_VERIFICATION_ATTEMPTS; attempt++) {
+    const persistedSchedule = await loadScheduleFromGoogleSheets(yearMonth);
+    if (scheduleDataMatches(expectedSchedule, persistedSchedule)) {
+      return true;
+    }
+
+    if (attempt < SHEET_WRITE_VERIFICATION_ATTEMPTS) {
+      await waitForSheet(SHEET_WRITE_VERIFICATION_DELAY_MS);
+    }
+  }
+
+  return false;
+}
+
+async function verifySingleScheduleWrite(yearMonth, day, shift, memberId) {
+  const { normalizeMemberId } = getSheetSyncUtils();
+  const scheduleKey = `${yearMonth}:${Number(day)}-${shift}`;
+
+  for (let attempt = 1; attempt <= SHEET_WRITE_VERIFICATION_ATTEMPTS; attempt++) {
+    const persistedSchedule = await loadScheduleFromGoogleSheets(yearMonth);
+    const canReadPersistedSchedule = persistedSchedule && typeof persistedSchedule === 'object';
+    const persistedMemberId = persistedSchedule?.[scheduleKey];
+    const isVerified = canReadPersistedSchedule && (memberId
+      ? normalizeMemberId(persistedMemberId) === normalizeMemberId(memberId)
+      : persistedMemberId === undefined);
+
+    if (isVerified) {
+      return true;
+    }
+
+    if (attempt < SHEET_WRITE_VERIFICATION_ATTEMPTS) {
+      await waitForSheet(SHEET_WRITE_VERIFICATION_DELAY_MS);
+    }
+  }
+
+  return false;
+}
+
 // 聯絡電話（編號＝紙本菁英名單；映儒／泓廷／煥文請補電話）
 const CONTACT_PHONES = {
   '01': '梁以蓁 0930-802-502',
@@ -661,8 +731,10 @@ function bindEvents(){
             
             // 同步到 Google Sheets（異步執行）
             (async () => {
-              await updateSingleScheduleToSheets(ym, day, shift, '');
-              showSyncNotification('📊 清空排班已同步到 Google Sheets');
+              const isVerified = await updateSingleScheduleToSheets(ym, day, shift, '');
+              if (isVerified) {
+                showSyncNotification('📊 清空排班已同步到 Google Sheets');
+              }
             })();
           }
         );
@@ -699,8 +771,10 @@ function bindEvents(){
             
             // 同步到 Google Sheets（異步執行 - 只更新這一筆）
             (async () => {
-              await updateSingleScheduleToSheets(ym, day, shift, member);
-              showSyncNotification('📊 換班已同步到 Google Sheets');
+              const isVerified = await updateSingleScheduleToSheets(ym, day, shift, member);
+              if (isVerified) {
+                showSyncNotification('📊 換班已同步到 Google Sheets');
+              }
             })();
           }
         );
@@ -718,8 +792,10 @@ function bindEvents(){
       
       // 同步到 Google Sheets（異步執行 - 只更新這一筆）
       (async () => {
-        await updateSingleScheduleToSheets(ym, day, shift, member);
-        showSyncNotification('📊 排班已同步到 Google Sheets');
+        const isVerified = await updateSingleScheduleToSheets(ym, day, shift, member);
+        if (isVerified) {
+          showSyncNotification('📊 排班已同步到 Google Sheets');
+        }
       })();
     });
   });
@@ -3992,8 +4068,13 @@ async function sendScheduleToGoogleSheets(yearMonth, scheduleData, action = 'app
     console.warn('⚠️ Google Sheets Web App URL 尚未設定，跳過自動記錄');
     return false;
   }
-  
+
   try {
+    if (!getSheetSyncUtils().hasScheduleRecords(scheduleData)) {
+      console.warn('⚠️ 排班資料為空，已取消寫入以避免清空 Google Sheets 班表');
+      return false;
+    }
+
     // 準備成員名稱對照表
     const memberNames = {};
     MEMBERS.forEach(member => {
@@ -4002,6 +4083,7 @@ async function sendScheduleToGoogleSheets(yearMonth, scheduleData, action = 'app
     
     // 準備要發送的數據
     const postData = {
+      dataType: 'schedule',
       yearMonth: yearMonth,
       scheduleType: scheduleType,
       scheduleData: scheduleData,
@@ -4015,15 +4097,9 @@ async function sendScheduleToGoogleSheets(yearMonth, scheduleData, action = 'app
       console.log('🔄 使用完全覆蓋模式，從第2行開始重寫所有資料');
     }
     
-    // 發送 POST 請求到 Google Apps Script Web App
-    const response = await fetch(GOOGLE_SHEETS_WEB_APP_URL, {
-      method: 'POST',
-      mode: 'no-cors', // 使用 no-cors 模式避免 CORS 問題
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(postData)
-    });
+    // 發送 POST 請求到 Google Apps Script Web App。
+    // no-cors 回應無法判斷是否成功，後續必須讀回排班資料驗證。
+    await dispatchGoogleSheetsPost(postData);
     
     // 等待 Google Sheets 寫入完成（預估時間）
     const recordCount = Object.keys(scheduleData).length;
@@ -4032,10 +4108,13 @@ async function sendScheduleToGoogleSheets(yearMonth, scheduleData, action = 'app
     console.log(`⏳ 等待 Google Sheets 寫入 ${recordCount} 筆資料...（預估 ${Math.round(estimatedTime/1000)} 秒）`);
     await new Promise(resolve => setTimeout(resolve, estimatedTime));
     
-    console.log(`✅ 排班數據已${action === 'update' ? '更新到' : '發送到'} Google Sheets`);
-    
-    // 由於使用 no-cors 模式，無法讀取回應內容
-    // 但請求已成功發送
+    const isVerified = await verifyScheduleWrite(yearMonth, scheduleData);
+    if (!isVerified) {
+      console.error('❌ 無法確認 Google Sheets 已寫入排班；本機班表已保留，請稍後重新同步確認');
+      return false;
+    }
+
+    console.log(`✅ 已驗證排班數據${action === 'update' ? '更新到' : '寫入'} Google Sheets`);
     return true;
     
   } catch (error) {
@@ -4087,20 +4166,20 @@ async function updateSingleScheduleToSheets(yearMonth, day, shift, memberId) {
     
     console.log(`📤 正在更新單筆排班到 Google Sheets: ${yearMonth} 日期${day} ${shift} → ${memberName}(${memberId})`);
     
-    // 發送 POST 請求
-    const response = await fetch(GOOGLE_SHEETS_WEB_APP_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(postData)
-    });
+    // 送出後以讀回資料確認，避免 opaque 回應被誤判為成功。
+    await dispatchGoogleSheetsPost(postData);
     
     // 等待寫入完成
     await new Promise(resolve => setTimeout(resolve, 1500));
     
-    console.log(`✅ 單筆排班已更新到 Google Sheets`);
+    const isVerified = await verifySingleScheduleWrite(yearMonth, day, shift, memberId);
+    if (!isVerified) {
+      console.error('❌ 無法確認 Google Sheets 已更新單筆排班；本機變更已保留');
+      showSyncNotification('⚠️ 班表已在本機更新，尚未確認寫入 Google Sheets');
+      return false;
+    }
+
+    console.log(`✅ 已驗證單筆排班更新至 Google Sheets`);
     return true;
     
   } catch (error) {
@@ -4123,7 +4202,7 @@ async function syncCurrentMonthToGoogleSheets(scheduleType = '手動換班') {
   });
   
   // 使用 update 模式發送（會先刪除舊記錄再寫入新記錄）
-  await sendScheduleToGoogleSheets(ym, monthData, 'update', scheduleType);
+  return sendScheduleToGoogleSheets(ym, monthData, 'update', scheduleType);
 }
 
 // ⭐ 顯示次月排班結果並提供複製功能
@@ -4450,15 +4529,9 @@ async function sendScheduleToNextMonthSheet(yearMonth, scheduleData) {
     console.log(`📤 正在發送隨機排班數據到「次月排班表」...`);
     console.log(`📊 共 ${Object.keys(scheduleData).length} 筆排班數據`);
     
-    // 發送 POST 請求
-    const response = await fetch(GOOGLE_SHEETS_WEB_APP_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(postData)
-    });
+    // 「次月排班表」目前沒有獨立讀取 API 可供比對，因此只記錄為已送出，
+    // 不會把 opaque POST 回應誤報成同步成功。
+    await dispatchGoogleSheetsPost(postData);
     
     // 等待寫入完成
     const recordCount = Object.keys(scheduleData).length;
@@ -4467,8 +4540,8 @@ async function sendScheduleToNextMonthSheet(yearMonth, scheduleData) {
     console.log(`⏳ 等待 Google Sheets 寫入 ${recordCount} 筆資料到「次月排班表」...（預估 ${Math.round(estimatedTime/1000)} 秒）`);
     await new Promise(resolve => setTimeout(resolve, estimatedTime));
     
-    console.log(`✅ 隨機排班已成功發送到「次月排班表」`);
-    return true;
+    console.warn('⚠️ 次月排班已送出至 Google Sheets，但尚無法自動讀回驗證');
+    return false;
     
   } catch (error) {
     console.error('❌ 發送到「次月排班表」時發生錯誤:', error);
@@ -4493,16 +4566,8 @@ async function sendKeyRecordToGoogleSheets(record, action) {
     
     console.log(`📤 正在${action === 'borrow' ? '記錄鑰匙借出' : action === 'return' ? '更新歸還記錄' : '更新值班確認'}到 Google Sheets...`);
     
-    const response = await fetch(GOOGLE_SHEETS_WEB_APP_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(postData)
-    });
-    
-    console.log(`✅ 鑰匙記錄已${action === 'borrow' ? '寫入' : '更新到'} Google Sheets`);
+    await dispatchGoogleSheetsPost(postData);
+    console.log(`📨 鑰匙記錄已送出至 Google Sheets，等待下次讀取同步確認`);
     
   } catch (error) {
     console.error('❌ 發送鑰匙記錄到 Google Sheets 時發生錯誤:', error);
@@ -5281,11 +5346,27 @@ async function syncScheduleFromSheets() {
     '這會覆蓋本地的排班資料！',
     async () => {
       const scheduleData = await loadScheduleFromGoogleSheets(ym);
-      
+
       if (scheduleData) {
         // 更新 localStorage
         const allData = JSON.parse(localStorage.getItem(STORE_KEY) || '{}');
-        
+        const localMonthData = {};
+        Object.keys(allData).forEach(key => {
+          if (key.startsWith(ym + ':')) {
+            localMonthData[key] = allData[key];
+          }
+        });
+
+        if (!getSheetSyncUtils().shouldReplaceLocalSchedule(localMonthData, scheduleData)) {
+          if (getSheetSyncUtils().hasScheduleRecords(localMonthData)) {
+            console.warn('⚠️ Google Sheets 回傳空班表，已取消手動同步以保留本機資料');
+            showCustomAlert('⚠️ Google Sheets 本月沒有排班資料，已保留本機班表，沒有覆蓋。', 'error');
+          } else {
+            showCustomAlert('ℹ️ Google Sheets 本月沒有排班資料，本機班表未變更。', 'error');
+          }
+          return false;
+        }
+
         // 刪除本地該月份的舊排班
         Object.keys(allData).forEach(key => {
           if (key.startsWith(ym + ':')) {
@@ -5305,7 +5386,10 @@ async function syncScheduleFromSheets() {
         
         showCustomAlert(`✅ 已從 Google Sheets 同步 ${Object.keys(scheduleData).length} 筆排班記錄`, 'success');
         showSyncNotification('📥 排班已從 Google Sheets 同步');
+        return true;
       }
+
+      return false;
     }
   );
 }
@@ -5336,7 +5420,25 @@ async function autoRefreshFromSheets(showLoadingHint = false, silentMode = false
         localMonthData[key] = allData[key];
       }
     });
-    
+
+    // 空回應可能代表月份尚未排班、後端讀取異常，或 Sheet 欄位被改動；
+    // 絕不能以它覆蓋已有的本機班表。
+    if (!getSheetSyncUtils().shouldReplaceLocalSchedule(localMonthData, scheduleData)) {
+      if (getSheetSyncUtils().hasScheduleRecords(localMonthData)) {
+        console.warn('⚠️ Google Sheets 回傳空班表，已保留本機班表');
+        if (isFirstAutoLoad) {
+          showSyncNotification('⚠️ Google Sheets 本月無資料，已保留本機班表');
+        }
+      } else {
+        console.log('📋 Google Sheets 連線成功，目前無排班記錄');
+        if (isFirstAutoLoad) {
+          showSyncNotification('✅ 已連線 Google Sheets（目前無排班記錄）');
+        }
+      }
+      isFirstAutoLoad = false;
+      return false;
+    }
+
     // 檢查是否有差異
     const localKeys = Object.keys(localMonthData).sort();
     const sheetsKeys = Object.keys(scheduleData).sort();
@@ -5512,8 +5614,12 @@ function executeQuickFill(){
   
   // 同步到 Google Sheets（異步執行）
   (async () => {
-    await syncCurrentMonthToGoogleSheets('快速填班');
-    showSyncNotification('📊 排班已同步到 Google Sheets');
+    const isVerified = await syncCurrentMonthToGoogleSheets('快速填班');
+    if (isVerified) {
+      showSyncNotification('📊 排班已同步到 Google Sheets');
+    } else {
+      showSyncNotification('⚠️ 班表已在本機更新，尚未確認寫入 Google Sheets');
+    }
   })();
 }
 
@@ -7901,25 +8007,16 @@ async function submitAddKeyName() {
     submitBtn.innerHTML = '⏳ 提交中...';
     submitBtn.disabled = true;
     
-    // 發送到 Google Sheets
-    const response = await fetch(GOOGLE_SHEETS_WEB_APP_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data)
-    });
-    
-    // no-cors 模式下無法讀取響應，假設成功
-    console.log('✅ 鑰匙名稱已提交到 Google Sheets');
+    // opaque POST 回應不能代表已寫入；送出後由下一次清單讀取確認。
+    await dispatchGoogleSheetsPost(data);
+    console.log('📨 鑰匙名稱已送出至 Google Sheets，等待重新讀取確認');
     
     // 關閉彈窗
     const overlay = submitBtn.closest('.modal-overlay');
     closeModal(overlay);
     
-    // 顯示成功訊息
-    alert(`✅ 新增成功！\n\n鑰匙案件名稱：${keyName}\n開發業務：${developer}\n備註：${note || '無'}`);
+    // 顯示已送出訊息；重新讀取後才會出現在清單中。
+    alert(`📨 已送出新增申請，系統將重新讀取 Google Sheets 確認。\n\n鑰匙案件名稱：${keyName}\n開發業務：${developer}\n備註：${note || '無'}`);
     
     // 重新載入鑰匙名稱清單
     setTimeout(() => {
@@ -9458,8 +9555,12 @@ function processShiftChange(requestId, action) {
     
     // 同步到 Google Sheets（異步執行）
     (async () => {
-      await syncCurrentMonthToGoogleSheets('調班申請核准');
-      showSyncNotification('📊 調班已同步到 Google Sheets');
+      const isVerified = await syncCurrentMonthToGoogleSheets('調班申請核准');
+      if (isVerified) {
+        showSyncNotification('📊 調班已同步到 Google Sheets');
+      } else {
+        showSyncNotification('⚠️ 調班已在本機更新，尚未確認寫入 Google Sheets');
+      }
     })();
   } else {
     showCustomAlert('❌ 調班申請已拒絕', 'error');

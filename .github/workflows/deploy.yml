@@ -16,7 +16,7 @@ jobs:
       - name: Prepare dist (舊版 only)
         run: |
           mkdir -p dist
-          cp index.html styles.css script.js 排班條件設定.js dist/
+          cp index.html styles.css script.js 排班條件設定.js sheet-sync-utils.js dist/
       
       - name: Deploy to Cloudflare Pages
         if: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
